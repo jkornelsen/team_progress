@@ -16,8 +16,10 @@
     {% if attrib_def.is_binary %}
         {{ '✅' if attrib_val.value else '❌' }}
     {% elif attrib_def.enum_list %}
-        {# Map numeric value to string in enum list #}
-        {{ attrib_def.enum_list[attrib_val.value | int] if attrib_def.enum_list[attrib_val.value | int] else '?' }}
+        {% set idx = attrib_val.value | int(-1) %}
+        {{ attrib_def.enum_list[idx]
+            if 0 <= idx < attrib_def.enum_list | length
+            else '?' }}
     {% else %}
         {{ attrib_val.value | formatNum }}
     {% endif %}

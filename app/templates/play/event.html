@@ -588,10 +588,12 @@ async function refreshFactors() {
             const equationEl = row.querySelector('.equation-display');
             const getValFrom = row.dataset.getValFrom;
 
-            row.querySelector('.target-name-display').innerText = eff.target_name;
+            const labelText = (eff.label && eff.label.trim() !== "") 
+                ? ` ${eff.label}: ` : "";
+            row.querySelector('.target-name-display').innerText = eff.target_name + labelText;
             row.style.opacity = eff.is_resolved ? "1" : "0.5";
 
-            // Update current value and operator for a new roll
+            // Current value and operator
             const currentValEl = row.querySelector('.current-value-display');
             currentValEl.innerText = eff.current_display;
             row.querySelector('.op-display').innerText = eff.op_app_display;

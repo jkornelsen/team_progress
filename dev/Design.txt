@@ -6,6 +6,11 @@
 
 petrol recipe didn't consume when setting to 1 batch
 
+daal and rice shows qty 0
+    when viewing general storage item "ate" with qty 1/1
+    context is in kitchen
+    shows qty 4 as expected when ate is 0/1
+
 comparing whether two attribs are equal is possible but prohibitively complex
     the proper way would be to allow comparison to another field,
         or to the running total
@@ -15,6 +20,10 @@ comparing whether two attribs are equal is possible but prohibitively complex
     can we currently read the running total and a field in the same row?
     our current solution multiplies the abs val of the difference by a large penalty
         that may work once or twice but this behavior is more commonly useful than that
+
+travel with on char play
+    arriving somewhere brings up play loc
+    returning to char play for the next destination shows "travel with" unset
 
 old_loc_id doesn't always get set when going to loc page
     http://localhost:5000/play/location/14 (navigate and reload both failed)
@@ -136,13 +145,6 @@ dungeon crawl
     3 levels up and down of location grids -- 7 total floors
     short predefined completable game including 1-2 char classes
     try generating grid layouts and adapt any good ones
-
-dating
-    acts improve relationship
-        spending time together
-        providing assistance or accomplishing tasks
-    the day for a date must be assigned beforehand
-        but you can still meet people by showing up
 
 mine helium-3 with location production
     then char converts to cannisters

@@ -16,9 +16,9 @@
             {"attrib_id": 144, "attrib_value": 17.0}
         ],
         "tag_introduce_order": 35,
-        "tag_best_order": 40,
+        "tag_best_order": 14,
         "tag_progress_type": "RPG",
-        "tag_complete": "07 Playable / Under Construction"
+        "tag_complete": "08 Playable"
     },
     "entities": {
         "items": [
@@ -70,10 +70,15 @@
                 "name": "Bible",
                 "description": "Best bring one of these to church meetings, or else it may be hard to follow the discussion. Also, it helps you fit in."
             },
-            {"id": 159, "name": "Bra—Purple"},
             {
                 "id": 147,
                 "name": "Buy from Bar",
+                "storage_type": "l",
+                "q_limit": 1.0
+            },
+            {
+                "id": 193,
+                "name": "Buy From Department Store",
                 "storage_type": "l",
                 "q_limit": 1.0
             },
@@ -123,6 +128,21 @@
                 "description": "Either cash on hand or funds at the bank.",
                 "storage_type": "u",
                 "toplevel": true
+            },
+            {"id": 188, "name": "Chest—Bikini Top"},
+            {
+                "id": 196,
+                "name": "Condom",
+                "recipes": [
+                    {
+                        "id": 197,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 81, "q_required": 3.0},
+                            {"item_id": 121, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
             },
             {
                 "id": 21,
@@ -391,6 +411,7 @@
                     }
                 ]
             },
+            {"id": 190, "name": "Full Body—One-Piece Bathing Suit"},
             {
                 "id": 34,
                 "name": "Full Body—Plain Black Dress",
@@ -410,6 +431,7 @@
                 "storage_type": "l",
                 "q_limit": 1.0
             },
+            {"id": 189, "name": "Hips—Bikini Bottom"},
             {
                 "id": 70,
                 "name": "Hours",
@@ -429,7 +451,7 @@
             {
                 "id": 91,
                 "name": "Job Listing 1",
-                "description": "Use the sequence of 3 events to \"read\" this listing, then do the same for the other listing: location, hours, wages.\r\n\r\nAfter reading, go to the listing you plan to apply for and **Circle Job Listing** (event). If it doesn't work out, then you may circle the other one afterwards. *Note: the recipes are for information only.*",
+                "description": "Use the sequence of 3 events to \"read\" this listing: **Location, Hours,** and **Wages.** Then do the same for the other listing.\r\n\r\nAfter reading, go to the listing you plan to apply for and **Circle Job Listing.** If it doesn't work out, then you may circle the other one afterwards. *Note: the recipes are for information only.*",
                 "attribs": [
                     [85, 0.0],
                     [88, 0.0],
@@ -480,7 +502,7 @@
             {
                 "id": 87,
                 "name": "Job—Circled",
-                "description": "Circle a job listing. If the job is from asking directly at the site instead of a listing, then roll for hours and wages here.",
+                "description": "Circle a job listing, then visit the location to apply.\r\n\r\nTypically, you'd work one job per day, but there could be time for two short jobs. Getting dirty in the first job makes this harder. You may need to change clothes or shower in between, and consider how far away the locations are.\r\n\r\nIf the job is from asking directly at the site instead of a listing, then roll for hours and wages here.",
                 "attribs": [
                     [85, 0.0],
                     [88, 0.0],
@@ -514,11 +536,24 @@
                 "description": "Nothing special, but passable away from home.",
                 "q_limit": 1.0
             },
+            {"id": 201, "name": "Legs—Skirt"},
             {
                 "id": 36,
                 "name": "Legs—Swim Trunks",
                 "description": "Not necessarily immodest if a guy wears these at a public place to swim. Could even be attractive if he's fit.",
                 "q_limit": 1.0
+            },
+            {
+                "id": 184,
+                "name": "Mem1",
+                "description": "Store and recall memory for event effects.",
+                "storage_type": "u"
+            },
+            {
+                "id": 186,
+                "name": "Mem2",
+                "description": "Store and recall memory for event effects.",
+                "storage_type": "u"
             },
             {
                 "id": 170,
@@ -572,6 +607,20 @@
                 "q_limit": 1.0
             },
             {
+                "id": 191,
+                "name": "Torso—Polo Shirt",
+                "description": "Short sleeves, for activities that involve moving around while still looking somewhat formal.",
+                "recipes": [
+                    {
+                        "id": 192,
+                        "sources": [
+                            {"item_id": 81, "q_required": 25.0},
+                            {"item_id": 193, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
                 "id": 37,
                 "name": "Towel",
                 "description": "To dry off or wrap around."
@@ -597,7 +646,7 @@
             {
                 "id": 77,
                 "name": "Work",
-                "description": "Travel to the [circled job location](/play/item/87) if you haven't yet, then produce per hour until the limit is reached, earning cash.",
+                "description": "Apply for a job, then produce per hour until the limit is reached, earning cash.",
                 "storage_type": "u",
                 "q_limit": 0.0,
                 "toplevel": true,
@@ -621,9 +670,10 @@
                 "name": "Beach",
                 "description": "Might be a good place to bring a date, or happen to run into someone you're interested in. Strangers might not appreciate advances here though, even if they're hot.\r\n\r\nThere's also swimming, sand volleyball, or jogging on the beach for exercise.\r\n\r\nJobs include rentals, lifeguard, and surfing instructor.",
                 "attribs": [
-                    [85, 0.0]
+                    [85, 0.0],
+                    [130, 5.0]
                 ],
-                "abilities": [101]
+                "abilities": [101, 129]
             },
             {
                 "id": 103,
@@ -648,13 +698,18 @@
                 "name": "Cinema",
                 "description": "One or two new movies come out each week, but there is also a large selection of classic movie showings for cheaper tickets.\r\n\r\nAvailable jobs: ticket vendor, popcorn popper, play button presser, clean sticky floors.",
                 "attribs": [
-                    [85, 1.0]
-                ]
+                    [85, 1.0],
+                    [130, 3.0]
+                ],
+                "abilities": [101, 129]
             },
             {
                 "id": 40,
                 "name": "Claudia's House",
                 "description": "Within walking distance of the church.",
+                "items": [
+                    {"item_id": 190, "quantity": 1.0}
+                ],
                 "destinations": [
                     {"loc2_id": 104}
                 ]
@@ -664,7 +719,12 @@
                 "name": "Department Store",
                 "description": "All the name brands. Buy better clothes, maybe one day even a ring.\r\n\r\nAvailable jobs: outfit fetcher, checkout counter, security monitors.",
                 "attribs": [
-                    [85, 2.0]
+                    [85, 2.0],
+                    [130, 2.0]
+                ],
+                "abilities": [101, 129],
+                "items": [
+                    {"item_id": 193, "quantity": 1.0}
                 ],
                 "destinations": [
                     {"loc2_id": 103}
@@ -685,9 +745,10 @@
                 "name": "Electronics Store",
                 "description": "Available jobs: customer assistant, product returns, repair squad, checkout register.",
                 "attribs": [
-                    [85, 3.0]
+                    [85, 3.0],
+                    [130, 3.0]
                 ],
-                "abilities": [101],
+                "abilities": [101, 129],
                 "destinations": [
                     {"loc2_id": 103}
                 ]
@@ -700,7 +761,7 @@
                     [85, 4.0],
                     [130, 4.0]
                 ],
-                "abilities": [129],
+                "abilities": [101, 129],
                 "destinations": [
                     {"loc2_id": 52},
                     {"loc2_id": 55},
@@ -712,9 +773,10 @@
                 "name": "Gym",
                 "description": "Improve your fitness and perhaps meet people.\r\n\r\nAvailable jobs: yoga instructor, masseuse, pick up weights, pool scraper.",
                 "attribs": [
-                    [85, 5.0]
+                    [85, 5.0],
+                    [130, 4.0]
                 ],
-                "abilities": [101],
+                "abilities": [101, 129],
                 "destinations": [
                     {"loc2_id": 103}
                 ]
@@ -727,7 +789,7 @@
                     [85, 6.0],
                     [130, 4.0]
                 ],
-                "abilities": [129],
+                "abilities": [101, 129],
                 "items": [
                     {"item_id": 147, "quantity": 1.0}
                 ],
@@ -751,8 +813,10 @@
                 "name": "Petrol Station",
                 "description": "Not only sells petrol but also any kind of vehicle maintenance, from selling wipers to repainting and replacing engine parts.\r\n\r\nAvailable jobs: pump receipt printing, oil changer, mechanic, order parts from catalog.",
                 "attribs": [
-                    [85, 7.0]
+                    [85, 7.0],
+                    [130, 2.0]
                 ],
+                "abilities": [101, 129],
                 "items": [
                     {"item_id": 172, "quantity": 1.0}
                 ]
@@ -760,23 +824,22 @@
             {
                 "id": 106,
                 "name": "River Walk",
-                "description": "Cafes and restaurants line the cobblestone pathway. Paddle boat rentals are available, though they're relatively expensive in comparison with rentals on the beach."
+                "description": "Cafes and restaurants line the cobblestone pathway. Paddle boat rentals are available, though they're relatively expensive in comparison with rentals on the beach.",
+                "attribs": [
+                    [130, 3.0]
+                ],
+                "abilities": [129]
             },
             {
                 "id": 46,
                 "name": "Sierra's House",
                 "description": "An old house with white siding.\r\n\r\nWithin walking distance of the bar. The streets are well lit at night, but it's still not a great part of town, so she doesn't love walking alone.",
+                "items": [
+                    {"item_id": 188, "quantity": 1.0},
+                    {"item_id": 189, "quantity": 1.0}
+                ],
                 "destinations": [
                     {"loc2_id": 104}
-                ]
-            },
-            {
-                "id": 45,
-                "name": "Single Bed",
-                "description": "The mattress isn't worn out, comfortable enough unless the day has been too stressful to sleep. Held by slats in a wooden frame.\r\n\r\nWhile you *could* fit another person in, it'd be better to buy a bigger bed.",
-                "item_refs": [71],
-                "destinations": [
-                    {"loc2_id": 50}
                 ]
             },
             {
@@ -797,8 +860,10 @@
                 "name": "Teria's Place",
                 "description": "Cafeteria style restaurant — go through the line and ask for what to put on your plate. A variety of options: noodles, meat, salads.\r\n\r\nThe owner named the place after his daughter. To meet her, start setting her up by duplicating one of the other characters.\r\n\r\nAvailable jobs: server, cook, dish washer.",
                 "attribs": [
-                    [85, 9.0]
+                    [85, 9.0],
+                    [130, 2.0]
                 ],
+                "abilities": [101, 129],
                 "items": [
                     {"item_id": 150, "quantity": 1.0}
                 ]
@@ -860,6 +925,15 @@
                 "destinations": [
                     {"loc2_id": 55}
                 ]
+            },
+            {
+                "id": 45,
+                "name": "Your Single Bed",
+                "description": "The mattress isn't worn out, comfortable enough unless the day has been too stressful to sleep. Held by slats in a wooden frame.\r\n\r\nWhile you *could* fit another person in, it'd be better to buy a bigger bed.",
+                "item_refs": [71],
+                "destinations": [
+                    {"loc2_id": 50}
+                ]
             }
         ],
         "characters": [
@@ -885,7 +959,8 @@
                     [131, 0.0],
                     [132, 0.0],
                     [135, 0.0],
-                    [144, 0.0]
+                    [144, 0.0],
+                    [194, 0.0]
                 ],
                 "abilities": [134, 136, 139, 166],
                 "location_id": 52,
@@ -922,7 +997,7 @@
             {
                 "id": 62,
                 "name": "(Enter a name)",
-                "description": "College has left little time for social life, until now. With a few months' holiday, this is the perfect time to reawaken that hidden charisma and those stifled interpersonal skills.\r\n\r\nThe default setup is male seeking female.",
+                "description": "College has left little time for social life, until now. With a few months' holiday, this is the perfect time to reawaken that hidden charisma and those stifled interpersonal skills.\r\n\r\nThe default setup is male seeking female, configurable of course. Also, you could change the win conditions, for example, having a baby with someone who you're in a committed relationship with.",
                 "attribs": [
                     [2, 5.0],
                     [3, 5.0],
@@ -930,16 +1005,16 @@
                     [5, 10.0],
                     [8, 1.0],
                     [10, 5.0],
-                    [11, 1.0],
                     [12, 3.0],
                     [14, 0.0],
                     [17, 10.0],
                     [108, 5.0],
                     [154, 0.0],
                     [156, 0.0],
-                    [158, 0.0]
+                    [158, 0.0],
+                    [194, 0.0]
                 ],
-                "abilities": [63, 64, 101, 107, 145, 146, 157, 178, 180],
+                "abilities": [63, 64, 101, 107, 145, 146, 157, 178, 180, 181, 195, 198],
                 "toplevel": true,
                 "location_id": 47,
                 "travel_party": "Drive",
@@ -982,25 +1057,26 @@
                 "description": "A young woman, but judging from her appearance, not a \"lady.\" Auburn shoulder-length hair. Loves dancing even if she's not particularly skilled at it.",
                 "attribs": [
                     [2, 5.0],
-                    [3, 8.0],
+                    [3, 9.0],
                     [4, 5.0],
                     [5, 7.0],
                     [7, 1.0],
                     [10, 2.0],
                     [11, 1.0],
                     [12, 4.0],
-                    [14, 1.0],
-                    [17, 10.0],
+                    [14, 0.0],
                     [131, 0.0],
                     [132, 0.0],
                     [135, 0.0],
-                    [144, 0.0]
+                    [144, 0.0],
+                    [194, 0.0]
                 ],
                 "abilities": [134, 136, 139, 166],
                 "location_id": 44,
                 "items": [
                     {"item_id": 33, "quantity": 1.0, "slot": "Feet"},
                     {"item_id": 35, "quantity": 1.0, "slot": "Full Body"},
+                    {"item_id": 159, "quantity": 1.0, "slot": "Chest (Women)"},
                     {"item_id": 162, "quantity": 1.0, "slot": "Accessories"}
                 ]
             },
@@ -1030,7 +1106,7 @@
                 "location_id": 47,
                 "travel_party": "Drive",
                 "items": [
-                    {"item_id": 170, "quantity": 8.0}
+                    {"item_id": 170, "quantity": 6.0}
                 ]
             }
         ],
@@ -1043,7 +1119,13 @@
             {
                 "id": 3,
                 "name": "Beauty",
-                "description": "Let's face it, some of us have it, and some of us don't."
+                "description": "Let's face it, some of us have it, and some of us don't. Although they do say that beauty is in the eye of the beholder.\r\n\r\nThis is about genes, skin weathering, preference, or makeup. For weight and health, see [Fitness](/configure/attrib/4)."
+            },
+            {
+                "id": 194,
+                "name": "Birth Control",
+                "description": "Set to true if wearing a condom, on the pill, spermicide, or monthly cycle planning. The \"early withdrawal\" method does not count.",
+                "is_binary": true
             },
             {
                 "id": 9,
@@ -1065,7 +1147,14 @@
             {
                 "id": 17,
                 "name": "Clean",
-                "description": "State of a person. 10 for completely clean, 0 for dirtiest.\r\n\r\nFactors include how long since showered, and clothing washed. Most clothes get less clean from wearing (but not shoes), although tracking this gets tedious.\r\n\r\nSee also: [Dirty](/configure/attrib/16)"
+                "description": "For example, spilled drink on clothing. Factors include how long since showered, and clothing washed.\r\n\r\nState of a person — not tracked by specific item of clothing.",
+                "enum_list": [
+                    "Disaster",
+                    "Spilled Or Muddied",
+                    "Needs Freshening",
+                    "Normal",
+                    "Sparkling"
+                ]
             },
             {
                 "id": 108,
@@ -1096,9 +1185,20 @@
                 "description": "A simple running total, not necessarily important for months or seasons. Rather, used for example to track how long someone stays angry before they're willing to talk with you again."
             },
             {
-                "id": 16,
-                "name": "Dirty",
-                "description": "For example, shoes get dirty if stepping in something such as mud. May affect how clean a person is. 0 is not dirty, up to 10."
+                "id": 85,
+                "name": "Employer ID",
+                "enum_list": [
+                    "Beach",
+                    "Cinema",
+                    "Department Store",
+                    "Electronics Store",
+                    "Friendly Community Church",
+                    "Gym",
+                    "Happy Hour Pub",
+                    "Petrol Station",
+                    "Supermarket",
+                    "Teria's Place"
+                ]
             },
             {
                 "id": 7,
@@ -1108,7 +1208,7 @@
             {
                 "id": 4,
                 "name": "Fitness",
-                "description": "Scale from professional athletes down to gamers who never leave the basement."
+                "description": "Scale from professional athletes down to overweight gamers who never leave the basement."
             },
             {
                 "id": 154,
@@ -1134,28 +1234,12 @@
             {
                 "id": 14,
                 "name": "Intoxicated",
-                "description": "Even a little (1-2) could be relaxing. A moderate amount (5) is unsafe to drive under, while a lot (7-10) could mean acting wildly or even passing out."
+                "description": "Even a little (1-2) could be relaxing. A moderate amount (5) is unsafe to drive under, while a lot (7-10) could mean acting wildly or even passing out.\r\n\r\nWears off after sleeping or waiting awhile."
             },
             {"id": 110, "name": "Job—Accepted", "is_binary": true},
             {"id": 109, "name": "Job—Applied", "is_binary": true},
             {"id": 88, "name": "Job—Hours Required"},
             {"id": 89, "name": "Job—Wages Per Hour"},
-            {
-                "id": 85,
-                "name": "Employer ID",
-                "enum_list": [
-                    "Beach",
-                    "Cinema",
-                    "Department Store",
-                    "Electronics Store",
-                    "Friendly Community Church",
-                    "Gym",
-                    "Happy Hour Pub",
-                    "Petrol Station",
-                    "Supermarket",
-                    "Teria's Place"
-                ]
-            },
             {
                 "id": 5,
                 "name": "Modesty",
@@ -1164,7 +1248,7 @@
             {
                 "id": 144,
                 "name": "Relationship Status",
-                "description": "This character's romantic status with you. Only applies to potential romantic partners.\r\n\r\nArranged approximately by how difficult it is to move to another level, not the order it happens. For example, *Mistress* means you are already *Married* to someone else, but getting to that status with someone may require less effort.",
+                "description": "This character's romantic status with you.\r\nOnly applies to potential romantic partners.\r\nArranged by how difficult it is to move to that level.",
                 "enum_list": [
                     "Unaware",
                     "Acquaintance",
@@ -1179,10 +1263,10 @@
                     "Courting",
                     "Exclusive",
                     "Cheating With",
+                    "Mistress",
                     "Living Together",
                     "Separated",
                     "Open Relationship",
-                    "Mistress",
                     "Engaged",
                     "Married",
                     "Polyamorous",
@@ -1254,7 +1338,9 @@
                     "Gets angry at what you forgot to do",
                     "Starts a petty argument",
                     "Refuses to talk",
-                    "Suggests a game",
+                    "Suggests a social game",
+                    "Tabletop game such as cards",
+                    "Active game such as ping pong",
                     "Dares you",
                     "You dare them",
                     "Ask truth question",
@@ -1266,6 +1352,11 @@
                     "Gets sick",
                     "Brings you to see someone",
                     "Go on an adventure",
+                    "The great outdoors",
+                    "Gardening or yard work",
+                    "Music",
+                    "Painting",
+                    "Crafting or building",
                     "Try something difficult",
                     "Sit quietly together"
                 ]
@@ -1341,13 +1432,54 @@
                     "Uncertain",
                     "Confused"
                 ]
+            },
+            {
+                "id": 183,
+                "name": "Who",
+                "description": "List for **Chance Encounter—Who.**",
+                "enum_list": ["Art", "Claudia", "Dreschsel", "Sierra", "Sydney", "Teria"]
             }
         ],
         "events": [
             {
+                "id": 198,
+                "name": "Act of Service",
+                "description": "Do something thoughtful for the other person. For example, repairing an appliance, buying something they or their family member needs, or supporting a cause.",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "infield": {"role": "target char", "attrib_id": 135}
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 7},
+                        "op_transform": "c",
+                        "val_transform": 5.0,
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 7},
+                        "op_transform": "c",
+                        "val_transform": 5.0,
+                        "outcome_success": "success_major"
+                    },
+                    {
+                        "label": "Misunderstanding",
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 7},
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "outcome_success": "failure_major"
+                    }
+                ]
+            },
+            {
                 "id": 107,
                 "name": "Apply For Job",
-                "description": "Visit the circled location to apply. (If you're at the wrong location then the outcome will go deeply negative, guaranteeing failure).\r\n\r\nSet your **Clothing Score** before rolling.",
+                "description": "Visit the circled location to apply. (If you're at the wrong location then the outcome will go deeply negative, guaranteeing failure).\r\n\r\nAdjust your **Clothing Score** before rolling.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -1482,7 +1614,7 @@
                         "label": "Standard Threshold",
                         "op_application": "-",
                         "op_transform": "c",
-                        "val_transform": 30.0
+                        "val_transform": 25.0
                     }
                 ],
                 "effects": [
@@ -1519,6 +1651,25 @@
                 ]
             },
             {
+                "id": 181,
+                "name": "Chance Encounter",
+                "description": "Before rolling, go to a place you might run into someone, for example the **River Walk.** It could also be while you're working, although more often, customers are random people you may never meet again.\r\n\r\n- On **Minor Success,** roll **Who** to see which person is there.\r\n- On **Major Success,** you can choose who shows up, or keep rolling **Who** until someone you want is selected.",
+                "numeric_range": [1, 20],
+                "chained": [
+                    {
+                        "child_id": 182,
+                        "req": {"outcome_success": "success_any"}
+                    }
+                ]
+            },
+            {
+                "id": 182,
+                "name": "Chance Encounter—Who",
+                "description": "Move the selected person to your location, then engage in conversation.",
+                "outcome_type": "selection",
+                "selection_attrib_id": 183
+            },
+            {
                 "id": 166,
                 "name": "Choose Action",
                 "description": "Ask what an NPC you're interacting with romantically decides to do next. Also roll **Choose Tone.**",
@@ -1542,45 +1693,56 @@
                 "outcome_type": "determined",
                 "determinants": [
                     {
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 82}
+                        "infield": {"attrib_id": 88},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "For Display",
+                        "infield": {"attrib_id": 88}
                     }
                 ],
                 "effects": [
                     {
                         "infield": {"attrib_id": 85},
                         "outfield": {"role": "universal", "item_id": 87, "attrib_id": 85},
-                        "op_application": ":="
+                        "op_application": ":=",
+                        "auto_apply": true
                     },
                     {
                         "infield": {"attrib_id": 88},
                         "outfield": {"role": "universal", "item_id": 87, "attrib_id": 88},
-                        "op_application": ":="
+                        "op_application": ":=",
+                        "auto_apply": true
                     },
                     {
                         "infield": {"attrib_id": 89},
                         "outfield": {"role": "universal", "item_id": 87, "attrib_id": 89},
-                        "op_application": ":="
+                        "op_application": ":=",
+                        "auto_apply": true
                     },
                     {
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "item_id": 87, "attrib_id": 109},
                         "op_application": ":=",
                         "op_transform": "c",
-                        "val_transform": 0.0
+                        "val_transform": 0.0,
+                        "auto_apply": true
                     },
                     {
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "item_id": 87, "attrib_id": 110},
                         "op_application": ":=",
                         "op_transform": "c",
-                        "val_transform": 0.0
+                        "val_transform": 0.0,
+                        "auto_apply": true
                     },
                     {
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 77},
                         "op_application": ":=",
                         "op_transform": "c",
-                        "val_transform": 0.0
+                        "val_transform": 0.0,
+                        "auto_apply": true
                     }
                 ]
             },
@@ -1655,7 +1817,7 @@
                         "label": "Standard Threshold",
                         "op_application": "-",
                         "op_transform": "c",
-                        "val_transform": 28.0
+                        "val_transform": 23.0
                     }
                 ],
                 "effects": [
@@ -1722,7 +1884,7 @@
             {
                 "id": 139,
                 "name": "Feeling Adjustment",
-                "description": "Either change the value directly based on the narrative, or roll to include some chance.",
+                "description": "Either change the value directly based on the narrative, or roll to include chance.",
                 "outcome_type": "dice_system",
                 "roller_type": "dnd",
                 "effects": [
@@ -1793,6 +1955,32 @@
                 ]
             },
             {
+                "id": 195,
+                "name": "Getting Her Pregnant",
+                "description": "Success means she **does** get pregnant, even if this is not what you want.\r\n\r\n- *No birth control:* **5/50** chance (10%)\r\n- *Birth control:* **2/50** chance\r\n- *Double birth control:* still a **1/50** chance by rolling *Natural Max*",
+                "numeric_range": [1, 50],
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 194},
+                        "op_application": "-",
+                        "op_transform": "*",
+                        "val_transform": 3.0
+                    },
+                    {
+                        "infield": {"role": "target char", "attrib_id": 194},
+                        "op_application": "-",
+                        "op_transform": "*",
+                        "val_transform": 3.0
+                    },
+                    {
+                        "label": "Base Threshold",
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "val_transform": 16.0
+                    }
+                ]
+            },
+            {
                 "id": 63,
                 "name": "How an Advance is Received",
                 "description": "Does the person draw back or are they happy about the initiative taken. For example, attempt to hold their hand. The attempt could be physical or spoken.\r\n\r\nFor actions that are primarily about being physical and erotic rather than emotional, use **Steamy Action** instead.",
@@ -1826,51 +2014,104 @@
                         "label": "Standard Threshold",
                         "op_application": "-",
                         "op_transform": "c",
-                        "val_transform": 28.0
+                        "val_transform": 23.0
                     }
                 ],
                 "effects": [
                     {
+                        "label": "Damping Factor Temp",
+                        "infield": {"role": "target char", "attrib_id": 7},
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 186},
+                        "op_application": ":=",
+                        "op_transform": "/",
+                        "val_transform": 30.0
+                    },
+                    {
+                        "label": "Damping Factor",
                         "get_val_from": "outcome",
-                        "outfield": {"role": "target char", "attrib_id": 7},
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 184},
+                        "op_application": ":=",
                         "op_transform": "c",
-                        "val_transform": 3.0,
+                        "val_transform": 0.0
+                    },
+                    {
+                        "label": "Damping Factor",
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 186},
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 184},
+                        "op_application": "-"
+                    },
+                    {
+                        "label": "Damping Factor",
+                        "get_val_from": "outfield",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 184},
+                        "op_application": ":=",
+                        "op_transform": "^x",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "label": "Base Delta",
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 186},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 4.0,
                         "outcome_success": "success_any"
                     },
                     {
+                        "label": "Base Delta",
                         "get_val_from": "outcome",
-                        "outfield": {"role": "target char", "attrib_id": 7},
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 186},
                         "op_transform": "c",
-                        "val_transform": 3.0,
+                        "val_transform": 4.0,
                         "outcome_success": "success_major"
                     },
                     {
+                        "label": "Base Delta",
                         "get_val_from": "outcome",
-                        "outfield": {"role": "target char", "attrib_id": 7},
-                        "op_application": "-",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 186},
+                        "op_application": ":=",
                         "op_transform": "c",
                         "outcome_success": "failure_minor"
                     },
                     {
+                        "label": "Base Delta",
                         "get_val_from": "outcome",
-                        "outfield": {"role": "target char", "attrib_id": 7},
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 186},
                         "op_application": "-",
                         "op_transform": "c",
                         "val_transform": 3.0,
                         "outcome_success": "failure_major"
                     },
                     {
+                        "label": "Damped Delta",
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 186},
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 184},
+                        "op_application": "*"
+                    },
+                    {
+                        "label": "Damped Delta",
+                        "get_val_from": "outfield",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 184},
+                        "op_application": ":=",
+                        "op_transform": "floor"
+                    },
+                    {
+                        "label": "Apply The Delta",
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 184},
+                        "outfield": {"role": "target char", "attrib_id": 7}
+                    },
+                    {
                         "get_val_from": "outcome",
                         "outfield": {"role": "target char", "attrib_id": 11},
                         "op_transform": "c",
-                        "val_transform": 5.0,
+                        "val_transform": 6.0,
                         "outcome_success": "success_any"
                     },
                     {
                         "get_val_from": "outcome",
                         "outfield": {"role": "target char", "attrib_id": 11},
                         "op_transform": "c",
-                        "val_transform": 5.0,
+                        "val_transform": 6.0,
                         "outcome_success": "success_major"
                     },
                     {
@@ -1878,7 +2119,7 @@
                         "outfield": {"role": "target char", "attrib_id": 11},
                         "op_application": "-",
                         "op_transform": "c",
-                        "val_transform": 5.0,
+                        "val_transform": 6.0,
                         "outcome_success": "failure_major"
                     }
                 ]
@@ -1960,7 +2201,7 @@
             {
                 "id": 69,
                 "name": "Next Day",
-                "description": "Sets date/time and adjusts **Rested** status.",
+                "description": "Sets date/time and adjusts **Rested** status.\r\n\r\nAdd or remove any daily subscriptions here. Currently subscribed to the local newspaper.",
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -2048,6 +2289,14 @@
                         "op_transform": "c"
                     },
                     {
+                        "label": "Daily News Delivery",
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 82},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 2.0
+                    },
+                    {
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "item_id": 91, "attrib_id": 88},
                         "op_application": ":=",
@@ -2060,13 +2309,6 @@
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": 0.0
-                    },
-                    {
-                        "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 82},
-                        "op_application": ":=",
-                        "op_transform": "c",
-                        "val_transform": 2.0
                     }
                 ]
             },
@@ -2128,7 +2370,7 @@
             {
                 "id": 145,
                 "name": "Propose Next Level",
-                "description": "Attempt to advance the relationship, for example, marriage proposal. If successful, change the **Relationship Status** of that person.\r\n\r\nOn failure, it would be best to wait before trying again. To try again without waiting, increase the difficulty by one class each time.",
+                "description": "Attempt to advance the relationship, for example, marriage proposal. If successful, change the **Relationship Status** of that person.\r\n\r\nSome status changes, such as **Love Interest,** can be set unofficially and do not require a roll.\r\n\r\nOn failure, it would be best to wait before trying again. To try again without waiting, increase the difficulty by one class each time.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -2249,7 +2491,7 @@
             {
                 "id": 157,
                 "name": "Steamy Action",
-                "description": "Immediate physical focus takes priority over emotional feelings once the mood is right. This could be a bedroom scene or any physically focused situation such as dancing or making out. Clothing bonus may change based on what fits the new situation better.\r\n\r\n*Minor Failure* incurs a small penalty, and *Major Failure* generally indicates that your attempted action gets rejected.",
+                "description": "Immediate physical focus takes priority over emotional feelings once the mood is right. This could be a bedroom scene or any physically focused situation such as dancing or making out.\r\n\r\nClothing bonus may change based on what fits the new situation better. Adjust **Intensity of Act,** and for daring acts relative to current arousal, increase difficulty.\r\n\r\n*Minor Failure* incurs a small penalty, and *Major Failure* generally indicates that your attempted action gets rejected.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -2394,7 +2636,9 @@
             {"item_id": 82, "quantity": 2.0},
             {"item_id": 87, "quantity": 1.0},
             {"item_id": 91, "quantity": 1.0},
-            {"item_id": 92, "quantity": 1.0}
+            {"item_id": 92, "quantity": 1.0},
+            {"item_id": 184, "quantity": 0.0},
+            {"item_id": 186, "quantity": 0.0}
         ]
     },
     "progress": []

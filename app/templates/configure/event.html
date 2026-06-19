@@ -668,7 +668,12 @@ function syncInnerExprState(card) {
     const op = opSelector.value;
     const isConstant = (op === "{{ Operation.CONST }}");
     const isRecall = (op === "{{ Operation.MEM_RECALL }}");
-    const isAbs = (op === "{{ Operation.ABS }}");
+    const isUnary = ([
+        "{{ Operation.ABS }}",
+        "{{ Operation.ROUND }}",
+        "{{ Operation.FLOOR }}",
+        "{{ Operation.CEIL }}"
+        ].includes(op));
     const hasNoTransform = (op === ""); 
     const isEff = card.classList.contains('eff-card');
     
@@ -678,7 +683,7 @@ function syncInnerExprState(card) {
     // --- 1. VISIBILITY RULES ---
     
     if (lhs) lhs.classList.toggle('hidden', isConstant || isRecall);
-    if (rhsGroup) rhsGroup.classList.toggle('hidden', hasNoTransform || isRecall || isAbs);
+    if (rhsGroup) rhsGroup.classList.toggle('hidden', hasNoTransform || isRecall || isUnary);
 
     // --- 2. ORDERING RULES (Visual Equation Flow) ---
     
@@ -689,7 +694,7 @@ function syncInnerExprState(card) {
         rhsGroup.style.order = "1";
         opSelector.style.order = "2";
     } 
-    else if (op === "{{ Operation.POW_OF_VAL }}" || op === "{{ Operation.ABS }}") {
+    else if (op === "{{ Operation.POW_OF_VAL }}" || isUnary) {
         // ( [ 10 ] ^ Fetched Value )
         rhsGroup.style.order = "1";
         opSelector.style.order = "2";
@@ -1208,6 +1213,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         <option value="{{ Operation.SUB }}" {{ 'selected'
                             if factor and factor.op_application == Operation.SUB }}>
                             Decrease By ({{ Operation.Repr[Operation.SUB] }})
+                        </option>
+                        <option value="{{ Operation.MULT }}" {{ 'selected'
+                            if factor and factor.op_application == Operation.MULT }}>
+                            Multiply By ({{ Operation.Repr[Operation.MULT] }})
+                        </option>
+                        <option value="{{ Operation.DIV }}" {{ 'selected'
+                            if factor and factor.op_application == Operation.DIV }}>
+                            Divide By ({{ Operation.Repr[Operation.DIV] }})
                         </option>
                     </select>
                 </div>

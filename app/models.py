@@ -1112,9 +1112,9 @@ class Operation:
     MULT = '*'
     DIV = '/'
     MOD = '%'
-    ABS = 'abs'
     VAL_TO_POW = 'x^'
     POW_OF_VAL = '^x'
+    ABS = 'abs'
     ROUND = 'round'
     FLOOR = 'floor'
     CEIL = 'ceil'
@@ -1138,10 +1138,10 @@ class Operation:
         MOD:        'Mod',
         VAL_TO_POW: 'xⁿ',
         POW_OF_VAL: 'nˣ',
+        ABS:        'Abs',
         ROUND:      'Round',
         FLOOR:      'Floor',
         CEIL:       'Ceiling',
-        ABS:        'Abs',
         MIN:        'Min',
         MAX:        'Max',
         SOFTCAP:    'SoftCap',

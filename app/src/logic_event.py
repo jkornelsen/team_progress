@@ -644,6 +644,7 @@ def preview_effects(event, role_entities, roll_val=None):
         #   current -> source (impact_value) = final
         results.append({
             'effect_id': eff.id,
+            'label': eff.label,
             'target_name': target_name,
             'current_value': current_val,
             'current_display': current_display or \
@@ -705,7 +706,8 @@ def resolve_effects(event, role_entities, roll_val, tier=None):
         if eff.op_application == Operation.ASSIGN:
             final_val = impact
         else:
-            final_val = apply_operation(current_val, impact, eff.op_application)
+            final_val = apply_operation(
+                current_val, impact, eff.op_application)
         if lkey is not None:
             ledger[lkey] = final_val
  

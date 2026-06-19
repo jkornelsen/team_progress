@@ -4,6 +4,7 @@ from flask import (
     Blueprint, request, session, flash, redirect, url_for, render_template,
     g, jsonify)
 from http import HTTPStatus
+from sqlalchemy import select, or_
 from app.models import (
     GENERAL_ID, StorageType, ENTITIES, db,
     Entity, Item, Character, Location, Attrib, Event, 
@@ -862,8 +863,8 @@ def lookup_entity(ent_type, id):
     # Results is a dict of lists: { 'Category Name': [ {label, name, link, meta}, ... ] }
     results = {}
 
-    # 1. Check Pile (Who has this item / Where is this item?)
-    if ent_type == 'item':
+    if ent_type == Item.TYPENAME:
+        # Who has this item
         piles = Pile.query.filter_by(game_token=game_token, item_id=id).all()
         key_name = 'Physical Presence'
         results[key_name] = []
@@ -877,23 +878,7 @@ def lookup_entity(ent_type, id):
                 'meta': f'Qty: {p.quantity}'
             })
 
-    # 2. Check Attributes (Who uses this attribute?)
-    elif ent_type == 'attrib':
-        values = AttribVal.query.filter_by(game_token=game_token, attrib_id=id).all()
-        key_name = 'Applied to Entities'
-        results[key_name] = []
-        for v in values:
-            subject = db.session.get(Entity, (game_token, v.subject_id))
-            results[key_name].append({
-                'label': f'Stat on {subject.entity_type}',
-                'name': subject.name,
-                'link': url_for(f'play.play_{subject.entity_type}', id=subject.id),
-                'meta': f'Value: {v.value}'
-            })
-
-    # 3. Check Recipe Dependencies (Recursive analysis)
-    elif ent_type == 'item':
-        # As an ingredient
+        # Recipe dependencies
         sources = RecipeSource.query.filter_by(game_token=game_token, item_id=id).all()
         key_name = 'Used as Ingredient'
         results[key_name] = []
@@ -907,8 +892,46 @@ def lookup_entity(ent_type, id):
                 'meta': f'Needs {s.q_required}'
             })
 
-    # 4. Check Navigation (What links to this location?)
-    elif ent_type == 'location':
+    elif ent_type == Attrib.TYPENAME:
+        # Who uses this attribute
+        stmt = select(AttribVal).filter_by(game_token=game_token, attrib_id=id)
+        attrib_vals = db.session.execute(stmt).scalars().all()
+        key_name = 'Applied to Entities'
+        results[key_name] = []
+        for av in attrib_vals:
+            subject = db.session.get(Entity, (game_token, av.subject_id))
+            results[key_name].append({
+                'label': f'Stat on {subject.entity_type}',
+                'name': subject.name,
+                'link': url_for(f'play.play_{subject.entity_type}', id=subject.id),
+                'meta': f'Value: {av.value}'
+            })
+
+        # Events that use this attribute
+        stmt = (
+            select(Event)
+            .join(EventFactor, (Event.id == EventFactor.event_id) &
+                               (Event.game_token == EventFactor.game_token))
+            .join(EventField, or_(EventFactor.infield_id == EventField.id,
+                                  EventFactor.outfield_id == EventField.id))
+            .where(
+                EventField.game_token == game_token,
+                EventField.attrib_id == id
+            )
+            .distinct()
+        )
+        events = db.session.execute(stmt).scalars().all()
+        key_name = 'Used in Events'
+        results[key_name] = []
+        for evt in events:
+            results[key_name].append({
+                'label': f'Used in event',
+                'name': evt.name,
+                'link': url_for(f'play.play_event', id=evt.id)
+            })
+
+    elif ent_type == Location.TYPENAME:
+        # What links to this location
         dests = LocDest.query.filter(
             LocDest.game_token == game_token,
             (LocDest.loc1_id == id) | (LocDest.loc2_id == id)
@@ -924,20 +947,28 @@ def lookup_entity(ent_type, id):
                 'link': url_for('play.play_location', id=other.id)
             })
 
-    # A. Check Entity Abilities (Who can trigger this?)
-    elif ent_type == 'event':
-        abilities = EntityAbility.query.filter_by(game_token=game_token, event_id=id).all()
-        if abilities:
+    elif ent_type == Event.TYPENAME:
+        # Who can trigger this
+        stmt = (
+            select(EntityAbility, Entity)
+            .join(Entity, (EntityAbility.entity_id == Entity.id) & 
+                          (EntityAbility.game_token == Entity.game_token))
+            .where(
+                EntityAbility.game_token == game_token,
+                EntityAbility.event_id == id
+            )
+            .order_by(name_stripped(Entity.name))
+        )
+        rows = db.session.execute(stmt).all()
+        if rows:
             key_name = 'Can Be Called By'
             results[key_name] = []
-            for ab in abilities:
-                owner = db.session.get(Entity, (game_token, ab.entity_id))
-                if owner:
-                    results[key_name].append({
-                        'label': f'Ability on {owner.entity_type}',
-                        'name': owner.name,
-                        'link': url_for(f'play.play_{owner.entity_type}', id=owner.id),
-                    })
+            for _, owner in rows:
+                results[key_name].append({
+                    'label': f'Ability on {owner.entity_type}',
+                    'name': owner.name,
+                    'link': url_for(f'play.play_{owner.entity_type}', id=owner.id),
+                })
 
     # --- GLOBAL DESCRIPTION SCAN (For Markdown Links) ---
     # This handles things like [Red Bar Rate](/play/event/46)
@@ -959,10 +990,14 @@ def lookup_entity(ent_type, id):
         if ent.id == id and ent.entity_type == ent_type:
             continue # Don't list self
         if ent.description and search_str in ent.description:
+            if ent.entity_type == Attrib.TYPENAME:
+                link = url_for(f'configure.edit_attrib', id=ent.id)
+            else:
+                link = url_for(f'play.play_{ent.entity_type}', id=ent.id)
             results.setdefault(mention_key, []).append({
                 'label': f'{ent.entity_type.capitalize()} Desc',
                 'name': ent.name,
-                'link': url_for(f'play.play_{ent.entity_type}', id=ent.id),
+                'link': link
             })
 
     return render_template(
