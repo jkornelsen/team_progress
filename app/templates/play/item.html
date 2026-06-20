@@ -116,26 +116,26 @@
                 <h3>Production Recipes</h3>
                 <div class="recipe-list">
                     {% for r_data in enriched_recipes %}
-                        {% set r = r_data['recipe'] %}
-                    <div class="recipe-card {{ 'active' if progress and progress.recipe_id == r.id }}">
+                        {% set rec = r_data['recipe'] %}
+                    <div class="recipe-card {{ 'active' if progress and progress.recipe_id == rec.id }}">
                         <div class="recipe-header flex-between">
                             <strong>
-                                {% if r.is_producer %}
-                                    Output: {{ r.net_product_change | formatNum }}
-                                {% elif r.is_consumer %}
-                                    Consumes: {{ r.net_product_change | abs | formatNum }}
+                                {% if rec.is_producer %}
+                                    Output: {{ rec.net_product_change | formatNum }}
+                                {% elif rec.is_consumer %}
+                                    Consumes: {{ rec.net_product_change | abs | formatNum }}
                                 {% else %}
                                     <span title="Does not change main quantity" style="cursor: help;">🛠️</span>
                                 {% endif %}
                             </strong>
-                            {% if r.is_location_hosted %}
+                            {% if rec.is_location_hosted %}
                                 <span title="Automated production at location.">🏭</span>
                             {% endif %}
                             <span class="label-like">
-                                {% if r.instant %}
+                                {% if rec.instant %}
                                     ⚡Instant
                                 {% else %}
-                                    {{ r.rate_duration | formatNum }}s
+                                    {{ rec.rate_duration | formatNum }}s
                                 {% endif %}
                             </span>
                         </div>
@@ -222,61 +222,62 @@
 
                         <div class="recipe-controls spacious-top">
                             {% set letter = link_letters.next() %}
-                            <div id="controls-{{ r.id }}" data-recipe-hotkey="{{ letter }}">
-                                {% if r.instant %}
+                            <div id="controls-{{ rec.id }}" data-recipe-hotkey="{{ letter }}">
+                                {% if rec.instant %}
                                     <div class="flex-row align-center">
-                                        <button id="gain-{{ r.id }}"
-                                            onclick="gainItem({{ r.id }}, {{ r_data.host_id }})"
+                                        <button id="gain-{{ rec.id }}"
+                                            onclick="gainItem({{ rec.id }}, {{ r_data.host_id }})"
                                             class="go-button {{ 'hidden' if not r_data.can_produce }}">
                                             <span class="hotkey-indicator">{{ letter }}</span>
                                             Gain Instant
                                         </button>
-                                        <div id="instant-controls-{{ r.id }}"
+                                        <div id="instant-controls-{{ rec.id }}"
                                              class="batch-selector flex-row align-center {{ 'hidden' if not r_data.can_produce }}"
                                              style="margin-left: 10px;">
-                                            <input type="text" id="instant-batches-{{ r.id }}" 
+                                            <input type="text" id="instant-batches-{{ rec.id }}" 
                                                     value="{{ r_data.max_batches }}" 
                                                     data-max="{{ r_data.max_batches }}"
-                                                    onchange="setBatchQty('{{ r.id }}', this.value)"
+                                                    onchange="setBatchQty('{{ rec.id }}', this.value)"
                                                     min="1" max="{{ r_data.max_batches }}" 
                                                     style="max-width: 9ch;"
                                                     class="mini-input">
                                             
                                             <div class="presets">
                                                 <button type="button" class="tag-button" 
-                                                    onclick="setBatchQty('{{ r.id }}', '1')">1</button>
+                                                    onclick="setBatchQty('{{ rec.id }}', '1')">1</button>
                                                 <button type="button" class="tag-button" 
-                                                    onclick="setBatchQty('{{ r.id }}', 'half')">½</button>
+                                                    onclick="setBatchQty('{{ rec.id }}', 'half')">½</button>
                                                 <button type="button" class="tag-button" 
-                                                    onclick="setBatchQty('{{ r.id }}', 'max')">Max</button>
+                                                    onclick="setBatchQty('{{ rec.id }}', 'max')">Max</button>
                                             </div>
                                         </div>
                                     </div>
                                 {% else %}
                                     <div class="flex-row align-center">
-                                        <button id="start-{{ r.id }}"
-                                                onclick="startProd({{ r.id }}, {{ r_data.host_id }})"
+                                        <button id="start-{{ rec.id }}"
+                                                onclick="startProd({{ rec.id }}, {{ r_data.host_id }})"
                                                 class="go-button {{ 'hidden' if not r_data.can_produce or
-                                                (progress and progress.recipe_id == r.id) }}">
+                                                (progress and progress.recipe_id == rec.id) }}">
                                             <span class="hotkey-indicator">{{ letter }}</span>
                                             Start
                                         </button>
-                                        <button id="stop-{{ r.id }}"
-                                                onclick="stopProd({{ r_data.host_id }}, {{ r.product_id }})"
+                                        <button id="stop-{{ rec.id }}"
+                                                onclick="stopProd({{ r_data.host_id }}, {{ rec.product_id }})"
                                                 class="dangerous-button {{ 'hidden' if not
-                                                (progress and progress.recipe_id == r.id) }}">
+                                                (progress and progress.recipe_id == rec.id) }}">
                                             <span class="hotkey-indicator">{{ letter }}</span>
                                             Stop
                                         </button>
 
                                         <div class="flex-row align-center {{ 'hidden'
-                                                if not r_data.can_produce or (
-                                                progress and progress.recipe_id == r.id) }}" 
-                                             id="stop-at-wrapper-{{ r.id }}"
+                                                if not r_data.can_produce or 
+                                                not rec.net_product_change or (
+                                                progress and progress.recipe_id == rec.id) }}" 
+                                             id="stop-at-wrapper-{{ rec.id }}"
                                              style="margin-left: 10px;">
-                                            <label for="batches-stop-{{ r.id }}">Batches</label>
+                                            <label for="batches-stop-{{ rec.id }}">Batches</label>
                                             <input type="number" 
-                                                   id="batches-stop-{{ r.id }}" 
+                                                   id="batches-stop-{{ rec.id }}" 
                                                    name="batches_stop" 
                                                    placeholder="∞" 
                                                    step="1"
@@ -284,8 +285,8 @@
                                                    value=""
                                                    class="mini-input" 
                                                    style="width: 7ch;"
-                                                   data-rate-amount="{{ r.rate_amount }}">
-                                            <span id="stop-at-display-{{ r.id }}"
+                                                   data-net-change="{{ rec.net_product_change }}">
+                                            <span id="stop-at-display-{{ rec.id }}"
                                                   class="hidden text-accent"
                                                   style="font-weight: bold;"></span>
                                         </div>
@@ -293,12 +294,12 @@
                                 {% endif %}
 
                                 {# Message why production is blocked #}
-                                <div id="blocked-{{ r.id }}" 
+                                <div id="blocked-{{ rec.id }}" 
                                      class="blocked-container flex-row align-center {{ 'hidden' if r_data.can_produce }}">
                                     
                                     {% if r_data.host_id is none %}
                                         <span class="text-danger">
-                                            {% if r.is_location_hosted %}
+                                            {% if rec.is_location_hosted %}
                                                 No active location
                                             {% else %}
                                                 No active character
@@ -322,10 +323,10 @@
                                     (function() {
                                         {# Set up initial hotkey mapping #}
                                         const letter = '{{ letter }}';
-                                        const recipeId = '{{ r.id }}';
-                                        const isInstant = {{ 'true' if r.instant else 'false' }};
+                                        const recipeId = '{{ rec.id }}';
+                                        const isInstant = {{ 'true' if rec.instant else 'false' }};
                                         const canProduce = {{ 'true' if r_data.can_produce else 'false' }};
-                                        const isRunning = {{ 'true' if progress and progress.recipe_id == r.id else 'false' }};
+                                        const isRunning = {{ 'true' if progress and progress.recipe_id == rec.id else 'false' }};
 
                                         if (isRunning) {
                                             window.linkForKey[letter] = `#stop-${recipeId}`;
@@ -337,14 +338,14 @@
                             </div>
 
                             <!-- Production Bar -->
-                            <div id="prog-container-{{ r.id }}" 
-                                 class="progress-container {{ 'hidden' if not (progress and progress.recipe_id == r.id) }}">
-                                <progress id="prog-bar-{{ r.id }}" class="progressbar" value="0" max="100"></progress>
-                                <span id="prog-label-{{ r.id }}" class="progress-label">0%</span>
+                            <div id="prog-container-{{ rec.id }}" 
+                                 class="progress-container {{ 'hidden' if not (progress and progress.recipe_id == rec.id) }}">
+                                <progress id="prog-bar-{{ rec.id }}" class="progressbar" value="0" max="100"></progress>
+                                <span id="prog-label-{{ rec.id }}" class="progress-label">0%</span>
                             </div>
                         </div>
                     </div>
-                    {% endfor %}
+                    {% endfor %} <!-- r_data / rec -->
                 </div>
             </section>
             {% endif %}
@@ -475,6 +476,12 @@
                                         <span class="label-like">Slot: <strong>{{ pile.slot }}</strong></span>
                                         <button id="unequip-btn" class="go-button">une{{ hk.bracket('q') }}uip</button>
                                     </div>
+                                {% elif item.slot %}
+                                    <div class="action-box">
+                                        <span class="label-like">(not equipped)</span>
+                                        <input type="hidden" id="equip-slot" value="{{ item.slot }}">
+                                        <button id="equip-btn" class="go-button">e{{ hk.bracket('q') }}uip to {{ item.slot }}</button>
+                                    </div>
                                 {% else %}
                                     {% if available_slots %}
                                         {% set has_controls = true %}
@@ -486,7 +493,7 @@
                                                     </option>
                                                 {% endfor %}
                                             </select>
-                                            <button id="equip-btn" class="go-button">e[{{ hk.bracket('q') }}uip</button>
+                                            <button id="equip-btn" class="go-button">e{{ hk.bracket('q') }}uip</button>
                                         </div>
                                     {% endif %}
                                 {% endif %}
@@ -589,10 +596,10 @@ const startedAtZero = (parseFloat("{{ pile.quantity }}".replace(/,/g, '')) || 0)
 
 const recipeMetadata = {
     {% for r_data in enriched_recipes %}
-        {% set r = r_data['recipe'] %}
-    "{{ r.id }}": {
+        {% set rec = r_data['recipe'] %}
+    "{{ rec.id }}": {
         "can_produce": {{ 'true' if r_data.can_produce else 'false' }},
-        "rate_amount": {{ r.rate_amount }},
+        "rate_amount": {{ rec.rate_amount }},
         "sources": [
             {% for s in r_data.sources %}
             {
@@ -741,33 +748,33 @@ async function updateStatus() {
 
     // 8. Update Recipes & Progress Bars
     if (data.recipes) {
-        data.recipes.forEach(r => {
-            const container = document.getElementById(`controls-${r.recipe_id}`);
+        data.recipes.forEach(rec => {
+            const container = document.getElementById(`controls-${rec.recipe_id}`);
             if (!container) return;
 
             const card = container.closest('.recipe-card');
             const letter = container.getAttribute('data-recipe-hotkey');
 
-            const startBtn = document.getElementById(`start-${r.recipe_id}`);
-            const stopBtn = document.getElementById(`stop-${r.recipe_id}`);
-            const gainBtn = document.getElementById(`gain-${r.recipe_id}`);
-            const blockedDiv = document.getElementById(`blocked-${r.recipe_id}`);
-            const instantControls = document.getElementById(`instant-controls-${r.recipe_id}`);
+            const startBtn = document.getElementById(`start-${rec.recipe_id}`);
+            const stopBtn = document.getElementById(`stop-${rec.recipe_id}`);
+            const gainBtn = document.getElementById(`gain-${rec.recipe_id}`);
+            const blockedDiv = document.getElementById(`blocked-${rec.recipe_id}`);
+            const instantControls = document.getElementById(`instant-controls-${rec.recipe_id}`);
 
-            const progContainer = document.getElementById(`prog-container-${r.recipe_id}`);
+            const progContainer = document.getElementById(`prog-container-${rec.recipe_id}`);
             // If server says recipe is currently valid, clear red text
-            if (r.can_produce && card) {
+            if (rec.can_produce && card) {
                 card.querySelectorAll('.text-danger').forEach(
                     el => el.classList.remove('text-danger'));
             }
 
             // Check if this recipe is the one currently running
             const isRunning = (
-                main.is_ongoing && main.active_recipe_id === r.recipe_id);
-            const stopAtWrapper = document.getElementById(`stop-at-wrapper-${r.recipe_id}`);
-            const batchesStopInput = document.getElementById(`batches-stop-${r.recipe_id}`);
+                main.is_ongoing && main.active_recipe_id === rec.recipe_id);
+            const stopAtWrapper = document.getElementById(`stop-at-wrapper-${rec.recipe_id}`);
+            const batchesStopInput = document.getElementById(`batches-stop-${rec.recipe_id}`);
             const batchesStopLabel = stopAtWrapper?.querySelector('label');
-            const stopAtDisplay = document.getElementById(`stop-at-display-${r.recipe_id}`);
+            const stopAtDisplay = document.getElementById(`stop-at-display-${rec.recipe_id}`);
 
             if (isRunning) {
                 if (startBtn) startBtn.classList.add('hidden');
@@ -777,13 +784,13 @@ async function updateStatus() {
 
                 if (stopBtn) {
                     stopBtn.classList.remove('hidden');
-                    if (letter) window.linkForKey[letter] = `#stop-${r.recipe_id}`;
+                    if (letter) window.linkForKey[letter] = `#stop-${rec.recipe_id}`;
                 }
                 if (progContainer) {
                     progContainer.classList.remove('hidden');
                     if (main.start_time && main.rate_duration) {
                         animateProgress(
-                            r.recipe_id, main.start_time, main.rate_duration);
+                            rec.recipe_id, main.start_time, main.rate_duration);
                     }
                 }
                 if (stopAtWrapper) {
@@ -801,7 +808,7 @@ async function updateStatus() {
                 if (progContainer) progContainer.classList.add('hidden');
                 
                 isWaitingForServer = false;
-                const progBar = document.getElementById(`prog-bar-${r.recipe_id}`);
+                const progBar = document.getElementById(`prog-bar-${rec.recipe_id}`);
                 if (progBar && progBar.value > 0) {
                     if (animationFrameId) {
                         cancelAnimationFrame(animationFrameId);
@@ -813,27 +820,34 @@ async function updateStatus() {
                     stopAtDisplay.classList.add('hidden');
                 }
 
-                if (r.can_produce) {
+                if (rec.can_produce) {
                     // CAN PRODUCE
                     if (stopBtn) stopBtn.classList.add('hidden');
                     if (blockedDiv) blockedDiv.classList.add('hidden');
 
                     if (startBtn) {
                         startBtn.classList.remove('hidden');
-                        if (letter) window.linkForKey[letter] = `#start-${r.recipe_id}`;
+                        if (letter) window.linkForKey[letter] = `#start-${rec.recipe_id}`;
                         if (stopAtWrapper) {
                             if (batchesStopInput && batchesStopInput.classList.contains('hidden')) {
                                 batchesStopInput.value = "";
                             }
-                            stopAtWrapper.classList.remove('hidden');
-                            if (batchesStopInput) batchesStopInput.classList.remove('hidden');
-                            if (batchesStopLabel) batchesStopLabel.classList.remove('hidden');
+
+                            const netChange = parseFloat(batchesStopInput?.dataset.netChange) || 0;
+                            if (netChange === 0) {
+                                stopAtWrapper.classList.add('hidden');
+                            } else {
+
+                                stopAtWrapper.classList.remove('hidden');
+                                if (batchesStopInput) batchesStopInput.classList.remove('hidden');
+                                if (batchesStopLabel) batchesStopLabel.classList.remove('hidden');
+                            }
                         }
                     }
                     if (gainBtn) {
                         gainBtn.classList.remove('hidden');
                         if (instantControls) instantControls.classList.remove('hidden');
-                        if (letter) window.linkForKey[letter] = `#gain-${r.recipe_id}`;
+                        if (letter) window.linkForKey[letter] = `#gain-${rec.recipe_id}`;
                     }
                 } else {
                     // CAN'T PRODUCE
@@ -846,12 +860,12 @@ async function updateStatus() {
                     if (blockedDiv) {
                         blockedDiv.classList.remove('hidden');
 
-                        const isStorageFull = r.reason.toLowerCase().includes("limit reached");
+                        const isStorageFull = rec.reason.toLowerCase().includes("limit reached");
                         const icon = blockedDiv.querySelector('.info-icon');
                         const msg = blockedDiv.querySelector('.blocked-msg');
                         if (icon) {
                             icon.classList.toggle('hidden', isStorageFull);
-                            icon.title = r.reason;
+                            icon.title = rec.reason;
                         }
                         if (msg) msg.textContent = isStorageFull ? 'Storage full' : 'Requirements not met';
                     }
@@ -987,10 +1001,10 @@ async function startProd(recipeId, targetHostId) {
     const batchesStopInput = document.getElementById(`batches-stop-${recipeId}`);
     if (batchesStopInput && batchesStopInput.value !== '') {
         const batches = parseFloat(batchesStopInput.value);
-        const rateAmount = parseFloat(batchesStopInput.dataset.rateAmount) || 1;
+        const netChange = parseFloat(batchesStopInput.dataset.netChange) || 1;
         const currentQty = parseFloat(
             document.getElementById('main-qty-display')?.textContent.replace(/,/g, '')) || 0;
-        const stopAt = currentQty + batches * rateAmount;
+        const stopAt = currentQty + batches * netChange;
         fd.append('stop_at', stopAt);
     }
 

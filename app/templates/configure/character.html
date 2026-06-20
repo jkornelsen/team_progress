@@ -246,7 +246,7 @@
                value="{{ qty }}" step="any" placeholder="Qty">
 
         <select name="items[{{ index }}][slot]">
-            <option value="">(In Pack)</option>
+            <option value="">(Stored)</option>
             {% for slot in slots %}
                 <option value="{{ slot }}" {{ 'selected' if slot == selected_slot }}>
                     {{ slot }}

@@ -257,6 +257,7 @@ class Item(Entity):
     storage_type = db.Column(
         db.String(1), nullable=False, default=StorageType.CARRIED)
     q_limit = db.Column(db.Float, default=0.0)
+    slot = db.Column(db.String(50))
     loc_hosted = db.Column(db.Boolean, default=False)
     toplevel = db.Column(db.Boolean, default=False) # i.e. pinned
     masked = db.Column(db.Boolean, default=False)
@@ -269,6 +270,7 @@ class Item(Entity):
             "q_limit": self.q_limit,
             "limits_for": sorted([l.to_dict() for l in self.limits_for], 
                                 key=lambda x: x['owner_id']),
+            "slot": self.slot,
             "loc_hosted": self.loc_hosted,
             "toplevel": self.toplevel,
             "masked": self.masked,

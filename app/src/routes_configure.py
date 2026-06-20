@@ -162,6 +162,8 @@ def edit_item(id):
                     owner_id=owner_id,
                     q_limit=q_limit
                 ))
+        item.slot = req.get_str('slot') \
+            if item.storage_type == StorageType.CARRIED else ''
 
         item.toplevel = 'toplevel' in request.form
         item.loc_hosted = 'loc_hosted' in request.form
@@ -281,6 +283,7 @@ def edit_item(id):
         return redirect_back('configure.index') 
 
     # GET: Prepare variables for the template
+    overall = db.session.get(Overall, g.game_token)
     gen_qty = 0
     if item.id is not None:
         gen_pile = Pile.query.filter_by(
@@ -301,7 +304,8 @@ def edit_item(id):
             game_token=game_token).order_by(name_stripped()).all(),
         all_events=Event.query.filter_by(
             game_token=game_token).order_by(name_stripped()).all(),
-        recipes=item.recipes if item else []
+        recipes=item.recipes if item else [],
+        slots=overall.slots
     )
 
 @configure_bp.route('/location/<int:id>', methods=['GET', 'POST'])

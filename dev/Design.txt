@@ -4,22 +4,11 @@
 
 ---- functional, tightening, quality of life ----
 
-petrol recipe didn't consume when setting to 1 batch
-
-daal and rice shows qty 0
+daal and rice shows qty 0 when at limit
     when viewing general storage item "ate" with qty 1/1
     context is in kitchen
     shows qty 4 as expected when ate is 0/1
-
-comparing whether two attribs are equal is possible but prohibitively complex
-    the proper way would be to allow comparison to another field,
-        or to the running total
-    maybe we could compare to running total during the roll rather than making
-        it a requirement to roll,
-        then use that result to affect the roll
-    can we currently read the running total and a field in the same row?
-    our current solution multiplies the abs val of the difference by a large penalty
-        that may work once or twice but this behavior is more commonly useful than that
+    also shows as expected when limit is increased to 2
 
 travel with on char play
     arriving somewhere brings up play loc

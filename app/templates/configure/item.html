@@ -147,6 +147,21 @@
                     </div>
                 </fieldset>
             </div>
+            {% if slots %}
+            <div>
+                <label id="equip-slot-label">
+                    Equips To Slot:
+                    <select name="slot" id="equip-slot" class="">
+                        <option value="">(None — Selectable)</option>
+                        {% for slot in slots %}
+                            <option value="{{ slot }}" {{ 'selected' if slot == item.slot }}>
+                                {{ slot }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </label>
+            </div>
+            {% endif %}
         </section>
 
         <!-- 3. Recipes (Recursive Links) -->
@@ -340,12 +355,14 @@ h5 { margin-top: 0; color: var(--text-dim); }
 function syncStorageState() {
     const selectedType = document.querySelector('input[name="storage_type"]:checked').value;
     const quantityInput = document.getElementById('quantity-input');
+    const equipSlot = document.getElementById('equip-slot-label');
     const topLevelCheckbox = document.getElementById('toplevel');
     const locHostedCheckbox = document.getElementById('loc-hosted');
     const locHostedLabel = document.getElementById('loc-hosted-label');
     const limitList = document.getElementById('limit-list');
     const addLimitBtn = document.getElementById('add-limit-btn');
     
+    const isCarried = (selectedType === '{{ StorageType.CARRIED }}');
     const isUniversal = (selectedType === '{{ StorageType.UNIVERSAL }}');
     const isLocal = (selectedType === '{{ StorageType.LOCAL }}');
 
@@ -362,6 +379,8 @@ function syncStorageState() {
     limitList.querySelectorAll('input, select, button').forEach(el => {
         el.disabled = isUniversal;
     });
+
+    equipSlot.classList.toggle('hidden', !isCarried);
 
     locHostedCheckbox.disabled = !isLocal;
     locHostedLabel.classList.toggle('disabled', !isLocal);

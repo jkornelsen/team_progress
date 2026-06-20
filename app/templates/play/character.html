@@ -143,7 +143,7 @@
                                         {% endcall %}
                                         
                                         <span>{{ pile.quantity | formatNum if pile.quantity >= 2 else '' }}</span>
-                                        <span class="label-like">[{{ pile.slot }}]</span>
+                                        <span class="label-like">{{ pile.slot }}</span>
                                     </div>
                                 {% endfor %}
                             </div>
@@ -151,7 +151,7 @@
 
                         {% if backpack %}
                             <h3 class="{{ 'spacious-top' if equipped else '' }}">
-                                {{ 'Pack' if equipped else 'Inventory' }}
+                                {{ 'Stored' if equipped else 'Inventory' }}
                             </h3>
                             <div class="col-list twocol-list">
                                 {% for pile in backpack %}
