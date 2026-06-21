@@ -34,6 +34,9 @@ don't show duplicate destinations in play location
     same door positions (null in the example)
     maybe shouldn't allow in database
 
+catch smoothly
+    adding 'relationship status' twice gave an attribute error
+
 logic_navigation.py", line 300, in move_group
     db.session.flush()
 sqlalchemy.exc.OperationalError: (psycopg2.errors.DeadlockDetected) deadlock detected

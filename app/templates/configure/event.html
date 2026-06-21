@@ -597,7 +597,7 @@ function syncOuterExprState(card) {
     const appSelector = card.querySelector('.op-application-selector');
     const op = appSelector.value;
     const innerGroup = card.querySelector('[data-inner-group]');
-    const requiredGroup = card.querySelector('[data-slot-required]');
+    const requiredGroup = card.querySelector('[data-slot-valreq]');
     const attrSelect = card.querySelector('.id-attr');
     const negateToggle = card.querySelector('.negate-toggle-container');
 
@@ -639,11 +639,26 @@ function syncOuterExprState(card) {
 }
 
 function syncFieldAttribState(attrSelect) {
+    if (!attrSelect) return;
+    const card = attrSelect.closest('.factor-card');
+    const appSelector = card.querySelector('.op-application-selector');
+    const opApp = appSelector.value;
+    const innerOpSelect = card.querySelector('.op-inner-selector');
+    const opTransform = innerOpSelect.value;
+    const isComparison = COMPARISON_OPS.includes(opApp);
     const eventField = attrSelect.closest('.field-input-group');
     const modeSelect = eventField.querySelector('.field-mode-select');
 
     if (modeSelect.value === '{{ Participant.ATTR }}') {
-        ConfigEditor.syncAttribVal(attrSelect);
+        if (isComparison ||
+            (opApp === '{{ Operation.ASSIGN }}' && opTransform === '{{ Operation.CONST }}')
+        ) {
+            // Render enum input as a select box.
+            ConfigEditor.syncAttribVal(attrSelect);
+        } else {
+            // Render enum input as a numeric value.
+            ConfigEditor.syncAttribVal(attrSelect, true);
+        }
     } else {
         ConfigEditor.syncNumVal(attrSelect);
     }
@@ -766,10 +781,12 @@ document.addEventListener('change', function(e) {
 
     if (e.target.classList.contains('op-inner-selector')) {
         syncInnerExprState(card);
+        syncCardAttribState(card);
     }
     
     if (e.target.classList.contains('op-application-selector')) {
         syncOuterExprState(card);
+        syncCardAttribState(card);
     }
 });
 
@@ -1062,7 +1079,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     {% endfor %}
                 </select>
 
-                <div data-slot-required
+                <div data-slot-valreq
                     class="attribval-container flex-row align-center gap-5 hidden"
                     data-field-name="dets[{{ card_index }}][val_required]">
                     <!-- Filled by ConfigEditor.syncAttribVal -->

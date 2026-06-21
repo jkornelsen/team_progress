@@ -126,18 +126,18 @@ const ConfigEditor = {
 
     // --- 1. THE ATTRIBUTE SYNCERS (Smart UI: Binary/Enum/Numeric) ---
 
-    syncAttribVal: function(select) {
+    syncAttribVal: function(select, forceNumeric = false) {
         const { container, fieldName, attr } = this._getBasics(select);
         if (!container) return;
         const val = select.dataset.currentVal || "0";
         
-        if (attr && attr.is_binary) {
+        if (attr && attr.is_binary && !forceNumeric) {
             const isChecked = parseFloat(val) > 0;
             container.innerHTML = `
                 <input type="hidden" name="${fieldName}" value="${isChecked ? '1' : '0'}">
                 <input type="checkbox" ${isChecked ? 'checked' : ''} 
                        onchange="this.previousElementSibling.value = this.checked ? '1' : '0'">`;
-        } else if (attr && attr.enums) {
+        } else if (attr && attr.enums && !forceNumeric) {
             const opts = attr.enums.map((l, i) => 
                 `<option value="${i}" ${parseInt(val) === i ? 'selected' : ''}>${l}</option>`).join('');
             container.innerHTML = `<select name="${fieldName}">${opts}</select>`;

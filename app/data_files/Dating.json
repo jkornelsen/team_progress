@@ -741,11 +741,22 @@
                 "abilities": [101, 129]
             },
             {
+                "id": 211,
+                "name": "Bowling Alley",
+                "description": "Slippery shoes included. Cost for a game is 20 cash, and that covers the whole group.",
+                "attribs": [
+                    [130, 4.0]
+                ],
+                "abilities": [129]
+            },
+            {
                 "id": 103,
                 "name": "Business District",
                 "destinations": [
                     {"loc2_id": 105},
-                    {"loc2_id": 140}
+                    {"loc2_id": 140},
+                    {"loc2_id": 210},
+                    {"loc2_id": 211}
                 ]
             },
             {
@@ -836,14 +847,14 @@
             {
                 "id": 41,
                 "name": "Gym",
-                "description": "Improve your fitness and perhaps meet people.\r\n\r\nAvailable jobs: yoga instructor, masseuse, pick up weights, pool scraper.",
+                "description": "Improve your fitness and perhaps meet people. South wing of the **Rec Center.**\r\n\r\nAvailable jobs: yoga instructor, masseuse, pick up weights, pool scraper.",
                 "attribs": [
                     [85, 5.0],
                     [130, 4.0]
                 ],
                 "abilities": [101, 129],
                 "destinations": [
-                    {"loc2_id": 103}
+                    {"loc2_id": 210}
                 ]
             },
             {
@@ -870,6 +881,7 @@
                     {"loc2_id": 48},
                     {"loc2_id": 49},
                     {"loc2_id": 53},
+                    {"loc2_id": 55},
                     {"loc2_id": 171}
                 ]
             },
@@ -887,6 +899,15 @@
                 ]
             },
             {
+                "id": 210,
+                "name": "Rec Center",
+                "description": "The main hall has a high ceiling where indoor soccer and volleyball tournaments take place. Sign-up sheets are available to join one of the rec leagues, and there are metal bleachers to sit and watch.",
+                "attribs": [
+                    [130, 4.0]
+                ],
+                "abilities": [129]
+            },
+            {
                 "id": 106,
                 "name": "River Walk",
                 "description": "Cafes and restaurants line the cobblestone pathway. Paddle boat rentals are available, though they're relatively expensive in comparison with rentals on the beach.",
@@ -894,18 +915,6 @@
                     [130, 3.0]
                 ],
                 "abilities": [129]
-            },
-            {
-                "id": 46,
-                "name": "Sierra's House",
-                "description": "An old house with white siding.\r\n\r\nWithin walking distance of the bar. The streets are well lit at night, but it's still not a great part of town, so she doesn't love walking alone.",
-                "items": [
-                    {"item_id": 188, "quantity": 1.0},
-                    {"item_id": 189, "quantity": 1.0}
-                ],
-                "destinations": [
-                    {"loc2_id": 104}
-                ]
             },
             {
                 "id": 48,
@@ -997,6 +1006,18 @@
                 "item_refs": [71],
                 "destinations": [
                     {"loc2_id": 50}
+                ]
+            },
+            {
+                "id": 46,
+                "name": "Zelest's House",
+                "description": "An old house with white siding.\r\n\r\nWithin walking distance of the bar. The streets are well lit at night, but it's still not a great part of town, so she doesn't love walking alone.",
+                "items": [
+                    {"item_id": 188, "quantity": 1.0},
+                    {"item_id": 189, "quantity": 1.0}
+                ],
+                "destinations": [
+                    {"loc2_id": 104}
                 ]
             }
         ],
@@ -1125,8 +1146,28 @@
                 ]
             },
             {
+                "id": 142,
+                "name": "Sydney",
+                "description": "Athletic. The guy in the plastic white chair next to her is holding her hand. Does that mean they're seeing each other exclusively?",
+                "attribs": [
+                    [144, 1.0]
+                ],
+                "location_id": 52,
+                "travel_party": "Church Attenders"
+            },
+            {
+                "id": 141,
+                "name": "Volvo S60",
+                "description": "A car that shows someone who likes things done right. Faster than waiting for the bus.",
+                "location_id": 47,
+                "travel_party": "Drive",
+                "items": [
+                    {"item_id": 170, "quantity": 10.0}
+                ]
+            },
+            {
                 "id": 58,
-                "name": "Sierra",
+                "name": "Zelest",
                 "description": "A young woman, but judging from her appearance, not a \"lady.\" Auburn shoulder-length hair. Loves dancing even if she's not particularly skilled at it.",
                 "attribs": [
                     [2, 5.0],
@@ -1153,32 +1194,12 @@
             },
             {
                 "id": 57,
-                "name": "Sierra's Stepdad",
-                "description": "A lowlife. Sierra would probably prefer her mom sent him away, but he doesn't usually bother her, so it's fine.",
+                "name": "Zelest's Stepdad",
+                "description": "A lowlife. Zelest would probably prefer her mom sent him away, but he doesn't usually bother her, so it's fine.",
                 "attribs": [
                     [14, 6.0]
                 ],
                 "location_id": 46
-            },
-            {
-                "id": 142,
-                "name": "Sydney",
-                "description": "The guy in the plastic white chair next to her is holding her hand. Does that mean they're seeing each other exclusively?",
-                "attribs": [
-                    [144, 1.0]
-                ],
-                "location_id": 52,
-                "travel_party": "Church Attenders"
-            },
-            {
-                "id": 141,
-                "name": "Volvo S60",
-                "description": "A car that shows someone who likes things done right. Faster than waiting for the bus.",
-                "location_id": 47,
-                "travel_party": "Drive",
-                "items": [
-                    {"item_id": 170, "quantity": 10.0}
-                ]
             }
         ],
         "attribs": [
@@ -1224,7 +1245,7 @@
                     "Spilled Or Muddied",
                     "Needs Freshening",
                     "Normal",
-                    "Sparkling"
+                    "Squeaky"
                 ]
             },
             {
@@ -1269,7 +1290,7 @@
             {
                 "id": 7,
                 "name": "Feels about You",
-                "description": "A key metric to determine how NPCs will respond to you.\r\n\r\n**Love:**     above  50\r\n**Like:**      1 to  50\r\n**Dislike:**  -1 to -50\r\n**Loathe:**   below -50"
+                "description": "A key metric to determine how NPCs will respond to you. Somewhat subjective and variable.\r\n```\r\nLove:          above 50\r\nLike:         20 to  49\r\nInterested:    1 to  19\r\nUninterested: -1 to -19\r\nDislike:     -20 to -49\r\nLoathe:       below -50\r\n```"
             },
             {
                 "id": 4,
@@ -1503,7 +1524,7 @@
                 "id": 183,
                 "name": "Who",
                 "description": "List for **Chance Encounter—Who.**",
-                "enum_list": ["Art", "Claudia", "Dreschsel", "Sierra", "Sydney", "Teria"]
+                "enum_list": ["Art", "Claudia", "Dreschsel", "Sydney", "Teria", "Zelest"]
             }
         ],
         "events": [
@@ -1680,7 +1701,7 @@
                         "label": "Standard Threshold",
                         "op_application": "-",
                         "op_transform": "c",
-                        "val_transform": 25.0
+                        "val_transform": 24.0
                     }
                 ],
                 "effects": [
@@ -1711,7 +1732,7 @@
                         "outfield": {"role": "universal", "item_id": 179, "attrib_id": 15},
                         "op_application": ":=",
                         "op_transform": "%",
-                        "val_transform": 0.0,
+                        "val_transform": 7.0,
                         "outcome_success": "success_any"
                     }
                 ]
@@ -1950,7 +1971,7 @@
             {
                 "id": 139,
                 "name": "Feeling Adjustment",
-                "description": "Either change the value directly based on the narrative, or roll to include chance.",
+                "description": "Change the value based on the narrative, including chance.\r\nFor example, `1d4 +2` (*dice* 1, *sides* 4, *bonus* 2).",
                 "outcome_type": "dice_system",
                 "roller_type": "dnd",
                 "effects": [
@@ -2286,7 +2307,7 @@
                         "outfield": {"attrib_id": 15},
                         "op_application": ":=",
                         "op_transform": "%",
-                        "val_transform": 0.0
+                        "val_transform": 7.0
                     },
                     {
                         "get_val_from": "outcome",
@@ -2654,7 +2675,7 @@
             {
                 "id": 134,
                 "name": "Their Goal—Roll",
-                "description": "When you first meet a prospective match (Claudia, Sierra, or a new character you add), roll to set their goal, then their attitude.",
+                "description": "When you first meet a prospective match (Claudia, Zelest, or a new character you add), roll to set their goal, then their attitude.",
                 "outcome_type": "selection",
                 "selection_attrib_id": 131,
                 "effects": [
