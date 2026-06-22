@@ -642,9 +642,9 @@ function syncFieldAttribState(attrSelect) {
     if (!attrSelect) return;
     const card = attrSelect.closest('.factor-card');
     const appSelector = card.querySelector('.op-application-selector');
-    const opApp = appSelector.value;
+    const opApp = appSelector?.value;
     const innerOpSelect = card.querySelector('.op-inner-selector');
-    const opTransform = innerOpSelect.value;
+    const opTransform = innerOpSelect?.value;
     const isComparison = COMPARISON_OPS.includes(opApp);
     const eventField = attrSelect.closest('.field-input-group');
     const modeSelect = eventField.querySelector('.field-mode-select');

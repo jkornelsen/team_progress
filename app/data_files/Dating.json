@@ -432,7 +432,7 @@
             {
                 "id": 114,
                 "name": "Food—Daal and Rice",
-                "description": "With aloo gobi on the side. A decent standard meal although a bit high in carbs.",
+                "description": "Aloo gobi on the side. A decent standard meal although a bit high in carbs.",
                 "recipes": [
                     {
                         "id": 124,
@@ -592,6 +592,7 @@
                 "q_limit": 1.0,
                 "slot": "Legs"
             },
+            {"id": 214, "name": "Legs—Khaki Shorts", "slot": "Legs"},
             {"id": 201, "name": "Legs—Skirt", "slot": "Legs"},
             {
                 "id": 36,
@@ -743,7 +744,7 @@
             {
                 "id": 211,
                 "name": "Bowling Alley",
-                "description": "Slippery shoes included. Cost for a game is 20 cash, and that covers the whole group.",
+                "description": "Cost is 20 cash for a game, and that covers the whole group. Slippery shoes included.\r\n\r\nAlso, a full arcade that takes tokens, including air hockey.",
                 "attribs": [
                     [130, 4.0]
                 ],
@@ -860,7 +861,7 @@
             {
                 "id": 44,
                 "name": "Happy Hour Pub",
-                "description": "Where else would you go to blow off steam and have a good time? There's certain to be people here to meet. The only question is whether the types who frequent this joint are worth your time.\r\n\r\nEven if you'd normally consider yourself too moral to indulge in such a lifestyle, you could still choose someone less worthy (but good-looking) in an attempt to get them back on the right road.\r\n\r\nAvailable jobs: drink mixer, piano man, bouncer, bathroom cleaner.",
+                "description": "Where else would you go to blow off steam and have a good time? There's certain to be people here to meet. The only question is whether the types who frequent this joint are worth your time.\r\n\r\nEven if you'd normally consider yourself too moral to indulge in such a lifestyle, you could still choose someone less worthy (but good-looking) in an attempt to get them back on the right road.\r\n\r\nTwo pool tables and a juke box are on one side.\r\n\r\nAvailable jobs: drink mixer, piano man, bouncer, bathroom cleaner.",
                 "attribs": [
                     [85, 6.0],
                     [130, 4.0]
@@ -910,7 +911,7 @@
             {
                 "id": 106,
                 "name": "River Walk",
-                "description": "Cafes and restaurants line the cobblestone pathway. Paddle boat rentals are available, though they're relatively expensive in comparison with rentals on the beach.",
+                "description": "Cafes and restaurants line the cobblestone pathway. Paddle boat rentals are available, though at 30 per hour, they're relatively expensive in comparison with rentals on the beach.",
                 "attribs": [
                     [130, 3.0]
                 ],
@@ -982,8 +983,8 @@
                 "name": "Your Kitchen",
                 "description": "Gas stove, refrigerator, dining table for six. Cupboard with utensils and dishes, many of them metal.",
                 "items": [
-                    {"item_id": 114, "quantity": 7.0},
-                    {"item_id": 115, "quantity": 3.0},
+                    {"item_id": 114, "quantity": 3.0},
+                    {"item_id": 115, "quantity": 2.0},
                     {"item_id": 123, "quantity": 1.0}
                 ],
                 "destinations": [
@@ -1089,9 +1090,15 @@
                 ]
             },
             {
+                "id": 155,
+                "name": "Drechsel",
+                "description": "Bartender. Has a knack for bottles, jars, and mixes.",
+                "location_id": 44
+            },
+            {
                 "id": 62,
                 "name": "(Enter a name)",
-                "description": "College has left little time for social life, until now. With a few months' holiday, this is the perfect time to reawaken that hidden charisma and those stifled interpersonal skills.\r\n\r\nThe default setup is male seeking female, configurable of course.\r\n\r\nAlso, you could change the win conditions, for example, having a baby with someone who you're in a committed relationship with. The goal probably shouldn't merely be a certain **Feels** score, as that is a general metric rather than an objective status.",
+                "description": "College has left little time for social life, until now. With a few months' holiday, this is the perfect time to reawaken that hidden charisma and those stifled interpersonal skills.\r\n\r\nThe default setup is male seeking female, configurable of course.\r\n\r\nAlso, you could change the win conditions, for example, having a baby with someone who you're in a committed relationship with. Best not to make the primary condition a certain **Feels** score, as that is a general metric rather than an objective status.",
                 "attribs": [
                     [2, 5.0],
                     [3, 5.0],
@@ -1120,9 +1127,13 @@
                 ]
             },
             {
-                "id": 155,
-                "name": "Drechsel",
-                "description": "Bartender. Has a knack for bottles, jars, and mixes.",
+                "id": 212,
+                "name": "Leighy",
+                "description": "Happy to wait on you for tips, but highly uninterested in any relationship with a customer, as she's had more than her fill of advances from drunks. Possibly you could get to know her personally while working at the pub, maybe helping her on a busy day.",
+                "attribs": [
+                    [2, 7.0],
+                    [144, 0.0]
+                ],
                 "location_id": 44
             },
             {
@@ -1150,7 +1161,8 @@
                 "name": "Sydney",
                 "description": "Athletic. The guy in the plastic white chair next to her is holding her hand. Does that mean they're seeing each other exclusively?",
                 "attribs": [
-                    [144, 1.0]
+                    [4, 8.0],
+                    [144, 0.0]
                 ],
                 "location_id": 52,
                 "travel_party": "Church Attenders"
@@ -2215,7 +2227,7 @@
                 "id": 95,
                 "name": "Job Hours",
                 "outcome_type": "numeric",
-                "numeric_range": [1, 10],
+                "numeric_range": [2, 10],
                 "determinants": [
                     {
                         "label": "(works for 1 or 2)",
@@ -2321,7 +2333,7 @@
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 74},
                         "op_application": "-",
                         "op_transform": "c",
-                        "val_transform": 3.0
+                        "val_transform": 3.5
                     },
                     {
                         "infield": {"role": "universal", "field_mode": "qty", "item_id": 71},
@@ -2584,7 +2596,7 @@
                     {
                         "infield": {"role": "target char", "attrib_id": 11},
                         "op_transform": "/",
-                        "val_transform": 2.0
+                        "val_transform": 3.0
                     },
                     {
                         "infield": {"attrib_id": 108}
@@ -2624,7 +2636,7 @@
                         "label": "Standard Threshold",
                         "op_application": "-",
                         "op_transform": "c",
-                        "val_transform": 18.0
+                        "val_transform": 16.0
                     }
                 ],
                 "effects": [
@@ -2668,7 +2680,8 @@
                     {
                         "get_val_from": "outcome",
                         "outfield": {"attrib_id": 132},
-                        "op_application": ":="
+                        "op_application": ":=",
+                        "auto_apply": true
                     }
                 ]
             },
@@ -2682,7 +2695,8 @@
                     {
                         "get_val_from": "outcome",
                         "outfield": {"attrib_id": 131},
-                        "op_application": ":="
+                        "op_application": ":=",
+                        "auto_apply": true
                     }
                 ],
                 "chained": [
