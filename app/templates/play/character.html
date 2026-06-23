@@ -88,7 +88,7 @@
                             <input type="checkbox"
                                    id="travel-with-party-chk"
                                    onchange="this.blur()"
-                                   {{ 'checked' if request.args.get('move_party') == '1' }}>
+                                   {{ 'checked' if travel_with_party }}>
                                 Travel {{ hk.bracket('w') }}ith
                                 <i>{{ character.travel_party if character.travel_party else 'Followers' }}</i> 
                                 ({{ party_members | length }} other{{ 's' if party_members | length != 1 }} nearby)

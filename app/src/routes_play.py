@@ -234,7 +234,13 @@ def play_character(id):
     game_token = g.game_token
     character = db.get_or_404(Character, (game_token, id))
     capture_origin(name=character.name)
-    exit_loc_id = request.args.get('auto_select_exit', type=int)
+    req = RequestHelper('args')
+    exit_loc_id = req.get_int('auto_select_exit')
+    move_party = req.get_bool('move_party', None)
+    if move_party is not None:
+        session['travel_with_party'] = move_party
+    else:
+        move_party = session['travel_with_party']
     session['old_char_id'] = id
     session.pop('old_loc_id', None)
     
@@ -270,6 +276,7 @@ def play_character(id):
         exit_loc_id=exit_loc_id,
         has_nonadjacent=has_nonadjacent,
         party_members=party_members,
+        travel_with_party=move_party,
         link_letters=LinkLetters(excluded='gltmoew')
     )
 
@@ -453,6 +460,7 @@ def char_travel(id):
     req = RequestHelper('form')
     dest_loc_id = req.get_int('dest_id')
     move_party = req.get_bool('move_party')
+    session['travel_with_party'] = move_party
     success, message = arrive_at_destination(id, dest_loc_id, move_party)
     if success:
         db.session.commit()

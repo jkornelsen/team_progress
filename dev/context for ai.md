@@ -1,6 +1,8 @@
 ## Scoped Files for Bundling
 
-Prompt 1 along with full bundled code:
+#### Prompt 1
+
+Include full bundled code.
 
 ```
 You are helping modify an existing Flask + SQLAlchemy project.
@@ -20,7 +22,7 @@ Goal:
 [enter goal]
 ```
 
-Prompt 2:
+#### Prompt 2
 
 ```
 Return a FILE MANIFEST for implementing this change.
@@ -34,7 +36,10 @@ Rules:
 - output within a single Markdown code block
 ```
 
-Prompt 3:
+#### Prompt 3
+
+Copy and paste goal from prompt 1.
+Drag and drop bundled file selection.
 
 ```
 You are helping modify an existing Flask + SQLAlchemy project.
@@ -48,14 +53,10 @@ Goal:
 [enter goal]
 ```
 
-Copy and paste goal from prompt 1.
-Drag and drop bundled file selection.
-
-## Goals
+## Overview
 
 - How to get results grounded in source of truth
 - Provide a bit of stable guidance along with fresh, task-specific context
-- Bundle new code, old code, json data files
 
 ## Ideas
 
