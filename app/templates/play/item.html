@@ -187,19 +187,12 @@
                                     {% endif %}
                                     {% if req.link_entity_id %}
                                         {% set link_entity = attribreq_entities[req.link_entity_id] %}
-                                        {% if link_entity.entity_type == 'character' %}
-                                            {% set target_url = url_for('play.play_character', id=req.link_entity_id) %}
-                                            {% call hk.hotlink(target_url, link_letters) %}
-                                                {{ req.attrib.name }}
-                                            {% endcall %}
-                                        {% elif link_entity.entity_type == 'location' %}
-                                            {% set target_url = url_for('play.play_location', id=req.link_entity_id) %}
-                                            {% call hk.hotlink(target_url, link_letters, brackets=True) %}
-                                                {{ req.attrib.name }}
-                                            {% endcall %}
-                                        {% else %}
+                                        {% set target_url = url_for('play.play_attrib',
+                                            attrib_id=req.attrib.id,
+                                            subject_id=req.link_entity_id) %}
+                                        {% call hk.hotlink(target_url, link_letters) %}
                                             {{ req.attrib.name }}
-                                        {% endif %}
+                                        {% endcall %}
                                     {% else %}
                                         {{ req.attrib.name }}
                                     {% endif %}

@@ -90,6 +90,14 @@
                             {"item_id": 70, "q_required": 3.0},
                             {"item_id": 151, "q_required": 1.0}
                         ]
+                    },
+                    {
+                        "id": 222,
+                        "rate_duration": 8,
+                        "sources": [
+                            {"item_id": 70, "q_required": 3.0},
+                            {"item_id": 220, "q_required": 1.0}
+                        ]
                     }
                 ]
             },
@@ -391,7 +399,7 @@
                 "recipes": [
                     {
                         "id": 122,
-                        "rate_duration": 8,
+                        "rate_duration": 4,
                         "sources": [
                             {"item_id": 70, "q_required": 2.0},
                             {"item_id": 118, "q_required": 1.0},
@@ -436,7 +444,7 @@
                 "recipes": [
                     {
                         "id": 124,
-                        "rate_duration": 10,
+                        "rate_duration": 5,
                         "sources": [
                             {"item_id": 70, "q_required": 3.0},
                             {"item_id": 119, "q_required": 1.0},
@@ -455,6 +463,37 @@
                         "instant": true,
                         "sources": [
                             {"item_id": 81, "q_required": 4.0},
+                            {"item_id": 121, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 220,
+                "name": "Food—Fried Fish",
+                "description": "Lightly pan-fried with butter, or dipped in batter and deep-fried until crisp. Served with green beans and mashed potatoes.",
+                "recipes": [
+                    {
+                        "id": 221,
+                        "rate_duration": 4,
+                        "sources": [
+                            {"item_id": 70, "q_required": 2.0},
+                            {"item_id": 123, "q_required": 1.0, "preserve": true},
+                            {"item_id": 218, "q_required": 1.0}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 218,
+                "name": "Food—Fried Fish Ingredients",
+                "description": "Fairly quick to prepare, but needs careful cooking.",
+                "recipes": [
+                    {
+                        "id": 219,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 81, "q_required": 5.0},
                             {"item_id": 121, "q_required": 1.0, "preserve": true}
                         ]
                     }
@@ -646,6 +685,29 @@
                 "name": "Rested",
                 "description": "Based on how many hours of sleep you've had, and whether you've been eating.",
                 "storage_type": "u"
+            },
+            {
+                "id": 216,
+                "name": "Shower Faucet",
+                "storage_type": "l",
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 217,
+                        "rate_amount": 0.0,
+                        "sources": [
+                            {"item_id": 70, "q_required": 1.0},
+                            {"item_id": 216, "q_required": 1.0, "preserve": true}
+                        ],
+                        "attrib_reqs": [
+                            {
+                                "attrib_id": 17,
+                                "value_range": [0.0, 3.0],
+                                "range_inclusive": [true, true]
+                            }
+                        ]
+                    }
+                ]
             },
             {
                 "id": 71,
@@ -956,6 +1018,9 @@
                 "items": [
                     {"item_id": 37, "quantity": 1.0},
                     {"item_id": 38, "quantity": 1.0}
+                ],
+                "destinations": [
+                    {"loc2_id": 215}
                 ]
             },
             {
@@ -981,10 +1046,10 @@
             {
                 "id": 39,
                 "name": "Your Kitchen",
-                "description": "Gas stove, refrigerator, dining table for six. Cupboard with utensils and dishes, many of them metal.",
+                "description": "Gas stove, refrigerator, dining table with four chairs. Cupboard with utensils and dishes, many of them metal.",
                 "items": [
                     {"item_id": 114, "quantity": 3.0},
-                    {"item_id": 115, "quantity": 2.0},
+                    {"item_id": 115, "quantity": 1.0},
                     {"item_id": 123, "quantity": 1.0}
                 ],
                 "destinations": [
@@ -994,10 +1059,17 @@
             {
                 "id": 53,
                 "name": "Your Neighborhood",
-                "description": "Part way between downtown and the outskirts, this neighborhood is well positioned to get somewhere easily.\r\n\r\nOn the street is a bus stop with routes downtown. Deduct an hour whenever you use the bus.",
+                "description": "Part way between downtown and the outskirts, this neighborhood is well positioned to get somewhere easily.\r\n\r\nOn the street is a bus stop with routes downtown. Deduct an hour whenever you use the bus (but not when you drive).",
                 "item_refs": [70],
                 "destinations": [
                     {"loc2_id": 55}
+                ]
+            },
+            {
+                "id": 215,
+                "name": "Your Shower",
+                "items": [
+                    {"item_id": 216, "quantity": 1.0}
                 ]
             },
             {
@@ -1302,7 +1374,7 @@
             {
                 "id": 7,
                 "name": "Feels about You",
-                "description": "A key metric to determine how NPCs will respond to you. Somewhat subjective and variable.\r\n```\r\nLove:          above 50\r\nLike:         20 to  49\r\nInterested:    1 to  19\r\nUninterested: -1 to -19\r\nDislike:     -20 to -49\r\nLoathe:       below -50\r\n```"
+                "description": "A key metric to determine how NPCs will respond to you. Somewhat subjective and variable.\r\n```\r\nLove:          above 50\r\nLike:         20 to  49\r\nInterested:    1 to  19\r\nUninterested: -1 to -19\r\nDislike:     -20 to -49\r\nLoathe:       below -50\r\n```\r\n\r\n[Click here](/configure/lookup/attrib/7) to see the full list. Or, get to lookup from *Main Setup* by hovering *Feels About You* and clicking on the magnifying glass."
             },
             {
                 "id": 4,

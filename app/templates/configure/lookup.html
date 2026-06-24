@@ -29,6 +29,7 @@
         <span class="label-like text-uppercase">{{ entity.entity_type }} Usage</span>
         <h1>Lookup: {{ entity.name }}</h1>
         <p class="text-dim">Tracking all relational dependencies for ID: {{ entity.id }}</p>
+        <div class="description-box label-like">{{ entity.description | htmlify }}</div>
     </header>
 
     <div class="column-container">
