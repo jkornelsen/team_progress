@@ -443,7 +443,9 @@ def name_stripped(col=None):
 def sort_by_name_stripped(items, named=lambda x: x):
     def get_sort_key(item):
         obj = named(item)
-        return re.sub(r'^\W+', '', obj.name).lower()
+        name_str = obj.get('name') if isinstance(
+            obj, dict) else getattr(obj, 'name', '')
+        return re.sub(r'^\W+', '', name_str).lower()
         
     return sorted(items, key=get_sort_key)
 

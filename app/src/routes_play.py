@@ -222,7 +222,8 @@ def play_location(id):
         grid_exits=grid_exits,
         referenced_items=referenced_data,
         attrib_values=sort_by_name_stripped(
-            AttribVal.query.filter_by(game_token=game_token, subject_id=id).all(),
+            AttribVal.query.filter_by(
+                game_token=game_token, subject_id=id).all(),
             lambda p: p.attrib),
         active_char_id=active_char_id,
         ctx_char=current_char,
@@ -270,7 +271,8 @@ def play_character(id):
             Pile.query.filter_by(game_token=game_token, owner_id=id).all(),
             lambda p: p.item),
         attrib_values=sort_by_name_stripped(
-            AttribVal.query.filter_by(game_token=game_token, subject_id=id).all(),
+            AttribVal.query.filter_by(
+                game_token=game_token, subject_id=id).all(),
             lambda p: p.attrib),
         destinations=destinations,
         exit_loc_id=exit_loc_id,

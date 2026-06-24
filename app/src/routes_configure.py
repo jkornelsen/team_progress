@@ -16,7 +16,7 @@ from app.models import (
 from app.serialization import clone_entity
 from app.utils import (
     LinkLetters, RequestHelper, parse_coords,
-    capture_origin, redirect_back, name_stripped)
+    capture_origin, redirect_back, name_stripped, sort_by_name_stripped)
 from .logic_discovery import run_discovery_scan
 
 logger = logging.getLogger(__name__)
@@ -867,6 +867,9 @@ def lookup_entity(ent_type, id):
     # Results is a dict of lists: { 'Category Name': [ {label, name, link, meta}, ... ] }
     results = {}
 
+    def sort_results(r_list):
+        r_list[:] = sort_by_name_stripped(r_list)
+
     if ent_type == Item.TYPENAME:
         # Who has this item
         piles = Pile.query.filter_by(game_token=game_token, item_id=id).all()
@@ -881,6 +884,7 @@ def lookup_entity(ent_type, id):
                 'link': url_for(f'play.play_{owner.entity_type}', id=owner.id),
                 'meta': f'Qty: {p.quantity}'
             })
+        sort_results(results[key_name])
 
         # Recipe dependencies
         sources = RecipeSource.query.filter_by(game_token=game_token, item_id=id).all()
@@ -895,6 +899,7 @@ def lookup_entity(ent_type, id):
                 'link': url_for('play.play_item', id=prod.id),
                 'meta': f'Needs {s.q_required}'
             })
+        sort_results(results[key_name])
 
     elif ent_type == Attrib.TYPENAME:
         # Who uses this attribute
@@ -910,6 +915,7 @@ def lookup_entity(ent_type, id):
                 'link': url_for(f'play.play_{subject.entity_type}', id=subject.id),
                 'meta': f'Value: {av.value}'
             })
+        sort_results(results[key_name])
 
         # Events that use this attribute
         stmt = (
@@ -933,6 +939,7 @@ def lookup_entity(ent_type, id):
                 'name': evt.name,
                 'link': url_for(f'play.play_event', id=evt.id)
             })
+        sort_results(results[key_name])
 
     elif ent_type == Location.TYPENAME:
         # What links to this location
@@ -950,6 +957,7 @@ def lookup_entity(ent_type, id):
                 'name': other.name,
                 'link': url_for('play.play_location', id=other.id)
             })
+        sort_results(results[key_name])
 
     elif ent_type == Event.TYPENAME:
         # Who can trigger this
@@ -973,6 +981,7 @@ def lookup_entity(ent_type, id):
                     'name': owner.name,
                     'link': url_for(f'play.play_{owner.entity_type}', id=owner.id),
                 })
+            sort_results(results[key_name])
 
     # --- GLOBAL DESCRIPTION SCAN (For Markdown Links) ---
     # This handles things like [Red Bar Rate](/play/event/46)
@@ -1003,6 +1012,8 @@ def lookup_entity(ent_type, id):
                 'name': ent.name,
                 'link': link
             })
+    if mention_key in results:
+        sort_results(results[mention_key])
 
     return render_template(
         'configure/lookup.html',

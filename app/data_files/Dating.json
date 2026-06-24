@@ -167,6 +167,7 @@
                 "toplevel": true
             },
             {"id": 188, "name": "Chest—Bikini Top", "slot": "Chest (Women)"},
+            {"id": 230, "name": "Chest—Sports Bra", "slot": "Chest (Women)"},
             {
                 "id": 196,
                 "name": "Condom",
@@ -176,7 +177,7 @@
                         "id": 197,
                         "instant": true,
                         "sources": [
-                            {"item_id": 81, "q_required": 3.0},
+                            {"item_id": 81, "q_required": 4.0},
                             {"item_id": 121, "q_required": 1.0, "preserve": true}
                         ]
                     }
@@ -365,6 +366,21 @@
                 ]
             },
             {
+                "id": 226,
+                "name": "Feet—Athletic Shoes",
+                "description": "Provides support and cushioning for extended movement.",
+                "slot": "Feet",
+                "recipes": [
+                    {
+                        "id": 227,
+                        "sources": [
+                            {"item_id": 81, "q_required": 30.0},
+                            {"item_id": 193, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
                 "id": 32,
                 "name": "Feet—Loafers",
                 "description": "Easy to put on although not the most secure.",
@@ -385,6 +401,7 @@
                 "recipes": [
                     {
                         "id": 207,
+                        "instant": true,
                         "sources": [
                             {"item_id": 81, "q_required": 15.0},
                             {"item_id": 121, "q_required": 1.0, "preserve": true}
@@ -631,6 +648,22 @@
                 "q_limit": 1.0,
                 "slot": "Legs"
             },
+            {
+                "id": 228,
+                "name": "Legs—Jogging Shorts",
+                "description": "Breathable, lightweight, and allows unrestricted motion.",
+                "slot": "Legs",
+                "recipes": [
+                    {
+                        "id": 229,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 81, "q_required": 15.0},
+                            {"item_id": 121, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
             {"id": 214, "name": "Legs—Khaki Shorts", "slot": "Legs"},
             {"id": 201, "name": "Legs—Skirt", "slot": "Legs"},
             {
@@ -741,9 +774,26 @@
                 "recipes": [
                     {
                         "id": 192,
+                        "instant": true,
                         "sources": [
                             {"item_id": 81, "q_required": 25.0},
                             {"item_id": 193, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 224,
+                "name": "Torso—Tank Top",
+                "description": "Suitable for exercise, warm weather, or outdoor activities; often chosen to show off muscles.",
+                "slot": "Torso",
+                "recipes": [
+                    {
+                        "id": 225,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 81, "q_required": 15.0},
+                            {"item_id": 121, "q_required": 1.0, "preserve": true}
                         ]
                     }
                 ]
@@ -982,7 +1032,7 @@
             {
                 "id": 48,
                 "name": "Supermarket",
-                "description": "Good prices for everyday items, such as:\r\n* Groceries\r\n* Over-the-counter medicine\r\n* Toiletries\r\n* Basic clothes\r\n\r\nAvailable jobs: stocker, bagger, cashier, alcohol scanner.",
+                "description": "Good prices for everyday items, such as:\r\n\r\n- Groceries\r\n- Basic clothes\r\n- Over-the-counter medicine\r\n\r\nAvailable jobs: stocker, bagger, cashier, alcohol scanner.",
                 "attribs": [
                     [85, 8.0],
                     [130, 2.0]
@@ -1290,7 +1340,7 @@
             {
                 "id": 11,
                 "name": "Arousal",
-                "description": "Physical arousal. **1** could be considered average for a person of whatever age they are, while negative values indicate feeling sluggish or cold. The number temporarily increases in steamy situations, up to around **100.**\r\n\r\nReset to **1** when meeting someone again on a new day."
+                "description": "Physical arousal. **1** means average for a person of their age, while negative values indicate feeling sluggish or cold.\r\n\r\nThe number temporarily increases in steamy situations, up to **50** or higher. Arousal doesn't have to reach a certain target such as **100,** although doing so would make the rolls all but guaranteed.\r\n\r\nReset to **1** when meeting someone again on a new day."
             },
             {
                 "id": 3,
@@ -1379,7 +1429,7 @@
             {
                 "id": 4,
                 "name": "Fitness",
-                "description": "Scale from professional athletes down to overweight gamers who never leave the basement."
+                "description": "Scale from professional athletes down to overweight gamers who never leave the basement.\r\n\r\nTraining requires consistent exercise, at least 3 times per week. Increase fitness after the 3rd workout, then every 2 additional workouts as long as you keep up that schedule."
             },
             {
                 "id": 154,
@@ -2353,7 +2403,7 @@
                 "id": 96,
                 "name": "Job Pay",
                 "outcome_type": "numeric",
-                "numeric_range": [1, 5],
+                "numeric_range": [1, 6],
                 "determinants": [
                     {
                         "infield": {"attrib_id": 88},
@@ -2805,7 +2855,7 @@
             {"item_id": 74, "quantity": 10.0},
             {"item_id": 75, "quantity": 0.0},
             {"item_id": 77, "quantity": 0.0},
-            {"item_id": 81, "quantity": 100.0},
+            {"item_id": 81, "quantity": 30.0},
             {"item_id": 82, "quantity": 2.0},
             {"item_id": 87, "quantity": 1.0},
             {"item_id": 91, "quantity": 1.0},
