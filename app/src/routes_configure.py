@@ -6,9 +6,9 @@ from flask import (
 from http import HTTPStatus
 from sqlalchemy import select, or_
 from app.models import (
-    GENERAL_ID, StorageType, ENTITIES, db,
+    GENERAL_ID, EQUIPMENT_SLOTS_ID, StorageType, ENTITIES, db,
     Entity, Item, Character, Location, Attrib, Event, 
-    Pile, ItemLimit, AttribVal, Operation, EntityAbility,
+    Pile, ItemLimit, AttribVal, EnumEntry, Operation, EntityAbility,
     Recipe, RecipeSource, RecipeByproduct, RecipeAttribReq,
     LocDest, LocZone, EntranceReq, ItemRef,
     Participant, OutcomeType, SuccessTier, EventFactor, EventField, EventLink,
@@ -49,16 +49,41 @@ def index():
 
 @configure_bp.route('/overall', methods=['GET', 'POST'])
 def edit_overall():
-    overall = db.session.get(Overall, g.game_token)
+    game_token = g.game_token
+    overall = db.session.get(Overall, game_token)
+    slots_attrib = db.session.get(Attrib, (game_token, EQUIPMENT_SLOTS_ID))
+
     if request.method == 'POST':
         req = RequestHelper('form')
         overall.title = req.get_str('title', overall.title)
         overall.description = req.get_str('description')
-        slots_text = req.get_str('slots')
-        overall.slots = [s.strip() for s in slots_text.split('\n') if s.strip()]
         
+        use_slots = req.get_bool('use_slots')
+        if use_slots:
+            if not slots_attrib:
+                # Create the reserved attribute with defaults
+                slots_attrib = Attrib(
+                    id=EQUIPMENT_SLOTS_ID,
+                    game_token=game_token, 
+                    name="Equipment Slots",
+                    description="Equipment slots for characters."
+                )
+                db.session.add(slots_attrib)
+                slots_attrib.enum_entries = [
+                    EnumEntry(
+                        game_token=game_token,
+                        label="Main Hand",
+                        order_index=0),
+                    EnumEntry(
+                        game_token=game_token,
+                        label="Body",
+                        order_index=1)
+                ]
+        elif slots_attrib:
+            db.session.delete(slots_attrib)
+
         # Save Win Conditions
-        WinRequirement.query.filter_by(game_token=g.game_token).delete()
+        WinRequirement.query.filter_by(game_token=game_token).delete()
         win_req_rows = req.get_list('winreqs')
         win_req_rows.sort(key=lambda r: r.get_int('order_index', 0))
         for idx, row in enumerate(win_req_rows):
@@ -69,13 +94,13 @@ def edit_overall():
             if not target_id and not attrib_id:
                 continue
             new_req = WinRequirement(
-                game_token=g.game_token,
+                game_token=game_token,
                 order_index=idx
             )
             
             # Resolve target
             if target_id:
-                target = db.session.get(Entity, (g.game_token, target_id))
+                target = db.session.get(Entity, (game_token, target_id))
                 if target:
                     if target.entity_type == Item.TYPENAME:
                         new_req.item_id = target_id
@@ -84,7 +109,7 @@ def edit_overall():
 
             # Resolve owner
             if owner_id:
-                owner = db.session.get(Entity, (g.game_token, owner_id))
+                owner = db.session.get(Entity, (game_token, owner_id))
                 if owner:
                     if owner.entity_type == Location.TYPENAME:
                         new_req.loc_id = owner_id
@@ -106,12 +131,13 @@ def edit_overall():
         
     entities = {
         name: model.query.filter_by(
-            game_token=g.game_token).order_by(name_stripped()).all()
+            game_token=game_token).order_by(name_stripped()).all()
         for name, model in ENTITIES.items()
     }
     return render_template(
         'configure/overall.html',
         overall=overall,
+        slots_attrib=slots_attrib,
         **entities
     )
 
@@ -162,8 +188,8 @@ def edit_item(id):
                     owner_id=owner_id,
                     q_limit=q_limit
                 ))
-        item.slot = req.get_str('slot') \
-            if item.storage_type == StorageType.CARRIED else ''
+        item.slot_id = req.get_int('slot_id', None) \
+            if item.storage_type == StorageType.CARRIED else None
 
         item.toplevel = 'toplevel' in request.form
         item.loc_hosted = 'loc_hosted' in request.form
@@ -291,6 +317,11 @@ def edit_item(id):
         ).first()
         gen_qty = gen_pile.quantity if gen_pile else 0
 
+    slots_attrib = db.session.get(Attrib, (game_token, EQUIPMENT_SLOTS_ID))
+    all_slots = [
+        e for e in slots_attrib.enum_entries
+        ] if slots_attrib else []
+
     return render_template('configure/item.html', 
         item=item, 
         initial_qty=gen_qty,
@@ -305,7 +336,7 @@ def edit_item(id):
         all_events=Event.query.filter_by(
             game_token=game_token).order_by(name_stripped()).all(),
         recipes=item.recipes if item else [],
-        slots=overall.slots
+        all_slots=all_slots,
     )
 
 @configure_bp.route('/location/<int:id>', methods=['GET', 'POST'])
@@ -565,7 +596,7 @@ def edit_character(id):
                     owner_id=char.id,
                     item_id=item_id,
                     quantity=item_row.get_float('quantity'),
-                    slot=item_row.get_str('slot'),
+                    slot_id=item_row.get_int('slot_id', None),
                 ))
 
         # Abilities
@@ -589,6 +620,11 @@ def edit_character(id):
             return duplicate_entity(char.id, 'character')
         return redirect_back('configure.index') 
 
+    slots_attrib = db.session.get(Attrib, (game_token, EQUIPMENT_SLOTS_ID))
+    all_slots = [
+        e for e in slots_attrib.enum_entries
+        ] if slots_attrib else []
+
     return render_template('configure/character.html', 
         character=char, 
         all_locs=Location.query.filter_by(
@@ -599,7 +635,7 @@ def edit_character(id):
             game_token=game_token).order_by(name_stripped()).all(),
         all_events=Event.query.filter_by(
             game_token=game_token).order_by(name_stripped()).all(),
-        overall=db.session.get(Overall, game_token)
+        all_slots=all_slots
     )
 
 @configure_bp.route('/attrib/<int:id>', methods=['GET', 'POST'])
@@ -623,15 +659,30 @@ def edit_attrib(id):
         attrib.description = req.get_str('description')
         
         v_type = req.get_str('value_type')
-        attrib.is_binary = False
-        attrib.enum_list = None
-        if v_type == 'binary':
-            attrib.is_binary = True
-        elif v_type == 'enum':
-            lines = req.get_str('enum_values').splitlines()
-            attrib.enum_list = [l.strip() for l in lines if l.strip()]
-            if not attrib.enum_list:
-                attrib.enum_list = None 
+        attrib.is_binary = (v_type == 'binary')
+
+        existing_entries = {e.id: e for e in attrib.enum_entries}
+        enum_entries = []
+        if v_type == 'enum':
+            for idx, row in enumerate(req.get_list('enum_entries')):
+                eid = row.get_int('id')
+                label = row.get_str('label')
+                if not label: continue
+
+                if eid in existing_entries:
+                    # Reuse so we don't break ID references
+                    entry = existing_entries[eid]
+                    entry.label = label
+                    entry.order_index = idx
+                    enum_entries.append(entry)
+                else:
+                    enum_entries.append(EnumEntry(
+                        game_token=game_token, 
+                        label=label, 
+                        order_index=idx
+                    ))
+
+        attrib.enum_entries = enum_entries
 
         db.session.commit()
         if 'duplicate' in request.form:
@@ -860,12 +911,11 @@ def edit_event(id):
 # ------------------------------------------------------------------------
 
 @configure_bp.route('/lookup/<string:ent_type>/<int:id>')
-def lookup_entity(ent_type, id):
+def lookup(ent_type, id):
     game_token = g.game_token
     entity = db.get_or_404(Entity, (game_token, id))
     
-    # Results is a dict of lists: { 'Category Name': [ {label, name, link, meta}, ... ] }
-    results = {}
+    results = {}  # dict of lists
 
     def sort_results(r_list):
         r_list[:] = sort_by_name_stripped(r_list)
@@ -882,7 +932,7 @@ def lookup_entity(ent_type, id):
                 'label': label,
                 'name': owner.name,
                 'link': url_for(f'play.play_{owner.entity_type}', id=owner.id),
-                'meta': f'Qty: {p.quantity}'
+                'value': f'Qty: {p.quantity}'
             })
         sort_results(results[key_name])
 
@@ -897,7 +947,7 @@ def lookup_entity(ent_type, id):
                 'label': 'Required to produce',
                 'name': prod.name,
                 'link': url_for('play.play_item', id=prod.id),
-                'meta': f'Needs {s.q_required}'
+                'value': f'Needs {s.q_required}'
             })
         sort_results(results[key_name])
 
@@ -913,7 +963,7 @@ def lookup_entity(ent_type, id):
                 'label': f'Stat on {subject.entity_type}',
                 'name': subject.name,
                 'link': url_for(f'play.play_{subject.entity_type}', id=subject.id),
-                'meta': f'Value: {av.value}'
+                'value': f'{av.display}'
             })
         sort_results(results[key_name])
 

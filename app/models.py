@@ -11,6 +11,11 @@ logger = logging.getLogger(__name__)
 # Progress can also be hosted generally rather than by char or at loc.
 GENERAL_ID = 1
 
+# Reserved ID in the Attrib table for equipment slots.
+# Unlike the General ID, this record doesn't get created unless needed.
+EQUIPMENT_SLOTS_ID = 2
+HIGHEST_RESERVED_ID = EQUIPMENT_SLOTS_ID
+
 class StorageType:
     """How Item objects are placed."""
     UNIVERSAL = 'u' # not anchored anywhere
@@ -167,7 +172,7 @@ class Entity(db.Model, DictHydrator):
             "name": self.name,
             "description": self.description,
             "attribs": sorted([
-                [av.attrib_id, av.value] 
+                [av.attrib_id, av.serialized_value] 
                 for av in self.attrib_values
             ], key=lambda x: x[0]),
             "abilities": sorted(
@@ -181,11 +186,29 @@ class Entity(db.Model, DictHydrator):
         entity = super().from_dict(data, game_token)
         for a_data in data.get('attribs', []):
             if isinstance(a_data, list) and len(a_data) == 2:
-                entity.attrib_values.append(AttribVal(
-                    game_token=game_token,
-                    attrib_id=a_data[0],
-                    value=a_data[1]
-                ))
+                attrib_id, raw_val = a_data[0], a_data[1]
+                final_val = raw_val
+
+                if isinstance(raw_val, str):
+                    # Resolve to an enum id
+                    attrib = db.session.get(Attrib, (game_token, attrib_id))
+                    if attrib and attrib.enum_entries:
+                        match = next((
+                            e.id
+                            for e in attrib.enum_entries 
+                            if e.label == raw_val), 0)
+                        final_val = float(match)
+                    else:
+                        final_val = None
+                elif isinstance(raw_val, bool):
+                    final_val = 1.0 if raw_val else 0.0
+
+                if final_val is not None:
+                    entity.attrib_values.append(AttribVal(
+                        game_token=game_token,
+                        attrib_id=attrib_id,
+                        value=final_val
+                    ))
         for event_id in data.get('abilities', []):
             entity._ability_links.append(EntityAbility(
                 game_token=game_token,
@@ -204,10 +227,6 @@ class Entity(db.Model, DictHydrator):
     @property
     def abilities(self):
         return [link.event for link in self._ability_links]
-
-    @property
-    def DISPLAY(self):
-        return self.TYPENAME.capitalize()
 
     piles = db.relationship(
         'Pile', 
@@ -257,11 +276,15 @@ class Item(Entity):
     storage_type = db.Column(
         db.String(1), nullable=False, default=StorageType.CARRIED)
     q_limit = db.Column(db.Float, default=0.0)
-    slot = db.Column(db.String(50))
+    slot_id = db.Column(db.Integer)
     loc_hosted = db.Column(db.Boolean, default=False)
     toplevel = db.Column(db.Boolean, default=False) # i.e. pinned
     masked = db.Column(db.Boolean, default=False)
     counted_for_unmasking = db.Column(db.Boolean, default=False)
+
+    @property
+    def slot_label(self):
+        return self.slot_entry.label if self.slot_entry else ""
 
     def to_dict(self):
         data = super().to_dict()
@@ -270,7 +293,7 @@ class Item(Entity):
             "q_limit": self.q_limit,
             "limits_for": sorted([l.to_dict() for l in self.limits_for], 
                                 key=lambda x: x['owner_id']),
-            "slot": self.slot,
+            "slot": self.slot_label,
             "loc_hosted": self.loc_hosted,
             "toplevel": self.toplevel,
             "masked": self.masked,
@@ -290,6 +313,15 @@ class Item(Entity):
         for order_index, r_data in enumerate(data.get('recipes', [])):
             item.recipes.append(
                 Recipe.from_dict(r_data, game_token, order_index))
+        slot_label = data.get('slot')
+        if slot_label:
+            entry = EnumEntry.query.filter_by(
+                game_token=game_token,
+                attrib_id=EQUIPMENT_SLOTS_ID,
+                label=slot_label
+            ).first()
+            if entry:
+                item.slot_id = entry.id
         return item
 
     in_piles = db.relationship(
@@ -317,11 +349,18 @@ class Item(Entity):
         back_populates='item',
         foreign_keys="[RecipeByproduct.game_token, RecipeByproduct.item_id]",
         viewonly=True)
+    slot_entry = db.relationship(
+        'EnumEntry',
+        foreign_keys=[slot_id],
+        post_update=True)
 
     __table_args__ = (
         db.ForeignKeyConstraint(
             ['game_token', 'id'],
             ['entities.game_token', 'entities.id'], ondelete='CASCADE'),
+        db.ForeignKeyConstraint(
+            ['slot_id'],
+            ['enum_entries.id'], ondelete='SET NULL'),
         db.CheckConstraint(
             f"storage_type IN {StorageType.ALL_CODES}", 
             name="check_storage_type_valid"),
@@ -516,7 +555,6 @@ class Attrib(Entity):
 
     game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
-    enum_list = db.Column(ARRAY(db.Text))
     is_binary = db.Column(db.Boolean, default=False)
 
     def to_dict(self):
@@ -525,17 +563,40 @@ class Attrib(Entity):
         data.pop("attribs", None) 
         data.update({
             "is_binary": self.is_binary,
-            "enum_list": self.enum_list or []
+            "enum_list": [e.label for e in self.enum_entries]
         })
         return self.to_dict_sparse(data)
 
     @classmethod
     def from_dict(cls, data, game_token):
-        return super().from_dict(data, game_token)
+        attrib = super().from_dict(data, game_token)
+        for idx, label in enumerate(data.get('enum_list', [])):
+            attrib.enum_entries.append(EnumEntry(
+                game_token=game_token,
+                label=label,
+                order_index=idx
+            ))
+        return attrib
 
-    @property
-    def DISPLAY(self):
-        return 'Attribute'
+    def format_value(self, val):
+        """
+        Converts a raw float value into a string based on this 
+        attribute's definition.
+        """
+        if self.is_binary:
+            return "✓" if val > 0 else "✗"
+        
+        if self.enum_entries:
+            try:
+                idx = int(val)
+                if 0 <= idx < len(self.enum_entries):
+                    return self.enum_entries[idx].label
+            except (ValueError, TypeError):
+                pass
+            return "?"
+
+        from .utils import format_num
+        return format_num(val)
 
     attrib_values = db.relationship(
         'AttribVal',
@@ -547,6 +608,12 @@ class Attrib(Entity):
         back_populates='attrib',
         foreign_keys="[RecipeAttribReq.game_token, RecipeAttribReq.attrib_id]",
         viewonly=True)
+    enum_entries = db.relationship(
+        'EnumEntry',
+        back_populates='attrib',
+        cascade="all, delete-orphan",
+        order_by="EnumEntry.order_index",
+        foreign_keys="[EnumEntry.game_token, EnumEntry.attrib_id]")
 
     __table_args__ = (
         db.ForeignKeyConstraint(
@@ -681,10 +748,10 @@ class Event(Entity):
     __mapper_args__ = {'polymorphic_identity': TYPENAME}
 
 ENTITIES = {
+    'attribs': Attrib,
     'items': Item,
     'locations': Location,
     'characters': Character,
-    'attribs': Attrib,
     'events': Event
 }
 
@@ -708,22 +775,35 @@ class Pile(db.Model, DictHydrator):
     # Not relevant for universal storage
     position = db.Column(ARRAY(db.Integer), default=None)
     quantity = db.Column(db.Float, nullable=False, default=0.0)
-    # Optional for carried items (equipment)
-    slot = db.Column(db.String(50))
+    slot_id = db.Column(db.Integer)
+
+    @property
+    def slot_label(self):
+        return self.slot_entry.label if self.slot_entry else ""
 
     def to_dict(self):
         data = {
             "item_id": self.item_id,
             "quantity": self.quantity,
             "position": self.position,
-            "slot": self.slot
+            "slot": self.slot_label
         }
         return self.to_dict_sparse(data)
 
     @classmethod
     def from_dict(cls, data, game_token, owner_id):
         scrub_array(data, 'position', 2)
-        return super().from_dict(data, game_token, owner_id=owner_id)
+        pile = super().from_dict(data, game_token, owner_id=owner_id)
+        slot_label = data.get('slot')
+        if slot_label:
+            entry = EnumEntry.query.filter_by(
+                game_token=game_token,
+                attrib_id=EQUIPMENT_SLOTS_ID,
+                label=slot_label
+            ).first()
+            if entry:
+                pile.slot_id = entry.id
+        return pile
 
     @property
     def is_placed(self):
@@ -778,6 +858,10 @@ class Pile(db.Model, DictHydrator):
         back_populates='in_piles',
         foreign_keys=[game_token, item_id],
         overlaps="owner,piles")
+    slot_entry = db.relationship(
+        'EnumEntry',
+        foreign_keys=[slot_id],
+        post_update=True)
 
     __table_args__ = (
         # Ensure uniqueness depending on whether position is NULL
@@ -796,6 +880,9 @@ class Pile(db.Model, DictHydrator):
         db.ForeignKeyConstraint(
             ['game_token', 'item_id'],
             ['items.game_token', 'items.id'], ondelete='CASCADE'),
+        db.ForeignKeyConstraint(
+            ['slot_id'],
+            ['enum_entries.id'], ondelete='SET NULL'),
     )
 
 class ItemLimit(db.Model, DictHydrator):
@@ -838,6 +925,18 @@ class AttribVal(db.Model):
     subject_id = db.Column(db.Integer, primary_key=True)
     value = db.Column(db.Float, nullable=False, default=0.0)
 
+    @property
+    def serialized_value(self):
+        if self.attrib.is_binary:
+            return bool(self.value)
+        if self.attrib.enum_entries:
+            return self.attrib.format_value(self.value)
+        return self.value
+
+    @property
+    def display(self):
+        return self.attrib.format_value(self.value)
+
     subject = db.relationship(
         'Entity',
         back_populates='attrib_values',
@@ -856,6 +955,26 @@ class AttribVal(db.Model):
         db.ForeignKeyConstraint(
             ['game_token', 'subject_id'],
             ['entities.game_token', 'entities.id'], ondelete='CASCADE'),
+    )
+
+class EnumEntry(db.Model, DictHydrator):
+    """Labels for an Attrib's enumerated states."""
+    __tablename__ = 'enum_entries'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    game_token = db.Column(db.String(50), index=True, nullable=False)
+    attrib_id = db.Column(db.Integer, nullable=False)
+    label = db.Column(db.String(255), nullable=False)
+    order_index = db.Column(db.Integer, default=0)
+
+    attrib = db.relationship(
+        'Attrib', 
+        back_populates='enum_entries',
+        foreign_keys=[game_token, attrib_id])
+
+    __table_args__ = (
+        db.ForeignKeyConstraint(
+            ['game_token', 'attrib_id'],
+            ['attribs.game_token', 'attribs.id'], ondelete='CASCADE'),
     )
 
 class EntranceReq(db.Model, DictHydrator):
@@ -1822,7 +1941,6 @@ class Overall(db.Model, DictHydrator):
     game_token = db.Column(db.String(50), primary_key=True)
     title = db.Column(db.String(255), nullable=False, default='New Scenario')
     description = db.Column(db.Text)
-    slots = db.Column(ARRAY(db.Text), default=list)
 
     # Metadata tags for scenario browsing
     tag_introduce_order = db.Column(db.Integer, default=50)
@@ -1831,13 +1949,12 @@ class Overall(db.Model, DictHydrator):
     tag_complete = db.Column(db.String(50), default='02 Under Construction')
 
     # Used to generate unique IDs per game token
-    next_entity_id = db.Column(db.Integer, default=2)
+    next_entity_id = db.Column(db.Integer, default=HIGHEST_RESERVED_ID + 1)
 
     def to_dict(self):
         data = {
             "title": self.title,
             "description": self.description,
-            "slots": self.slots or [],
             "win_reqs": [
                 wr.to_dict() for wr in
                 sorted(self.win_reqs, key=lambda x: x.order_index)

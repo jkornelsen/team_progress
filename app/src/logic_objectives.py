@@ -78,17 +78,14 @@ def validate_requirements(game_token):
             if r.attrib.is_binary:
                 is_fulfilled = any(
                     val == r.attrib_value for val in current_vals)
-                have = "must have" if r.attrib_value > 0 else "cannot have"
+                have = "needs" if r.attrib_value > 0 else "cannot have"
                 desc = f"{subject_prefix} {have} {r.attrib.name}"
-            elif r.attrib.enum_list:
+            elif r.attrib.enum_entries:
                 is_fulfilled = any(
                     val == r.attrib_value for val in current_vals)
-                try:
-                    state_name = r.attrib.enum_list[int(r.attrib_value)]
-                except (TypeError, ValueError, LookupError):
-                    state_name = str(r.attrib_value)
-                desc = f"{subject_prefix} must have {r.attrib.name} " \
-                       f"set to '{state_name}'"
+                state_name = r.attrib.format_value(r.attrib_value)
+                desc = f"{subject_prefix} needs {r.attrib.name} " \
+                       f"'{state_name}'"
             else:
                 is_fulfilled = any(
                     val >= r.attrib_value for val in current_vals)

@@ -16,6 +16,8 @@
         {% set target_url = forms.edit_url(subject.entity_type, subject.id) %}
         {% set text = "e" ~ hk.bracket('d') ~ "it " ~ subject.SHORT %}
         {{ hk.fixed_text(target_url, text, 'd') }}
+        <span class="separator">|</span>
+        <a href="{{ url_for('configure.lookup', ent_type='attrib', id=attribute.id) }}">lookup</a>
     </nav>
 {% endblock %}
 
@@ -33,7 +35,7 @@
         <h1>
             {{ attribute.name }}
             <span class="text-accent" id="current-val-display">
-                {{ render.attrib(attrib_value, attribute) }}
+                {{ attrib_value.display }}
             </span>
         </h1>
 
@@ -59,13 +61,13 @@
                         </div>
 
                     {# 2. Enum Selection #}
-                    {% elif attribute.enum_list %}
+                    {% elif attribute.enum_entries %}
                         <div class="flex-row align-center">
                             <input type="hidden" name="operator" value=":=">
                             <select name="value" class="flex-grow">
-                                {% for entry in attribute.enum_list %}
-                                    <option value="{{ loop.index0 }}" {{ 'selected' if attrib_value.value == loop.index0 }}>
-                                        {{ entry }}
+                                {% for entry in attribute.enum_entries %}
+                                    <option value="{{ entry.id }}" {{ 'selected' if attrib_value.value == entry.id }}>
+                                        {{ entry.label }}
                                     </option>
                                 {% endfor %}
                             </select>

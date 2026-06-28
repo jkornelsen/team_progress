@@ -111,7 +111,7 @@
                             {{ ent.name }}
                         </a>
                         <button type="button" 
-                                onclick="window.location.href='{{ url_for('configure.lookup_entity', ent_type=slug, id=ent.id) }}'" 
+                                onclick="window.location.href='{{ url_for('configure.lookup', ent_type=slug, id=ent.id) }}'" 
                                 class="lookup-btn" 
                                 title="Look up usage for {{ ent.name }}">
                             🔍

@@ -8,7 +8,7 @@ from flask_migrate import Migrate
 from jinja2 import StrictUndefined
 
 from .database import db, get_db_uri
-from .models import GENERAL_ID, StorageType
+from .models import GENERAL_ID, EQUIPMENT_SLOTS_ID, StorageType
 from .serialization import init_game_session
 from .utils import format_num, htmlify_filter, mask_string
 from app.src.routes_session import session_bp, generate_username, log_user_activity
@@ -73,6 +73,7 @@ def create_app():
     def inject_globals():
         return {
             'GENERAL_ID': GENERAL_ID,
+            'EQUIPMENT_SLOTS_ID': EQUIPMENT_SLOTS_ID,
             'StorageType': StorageType
         }
 

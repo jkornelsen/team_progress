@@ -12,20 +12,6 @@
     {% endif %}
 {% endmacro %}
 
-{% macro attrib(attrib_val, attrib_def) %}
-    {% if attrib_def.is_binary %}
-        {{ '✅' if attrib_val.value else '❌' }}
-    {% elif attrib_def.enum_list %}
-        {% set idx = attrib_val.value | int(-1) %}
-        {{ attrib_def.enum_list[idx]
-            if 0 <= idx < attrib_def.enum_list | length
-            else '?' }}
-    {% else %}
-        {{ attrib_val.value | formatNum }}
-    {% endif %}
-{% endmacro %}
-
-{# Configuration Forms #}
 {% macro attrib_input(name, value, attrib_def, id=None) %}
     {% if attrib_def.is_binary %}
         <input type="hidden" name="{{ name }}" id="{{ id }}" value="{{ 1 if value else 0 }}">
@@ -33,10 +19,10 @@
             <input type="checkbox" {{ 'checked' if value }} 
                    onchange="document.getElementById('{{ id }}').value = this.checked ? '1' : '0'">
         </label>
-    {% elif attrib_def.enum_list %}
+    {% elif attrib_def.enum_entries %}
         <select name="{{ name }}" id="{{ id }}">
-            {% for label in attrib_def.enum_list %}
-                <option value="{{ loop.index0 }}" {{ 'selected' if value|int == loop.index0 }}>{{ label }}</option>
+            {% for entry in attrib_def.enum_entries %}
+                <option value="{{ entry.id }}" {{ 'selected' if value|int == entry.id }}>{{ entry.label }}</option>
             {% endfor %}
         </select>
     {% else %}

@@ -7,7 +7,7 @@ from sqlalchemy import func, inspect as sa_inspect
 from sqlalchemy.dialects.postgresql import Range
 from sqlalchemy.orm import identity
 from .models import (
-    GENERAL_ID, ENTITIES, JsonKeys, db,
+    GENERAL_ID, HIGHEST_RESERVED_ID, ENTITIES, JsonKeys, db,
     Entity, Item, Character, Location, Attrib, Event, 
     Pile, Recipe, RecipeSource, RecipeByproduct, 
     RecipeAttribReq, Progress, Overall, WinRequirement)
@@ -54,7 +54,7 @@ def init_game_session():
             overall = Overall(game_token=game_token)
             db.session.add(overall)
 
-        # Ensure the 'General Storage' owner exists
+        # General Storage owner
         reserved_entity = Entity.query.filter_by(
             id=GENERAL_ID, game_token=game_token).first()
         if not reserved_entity:
@@ -65,7 +65,7 @@ def init_game_session():
                 description="Reserved entity for universal items."
             )
             db.session.add(reserved_entity)
-            
+
         db.session.commit()
 
 def load_scenario_from_path(filename):
@@ -123,7 +123,7 @@ def import_from_dict(data):
     db.session.flush()
     max_id = db.session.query(
         func.max(Entity.id)).filter_by(game_token=game_token).scalar()
-    ov.next_entity_id = (max_id or 1) + 1
+    ov.next_entity_id = max(max_id, HIGHEST_RESERVED_ID) + 1
     
     db.session.commit()
 

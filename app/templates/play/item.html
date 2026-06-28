@@ -33,7 +33,7 @@
     window.linkForKey['p'] = "#pickup-btn";
     window.linkForKey['r'] = "#drop-btn";
     window.linkForKey['g'] = "#give-btn";
-    {% if pile.slot %}
+    {% if pile.slot_id %}
         window.linkForKey['q'] = "#unequip-btn";
     {% else %}
         window.linkForKey['q'] = "#equip-btn";
@@ -461,19 +461,19 @@
                         {% endif %}
 
                         <!-- Equipment -->
-                        {% if pile.slot or available_slots %}
+                        {% if pile.slot_id or available_slots %}
                             <div class="action-box border-top-dim spacious-top" style="padding-top: 15px;">
-                                {% if pile.slot %}
+                                {% if pile.slot_id %}
                                     {% set has_controls = true %}
                                     <div class="action-box">
-                                        <span class="label-like">Slot: <strong>{{ pile.slot }}</strong></span>
+                                        <span class="label-like">Slot: <strong>{{ pile.slot_label }}</strong></span>
                                         <button id="unequip-btn" class="go-button">une{{ hk.bracket('q') }}uip</button>
                                     </div>
-                                {% elif item.slot %}
+                                {% elif item.slot_id %}
                                     <div class="action-box">
                                         <span class="label-like">(not equipped)</span>
-                                        <input type="hidden" id="equip-slot" value="{{ item.slot }}">
-                                        <button id="equip-btn" class="go-button">e{{ hk.bracket('q') }}uip to {{ item.slot }}</button>
+                                        <input type="hidden" id="equip-slot" value="{{ item.slot_id }}">
+                                        <button id="equip-btn" class="go-button">e{{ hk.bracket('q') }}uip to {{ item.slot_label }}</button>
                                     </div>
                                 {% else %}
                                     {% if available_slots %}
@@ -481,8 +481,8 @@
                                         <div class="action-box">
                                             <select id="equip-slot" class="full-width themed-input">
                                                 {% for slot in available_slots %}
-                                                    <option value="{{ slot }}" {{ 'selected' if slot == session.get('default_slot') }}>
-                                                        {{ slot }}
+                                                    <option value="{{ slot.id }}" {{ 'selected' if slot.id == session.get('default_slot_id') }}>
+                                                        {{ slot.label }}
                                                     </option>
                                                 {% endfor %}
                                             </select>
@@ -513,7 +513,7 @@
                             {% call hk.hotlink(attr_url, link_letters) %}
                                 {{ av.attrib.name }}
                             {% endcall %}
-                            <span>{{ render.attrib(av, av.attrib) }}</span>
+                            <span>{{ av.display }}</span>
                         </div>
                     {% endfor %}
                 </div>
@@ -1216,10 +1216,10 @@ document.getElementById('give-btn')?.addEventListener('click', async () => {
 });
 
 document.getElementById('equip-btn')?.addEventListener('click', async () => {
-    const slotInput = document.getElementById('equip-slot');
+    const slotId = document.getElementById('equip-slot').value;
     const fd = new FormData();
-    fd.append('item_id', itemId); // itemId should be globally defined in your template
-    fd.append('slot', slotInput.value);
+    fd.append('item_id', itemId);
+    fd.append('slot_id', slotId);
 
     const url = `/char/${ownerId}/equip`;
     const data = await apiPost(url, fd, "Could not equip.");

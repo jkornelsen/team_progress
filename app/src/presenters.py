@@ -1,6 +1,7 @@
 from flask import g, session
 from app.models import (
-    db, GENERAL_ID, StorageType, Entity, Item, Character, Location, 
+    db, GENERAL_ID, EQUIPMENT_SLOTS_ID, StorageType,
+    Entity, Item, Character, Location, Attrib,
     Pile, AttribVal, Progress, Overall, Recipe)
 from app.utils import (
     ContextIds, LinkLetters, capture_origin, 
@@ -321,6 +322,10 @@ class ItemPlayPresenter:
                 if ent:
                     attribreq_entities[eid] = ent
 
+        slots_attr = db.session.get(
+            Attrib, (self.game_token, EQUIPMENT_SLOTS_ID))
+        available_slots = slots_attr.enum_entries if slots_attr else []
+
         return {
             "item": self.item,
             "owner": self.owner,
@@ -337,7 +342,7 @@ class ItemPlayPresenter:
                 for bl in self.item.as_byproducts],
             "progress": Progress.query.filter_by(
                 game_token=self.game_token, product_id=self.item_id).first(),
-            "available_slots": overall.slots,
+            "available_slots": available_slots,
             "other_chars_here": other_chars_here,
             "is_reachable": is_reachable,
             "reach_error": reach_error,

@@ -1051,11 +1051,12 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
     elif event.outcome_type == OutcomeType.SELECT:
         choice_str = "(No Choices)"
         if event.selection_attrib_id:
-            attrib = db.session.get(Attrib, (game_token, event.selection_attrib_id))
-            options = attrib.enum_list if attrib and attrib.enum_list else []
-            if options:
-                result_val = float(random.randrange(len(options)))
-                choice_str = options[int(result_val)]
+            attrib = db.session.get(
+                Attrib, (game_token, event.selection_attrib_id))
+            if attrib and attrib.enum_entries:
+                result_index = random.randrange(len(attrib.enum_entries))
+                result_val = float(result_index)
+                choice_str = attrib.format_value(result_index)
         breakdown_parts = [f"Selection: <b>{choice_str}</b>"]
 
     elif event.outcome_type == OutcomeType.COORDS:

@@ -15,6 +15,13 @@
         {{ hk.fixed_text(
             forms.edit_url(entity.entity_type, entity.id),
             hk.bracket('e') ~ "dit " ~ entity.entity_type, 'e') }}
+        {% if entity.entity_type != 'attrib' %}
+            <span class="separator">|</span>
+            {% set id_args = {'id': entity.id} %}
+            <a href="{{ url_for('play.play_' + entity.entity_type, id=entity.id) }}">
+                Play {{ entity.entity_type }}
+            </a>
+        {% endif %}
     </nav>
 {% endblock %}
 
@@ -32,56 +39,30 @@
         <div class="description-box label-like">{{ entity.description | htmlify }}</div>
     </header>
 
-    <div class="column-container">
-        <!-- Main Usage List -->
-        <div class="usage-column" style="flex: 5">
-            {% for category, items in results.items() %}
-                {% if items %}
-                <section class="outer-border">
-                    <h3 class="category-title">{{ category }}</h3>
-                    <ul class="usage-list">
-                        {% for item in items %}
-                        <li>
-                            <div class="flex-between align-center">
-                                <div>
-                                    <span class="usage-label">{{ item.label }}</span>
-                                    <a href="{{ item.link }}" class="usage-name">{{ item.name }}</a>
-                                </div>
-                                {% if item.meta is defined %}
-                                    <span class="label-like">{{ item.meta }}</span>
-                                {% endif %}
-                            </div>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </section>
-                {% endif %}
-            {% else %}
-                <section class="outer-border text-center">
-                    <p class="text-dim italic">This entity is not currently referenced anywhere in the game world.</p>
-                </section>
-            {% endfor %}
-        </div>
-
-        <!-- Entity Summary Sidebar -->
-        <div class="summary-column" style="flex: 3">
-            <section class="outer-border">
-                <h4>Quick Actions</h4>
-                <div class="flex-column gap-10">
-                    {% if entity.entity_type != 'attrib' %}
-                        {% set id_args = {'id': entity.id} %}
-                        <a href="{{ url_for('play.play_' + entity.entity_type, id=entity.id) }}" class="go-button text-center" style="padding: 10px;">
-                            ▶️ Open in Play Mode
-                        </a>
-                    {% endif %}
-                    <a href="{{ forms.edit_url(entity.entity_type, entity.id) }}"
-                            class="btn text-center">
-                        📝 Edit Configuration
-                    </a>
-                </div>
-            </section>
-        </div>
-    </div>
+    {% for category, items in results.items() %}
+        {% if items %}
+        <section class="outer-border">
+            <h3 class="category-title">{{ category }}</h3>
+            <ul class="usage-list col-list">
+                {% for item in items %}
+                <li>
+                    <div class="col-row usage-row align-center">
+                        <span class="usage-label">{{ item.label }}</span>
+                        <a href="{{ item.link }}" class="usage-name">{{ item.name }}</a>
+                        {% if item.value is defined %}
+                            <span class="label-like">{{ item.value }}</span>
+                        {% endif %}
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </section>
+        {% endif %}
+    {% else %}
+        <section class="outer-border text-center">
+            <p class="text-dim italic">This entity is not currently referenced anywhere in the game world.</p>
+        </section>
+    {% endfor %}
 </div>
 
 {# =========================================================================
@@ -90,12 +71,12 @@
 
 <style>
 .category-title { border-bottom: 1px solid var(--accent); padding-bottom: 5px; margin-bottom: 15px; color: var(--accent); }
-.usage-list { list-style: none; padding: 0; }
+.usage-list { list-style: none; padding: 0; max-width: 80ch; }
 .usage-list li { padding: 10px; border-bottom: 1px solid #333; transition: background 0.2s; }
 .usage-list li:hover { background: #222; }
 .usage-label { color: var(--text-dim); font-size: 0.85em; margin-right: 10px; display: inline-block; min-width: 120px; }
+.usage-row { --grid-cols: 2fr 2fr 2fr; }
 .usage-name { font-weight: bold; }
-.gap-10 { gap: 10px; }
 .text-uppercase { text-transform: uppercase; letter-spacing: 1px; font-size: 0.75em; }
 </style>
 {% endblock %}

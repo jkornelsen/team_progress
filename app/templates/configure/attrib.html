@@ -1,3 +1,7 @@
+{# =========================================================================
+   1. GLOBAL IMPORTS
+   ========================================================================= #}
+
 {% extends 'layout/base.html' %}
 {% import 'macros/hotkeys.html' as hk %}
 {% from 'macros/config_forms.html' import footer_actions %}
@@ -11,6 +15,13 @@
 {% endblock %}
 
 {% block content %}
+
+<script src="{{ url_for('static', filename='js/configuration.js') }}"></script>
+
+{# =========================================================================
+   2. MAIN CONTENT
+   ========================================================================= #}
+
 <div class="configure-attrib">
     <h1>Attribute Setup</h1>
     <p class="label-like">Numeric stat or state that a subject can have.</p>
@@ -29,27 +40,49 @@
 
             <div class="type-selection" class="spacious-top">
                 <label>Value Type:</label>
-                <label class="radio-label">
-                    <input type="radio" name="value_type" value="number" 
-                           {{ 'checked' if not attrib or (not attrib.is_binary and not attrib.enum_list) }}> 
-                    Plain Number
-                </label>
-                <label class="radio-label">
-                    <input type="radio" name="value_type" value="binary" 
-                           {{ 'checked' if attrib.is_binary }}> 
-                    True / False
-                </label>
+
+                {% set is_slots = (attrib.id == EQUIPMENT_SLOTS_ID) %}
+
+                <span {% if is_slots %}style="display:none"{% endif %}>
+                    <label class="radio-label">
+                        <input type="radio" name="value_type" value="number" 
+                               {{ 'checked' if not attrib or (not attrib.is_binary and not attrib.enum_entries and not is_slots) }}> 
+                        Plain Number
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="value_type" value="binary" 
+                               {{ 'checked' if attrib.is_binary and not is_slots }}> 
+                        True / False
+                    </label>
+                </span>
+
                 <label class="radio-label">
                     <input type="radio" name="value_type" value="enum" 
-                           {{ 'checked' if attrib.enum_list }}> 
-                    Enumerated List
+                           {{ 'checked' if attrib.enum_entries or is_slots }}> 
+                    Enumerated List {{ '— required for equipment slots' if is_slots }}
                 </label>
             </div>
 
-            <div id="enum-container" class="spacious-top {{ 'hidden' if not attrib or not attrib.enum_list }}">
-                <label for="enum_values">Enum Labels (one per line, value is the index):</label>
-                <textarea id="enum_values" name="enum_values" rows="5" class="full-width themed-input" 
-                          placeholder="Empty&#10;Low&#10;Medium&#10;High&#10;Full">{{ attrib.enum_list | join('\n') if attrib.enum_list }}</textarea>
+            <div id="enum-container" class="spacious-top {{ 'hidden' if not attrib.enum_entries }}">
+                <div class="flex-between align-center">
+                    <label>Enumerated Labels:</label>
+                    <button type="button" class="btn-sm" 
+                            onclick="ConfigEditor.addRow('enum-list', 'enum-row-template', (row) => { 
+                                ConfigEditor.renumberRows('enum-list', {displayClass: '.index-display'});
+                                syncFormState(); 
+                            })">
+                        + Add Label
+                    </button>
+                </div>
+                
+                <div id="enum-list" class="col-list spacious-top">
+                    <style>
+                        .enum-entry-row { --grid-cols: 1fr 10fr 1fr 1fr 1fr; gap: 5px; }
+                    </style>
+                    {% for entry in attrib.enum_entries %}
+                        {{ enum_row(loop.index0, entry) }}
+                    {% endfor %}
+                </div>
             </div>
         </section>
 
@@ -61,54 +94,83 @@
     </form>
 </div>
 
+{# =========================================================================
+   3. TEMPLATES & STYLES
+   ========================================================================= #}
+
+<template id="enum-row-template">
+    {{ enum_row('__INDEX__') }}
+</template>
+
+{# =========================================================================
+   4. SCRIPTS
+   ========================================================================= #}
+
 <script>
-    function syncFormState() {
-        const enumTextbox = document.getElementById('enum_values');
-        const enumContainer = document.getElementById('enum-container');
-        
-        // Re-select inside the function or ensure they are valid
-        const radioNumber = document.querySelector('input[name="value_type"][value="number"]');
-        const radioBinary = document.querySelector('input[name="value_type"][value="binary"]');
-        const radioEnum = document.querySelector('input[name="value_type"][value="enum"]');
-        
-        if (!radioEnum || !enumTextbox) return; // Safety check
+const isSlots = {{ (attrib.id == EQUIPMENT_SLOTS_ID) | tojson }};
 
-        const hasText = enumTextbox.value.trim() !== "";
-        const selectedType = document.querySelector('input[name="value_type"]:checked').value;
+function syncFormState() {
+    const enumContainer = document.getElementById('enum-container');
+    const enumList = document.getElementById('enum-list');
+    
+    const radioEnum = document.querySelector('input[name="value_type"][value="enum"]');
+    const radioNumber = document.querySelector('input[name="value_type"][value="number"]');
+    const radioBinary = document.querySelector('input[name="value_type"][value="binary"]');
+    
+    const hasEntries = enumList && enumList.querySelectorAll('.enum-entry-row').length > 0;
 
-        // 1. Logic for forcing Enum if text exists
-        if (hasText) {
-            radioEnum.checked = true;
-            radioNumber.disabled = true;
-            radioBinary.disabled = true;
-        } else {
-            radioNumber.disabled = false;
-            radioBinary.disabled = false;
-        }
-
-        // 2. Visibility Logic
-        // We re-check the state because the logic above might have changed it
-        if (radioEnum.checked || hasText) {
-            enumContainer.classList.remove('hidden');
-        } else {
-            enumContainer.classList.add('hidden');
-        }
+    // 1. Enforcement Logic
+    if (isSlots || hasEntries) {
+        if (radioEnum) radioEnum.checked = true;
+        if (radioNumber) radioNumber.disabled = true;
+        if (radioBinary) radioBinary.disabled = true;
+    } else {
+        // Normal attribute with no labels: allow any type
+        if (radioNumber) radioNumber.disabled = false;
+        if (radioBinary) radioBinary.disabled = false;
     }
 
-    // Attach listeners using a delegated or direct approach after DOM loads
-    document.addEventListener('DOMContentLoaded', () => {
-        const enumTextbox = document.getElementById('enum_values');
-        
-        // Radio listeners
-        document.querySelectorAll('input[name="value_type"]').forEach(radio => {
-            radio.addEventListener('change', syncFormState);
-        });
+    // 2. Visibility Logic
+    const isEnumSelected = radioEnum && radioEnum.checked;
+    if (enumContainer) {
+        enumContainer.classList.toggle('hidden', !isEnumSelected);
+    }
+}
 
-        // Textbox listener
-        enumTextbox.addEventListener('input', syncFormState);
-
-        // Initial Run
-        syncFormState();
+// Attach listeners
+document.addEventListener('DOMContentLoaded', () => {
+    // Re-run sync when radio buttons change
+    document.querySelectorAll('input[name="value_type"]').forEach(radio => {
+        radio.addEventListener('change', syncFormState);
     });
+
+    // Initial Run
+    syncFormState();
+});
 </script>
+
+{# =========================================================================
+   5. MACROS
+   ========================================================================= #}
+
 {% endblock %}
+
+{% macro enum_row(index, entry=None) %}
+<div class="col-row enum-entry-row">
+    <input type="hidden" name="enum_entries[{{ index }}][id]" value="{{ entry.id if entry else '' }}">
+    
+    <span class="label-like index-display">{{ index }}</span>
+    
+    <input type="text" name="enum_entries[{{ index }}][label]" 
+           value="{{ entry.label if entry else '' }}" 
+           placeholder="Label Name" class="full-width">
+    
+    <button type="button" class="btn-sm" title="Move Up"
+            onclick="ConfigEditor.moveRow(this, -1, 'enum-list', {displayClass: '.index-display'})">↑</button>
+    <button type="button" class="btn-sm" title="Move Down"
+            onclick="ConfigEditor.moveRow(this, 1, 'enum-list', {displayClass: '.index-display'})">↓</button>
+    
+    <button type="button" class="btn-sm dangerous-button" title="Remove"
+            onclick="ConfigEditor.removeRow(this, 'enum-list'); syncFormState();">×</button>
+</div>
+{% endmacro %}

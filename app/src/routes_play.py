@@ -377,10 +377,10 @@ def equip_item(id):
     req = RequestHelper('form')
     game_token = g.game_token
     item_id = req.get_int('item_id')
-    slot = req.get_str('slot')
+    slot_id = req.get_str('slot_id')
     
     # Store the most recently used slot in the session for UI convenience
-    session['default_slot'] = slot
+    session['default_slot_id'] = slot_id
     
     # 1. Fetch character and item to ensure they exist (for the log message)
     char = db.session.get(Character, (game_token, id))
@@ -403,11 +403,11 @@ def equip_item(id):
         }), HTTPStatus.BAD_REQUEST
 
     # 3. Update the slot
-    pile.slot = slot
+    pile.slot_id = slot_id
     db.session.commit()
 
     # 4. Log
-    add_message(f"{char.name} equipped {item.name} to {slot}")
+    add_message(f"{char.name} equipped {item.name} to {pile.slot_label}")
     return '', HTTPStatus.NO_CONTENT
 
 @play_bp.route('/char/<int:id>/unequip', methods=['POST'])
@@ -437,7 +437,7 @@ def unequip_item(id):
         }), HTTPStatus.BAD_REQUEST
 
     # Remove the slot assignment (set to None/NULL)
-    pile.slot = None
+    pile.slot_id = None
     db.session.commit()
 
     # Log
@@ -724,15 +724,7 @@ def play_attrib(attrib_id, subject_id):
         }
         op_words = op_wording.get(op, {"verb": "Modified", "prep": "to"})
         if op == Operation.ASSIGN:
-            if attribute.is_binary:
-                val_str = "ON" if new_val > 0 else "OFF"
-            elif attribute.enum_list:
-                try:
-                    val_str = attribute.enum_list[int(new_val)]
-                except:
-                    val_str = f"{new_val:g}"
-            else:
-                val_str = f"{new_val:g}"
+            val_str = attribute.format_value(new_val)
         else:
             val_str = f"{round(abs(operand), 2):g} = {round(new_val, 2):g}"
         add_message(

@@ -21,7 +21,7 @@
         {% for a in all_attribs %}
         "{{ a.id }}": {
             "is_binary": {{ 'true' if a.is_binary else 'false' }},
-            "enums": {{ a.enum_list | tojson | safe if a.enum_list else 'null' }}
+            "enums": {{ a.enum_entries | map(attribute='label') | list | tojson | safe if a.enum_entries else 'null' }}
         }{{ "," if not loop.last }}
         {% endfor %}
     };
@@ -147,15 +147,15 @@
                     </div>
                 </fieldset>
             </div>
-            {% if slots %}
+            {% if all_slots %}
             <div>
                 <label id="equip-slot-label">
                     Equips To Slot:
-                    <select name="slot" id="equip-slot" class="">
+                    <select name="slot_id" id="equip-slot" class="">
                         <option value="">(None — Selectable)</option>
-                        {% for slot in slots %}
-                            <option value="{{ slot }}" {{ 'selected' if slot == item.slot }}>
-                                {{ slot }}
+                        {% for slot in all_slots %}
+                            <option value="{{ slot.id }}" {{ 'selected' if slot.id == item.slot_id }}>
+                                {{ slot.label }}
                             </option>
                         {% endfor %}
                     </select>

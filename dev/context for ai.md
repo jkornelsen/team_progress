@@ -53,6 +53,14 @@ Goal:
 [enter goal]
 ```
 
+## Pin Gemini Gem
+
+Enter the following prompt. Then pin the result as a conversation instead of the gem itself.
+
+```
+Give an overview of your gemini gem. Do not start creating dynamic content until the next prompt.
+```
+
 ## Overview
 
 - How to get results grounded in source of truth

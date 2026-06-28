@@ -22,7 +22,7 @@
         {% for a in all_attribs %}
         "{{ a.id }}": {
             "is_binary": {{ 'true' if a.is_binary else 'false' }},
-            "enums": {{ a.enum_list | tojson | safe if a.enum_list else 'null' }}
+            "enums": {{ a.enum_entries | map(attribute='label') | list | tojson | safe if a.enum_entries else 'null' }}
         }{{ "," if not loop.last }}
         {% endfor %}
     };
@@ -136,7 +136,7 @@
                 </div>
 
                 {% for pile in character.piles %}
-                    {{ inv_row(loop.index0, pile, all_items, overall.slots) }}
+                    {{ inv_row(loop.index0, pile, all_items) }}
                 {% endfor %}
             </div>
             <div id="inv-list-empty" class="no-entities {{ 'hidden' if character.piles }}">
@@ -181,7 +181,7 @@
 </template>
 
 <template id="inv-template">
-    {{ inv_row('__INDEX__', None, all_items, overall.slots) }}
+    {{ inv_row('__INDEX__', None, all_items) }}
 </template>
 
 <template id="ability-template">
@@ -228,10 +228,10 @@
     </div>
 {% endmacro %}
 
-{% macro inv_row(index, pile=None, all_items=[], slots=[]) %}
+{% macro inv_row(index, pile=None, all_items=[]) %}
     {% set selected_item_id = pile.item_id if pile else None %}
     {% set qty = pile.quantity if pile else 1 %}
-    {% set selected_slot = pile.slot if pile else '' %}
+    {% set selected_slot = pile.slot_id if pile else '' %}
 
     <div class="col-row inv-piles-row">
         <select name="items[{{ index }}][item_id]">
@@ -247,9 +247,9 @@
 
         <select name="items[{{ index }}][slot]">
             <option value="">(Stored)</option>
-            {% for slot in slots %}
-                <option value="{{ slot }}" {{ 'selected' if slot == selected_slot }}>
-                    {{ slot }}
+            {% for slot in all_slots %}
+                <option value="{{ slot.id }}" {{ 'selected' if slot.id == selected_slot }}>
+                    {{ slot.label }}
                 </option>
             {% endfor %}
         </select>

@@ -4,7 +4,6 @@
 
 {% extends 'layout/base.html' %}
 {% import 'macros/hotkeys.html' as hk %}
-{% import 'macros/render.html' as render %}
 {% import 'macros/config_forms.html' as forms %}
 
 {% block upper_left %}
@@ -125,8 +124,8 @@
                     .equipped-row { --grid-cols: 4fr 1fr 1fr; }
                     .equipped-list { --col-list-max-width: 300px; }
                 </style>
-                {% set equipped = inventory | selectattr("slot") | list %}
-                {% set backpack = inventory | rejectattr("slot") | list %}
+                {% set equipped = inventory | selectattr("slot_id") | list %}
+                {% set backpack = inventory | rejectattr("slot_id") | list %}
                 {% set producing_ids = character.progress_records | map(attribute='product_id') | list %}
                 {% if equipped or backpack %}
                 <section class="outer-border">
@@ -143,7 +142,7 @@
                                         {% endcall %}
                                         
                                         <span>{{ pile.quantity | formatNum if pile.quantity >= 2 else '' }}</span>
-                                        <span class="label-like">{{ pile.slot }}</span>
+                                        <span class="label-like">{{ pile.slot_label }}</span>
                                     </div>
                                 {% endfor %}
                             </div>
@@ -187,7 +186,7 @@
                                 {% call hk.hotlink(attr_url, link_letters) %}
                                     {{ av.attrib.name }}
                                 {% endcall %}
-                                <span>{{ render.attrib(av, av.attrib) }}</span>
+                                <span>{{ av.display }}</span>
                             </div>
                         {% endfor %}
                     </div>

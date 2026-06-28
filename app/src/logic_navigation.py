@@ -508,7 +508,7 @@ def check_location_access(party, loc):
                 ).first()
                 current_val = av.value if av else 0
                 
-                if req.attrib.is_binary or req.attrib.enum_list:
+                if req.attrib.is_binary or req.attrib.enum_entries:
                     if current_val == req.val_required:
                         satisfied = True
                         break
@@ -516,8 +516,8 @@ def check_location_access(party, loc):
                     if current_val >= req.val_required:
                         satisfied = True
                         break
-                req_val_display = req.attrib.enum_list[int(req.val_required)] \
-                    if req.attrib.enum_list else req.val_required
+                req_val_display = req.attrib.enum_entries[int(req.val_required)] \
+                    if req.attrib.enum_entries else req.val_required
                 error_msg = f"Must have {req.attrib.name} {req_val_display}"
 
         if not satisfied:

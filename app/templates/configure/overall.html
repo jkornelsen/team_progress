@@ -21,7 +21,7 @@
         {% for a in attribs %}
         "{{ a.id }}": {
             "is_binary": {{ 'true' if a.is_binary else 'false' }},
-            "enums": {{ a.enum_list | tojson | safe if a.enum_list else 'null' }}
+            "enums": {{ a.enum_entries | map(attribute='label') | list | tojson | safe if a.enum_entries else 'null' }}
         }{{ "," if not loop.last }}
         {% endfor %}
     };
@@ -51,15 +51,12 @@
 
         <!-- 2. Application Logic -->
         <section class="outer-border">
-            <h3>Global Configuration</h3>
-            <div class="grid-2-col">
-                <div class="form-group">
-                    <label for="slots">Equipment Slots (One per line):</label>
-                    <textarea id="slots" name="slots" rows="4" class="full-width themed-input" 
-                              placeholder="Main Hand&#10;Off Hand&#10;Body">{{ overall.slots | join('\n') }}</textarea>
-                    <small class="label-like">These appear in the Character and Item editors.</small>
-                </div>
-            </div>
+            <label class="checkbox-label">
+                <input type="checkbox"
+                       name="use_slots"
+                       {{ 'checked' if slots_attrib }}>
+                Equipment Slots &mdash; edit under <i>Attributes</i>
+            </label>
         </section>
 
         <!-- 3. Win Requirements -->
