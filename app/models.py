@@ -29,6 +29,9 @@ class JsonKeys:
     GENERAL = 'general data'
     OVERALL = 'overall settings'
 
+# Key: (game_token, attrib_id) → Value: {label: entry_id}
+_enum_cache: dict[tuple, dict[str, int]] = {}
+
 # ------------------------------------------------------------------------
 # Model Utilities
 # ------------------------------------------------------------------------
@@ -58,6 +61,31 @@ def scrub_array(data, field_name, min_length=2):
         data[field_name] = tuple(val)
     else:
         data[field_name] = None
+
+def resolve_enum_id(game_token, attrib_id, label):
+    cache_key = (game_token, attrib_id)
+    if cache_key in _enum_cache:
+        return _enum_cache[cache_key].get(label)
+    with db.session.no_autoflush:
+        entry = EnumEntry.query.filter_by(
+            game_token=game_token, attrib_id=attrib_id, label=label).first()
+    return entry.id if entry else None
+
+def prime_enum_cache(game_token):
+    """Call after flushing attribs but before hydrating items/piles."""
+    clear_enum_cache(game_token)
+    entries = EnumEntry.query.filter_by(game_token=game_token).all()
+    for e in entries:
+        key = (game_token, e.attrib_id)
+        _enum_cache.setdefault(key, {})[e.label] = e.id
+
+def clear_enum_cache(game_token=None):
+    if game_token:
+        keys = [k for k in _enum_cache if k[0] == game_token]
+        for k in keys:
+            del _enum_cache[k]
+    else:
+        _enum_cache.clear()
 
 class DictHydrator:
     """Map JSON keys to DB columns."""
@@ -190,16 +218,8 @@ class Entity(db.Model, DictHydrator):
                 final_val = raw_val
 
                 if isinstance(raw_val, str):
-                    # Resolve to an enum id
-                    attrib = db.session.get(Attrib, (game_token, attrib_id))
-                    if attrib and attrib.enum_entries:
-                        match = next((
-                            e.id
-                            for e in attrib.enum_entries 
-                            if e.label == raw_val), 0)
-                        final_val = float(match)
-                    else:
-                        final_val = None
+                    final_val = resolve_enum_id(
+                        game_token, attrib_id, raw_val)
                 elif isinstance(raw_val, bool):
                     final_val = 1.0 if raw_val else 0.0
 
@@ -315,13 +335,8 @@ class Item(Entity):
                 Recipe.from_dict(r_data, game_token, order_index))
         slot_label = data.get('slot')
         if slot_label:
-            entry = EnumEntry.query.filter_by(
-                game_token=game_token,
-                attrib_id=EQUIPMENT_SLOTS_ID,
-                label=slot_label
-            ).first()
-            if entry:
-                item.slot_id = entry.id
+            item.slot_id = resolve_enum_id(
+                game_token, EQUIPMENT_SLOTS_ID, slot_label)
         return item
 
     in_piles = db.relationship(
@@ -796,13 +811,8 @@ class Pile(db.Model, DictHydrator):
         pile = super().from_dict(data, game_token, owner_id=owner_id)
         slot_label = data.get('slot')
         if slot_label:
-            entry = EnumEntry.query.filter_by(
-                game_token=game_token,
-                attrib_id=EQUIPMENT_SLOTS_ID,
-                label=slot_label
-            ).first()
-            if entry:
-                pile.slot_id = entry.id
+            pile.slot_id = resolve_enum_id(
+                game_token, EQUIPMENT_SLOTS_ID, slot_label)
         return pile
 
     @property

@@ -8,6 +8,7 @@ from sqlalchemy.dialects.postgresql import Range
 from sqlalchemy.orm import identity
 from .models import (
     GENERAL_ID, HIGHEST_RESERVED_ID, ENTITIES, JsonKeys, db,
+    prime_enum_cache, clear_enum_cache,
     Entity, Item, Character, Location, Attrib, Event, 
     Pile, Recipe, RecipeSource, RecipeByproduct, 
     RecipeAttribReq, Progress, Overall, WinRequirement)
@@ -90,46 +91,57 @@ def import_from_dict(data):
     Load all data from JSON dictionary.
     Wipes existing session data and rebuilds using model hydration.
     """
-    # Wipe current data
-    game_token = g.game_token
-    clear_game_data()
-    for key in ['old_char_id', 'old_loc_id', 'default_slot']:
-        session.pop(key, None)
-    
-    # Overall Settings
-    ov_data = data.get(JsonKeys.OVERALL, {})
-    ov = Overall.from_dict(ov_data, game_token)
-    db.session.add(ov)
-    db.session.add(Entity(
-        id=GENERAL_ID, game_token=game_token, name="General Storage",
-        entity_type="entity"))
+    print("import_from_dict() BEGIN")
+    try:
+        # Wipe current data
+        game_token = g.game_token
+        clear_game_data()
+        for key in ['old_char_id', 'old_loc_id', 'default_slot']:
+            session.pop(key, None)
+        
+        # Overall Settings
+        ov_data = data.get(JsonKeys.OVERALL, {})
+        ov = Overall.from_dict(ov_data, game_token)
+        db.session.add(ov)
+        db.session.add(Entity(
+            id=GENERAL_ID, game_token=game_token, name="General Storage",
+            entity_type="entity"))
 
-    # Entities
-    entities_data = data.get(JsonKeys.ENTITIES, {})
-    entities_data = remap_general_id(entities_data)
-    for key, model_cls in ENTITIES.items():
-        for entry in entities_data.get(key, []):
-            instance = model_cls.from_dict(entry, game_token)
-            db.session.add(instance)
-    general_data = data.get(JsonKeys.GENERAL, {})
-    for pile_data in general_data.get("piles", []):
-        db.session.add(Pile.from_dict(pile_data, game_token, GENERAL_ID))
+        # Entities
+        entities_data = data.get(JsonKeys.ENTITIES, {})
+        entities_data = remap_general_id(entities_data)
+        for key, model_cls in ENTITIES.items():
+            for entry in entities_data.get(key, []):
+                instance = model_cls.from_dict(entry, game_token)
+                db.session.add(instance)
+            if model_cls == Attrib:
+                db.session.flush()
+                prime_enum_cache(game_token)
+        general_data = data.get(JsonKeys.GENERAL, {})
+        for pile_data in general_data.get("piles", []):
+            db.session.add(Pile.from_dict(pile_data, game_token, GENERAL_ID))
 
-    # State
-    for prog_data in data.get("progress", []):
-        db.session.add(Progress.from_dict(prog_data, game_token))
+        # State
+        for prog_data in data.get("progress", []):
+            db.session.add(Progress.from_dict(prog_data, game_token))
 
-    # Sync the next ID counter
-    db.session.flush()
-    max_id = db.session.query(
-        func.max(Entity.id)).filter_by(game_token=game_token).scalar()
-    ov.next_entity_id = max(max_id, HIGHEST_RESERVED_ID) + 1
-    
-    db.session.commit()
+        # Sync the next ID counter
+        db.session.flush()
+        max_id = db.session.query(
+            func.max(Entity.id)).filter_by(game_token=game_token).scalar()
+        ov.next_entity_id = max(max_id, HIGHEST_RESERVED_ID) + 1
+        
+        db.session.commit()
 
-    # Check for unmasking dependencies
-    run_discovery_scan(game_token)
+        # Check for unmasking dependencies
+        run_discovery_scan(game_token)
+    except:
+        db.session.rollback()
+        raise
+    finally:
+        clear_enum_cache(game_token)
 
+    print("import_from_dict() END")
     return True
 
 def remap_general_id(entities_data):

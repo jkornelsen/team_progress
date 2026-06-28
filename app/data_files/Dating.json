@@ -2,16 +2,6 @@
     "overall settings": {
         "title": "Dating",
         "description": "Your Indian mother has decided it's time. She's fine with you having a ❤️ love marriage, but if you don't find someone soon, she has in mind a match with a well-off family. The problem is that they're ugly! First, [talk things over with your Maa](/play/event/66?subject_id=56), then make a visit to either {violet|the church or the bar} to start meeting people.\r\n\r\nWork odd jobs to earn cash. The right clothes are important to impress people.\r\n\r\n*The initial setup aims for generally acceptable standards. If you make it explicit and want to share the file, then be considerate by including a warning.*",
-        "slots": [
-            "Torso",
-            "Chest (Women)",
-            "Legs",
-            "Hips / Underwear",
-            "Feet",
-            "Full Body",
-            "Accessories",
-            "Held"
-        ],
         "win_reqs": [
             {"attrib_id": 144, "attrib_value": 17.0}
         ],
@@ -21,6 +11,346 @@
         "tag_complete": "08 Fully Playable"
     },
     "entities": {
+        "attribs": [
+            {
+                "id": 11,
+                "name": "Arousal",
+                "description": "Physical arousal. **1** means average for a person of their age, while negative values indicate feeling sluggish or cold.\r\n\r\nThe number temporarily increases in steamy situations, up to **50** or higher. Arousal doesn't have to reach a certain target such as **100,** although doing so would make the rolls all but guaranteed.\r\n\r\nReset to **1** when meeting someone again on a new day."
+            },
+            {
+                "id": 3,
+                "name": "Beauty",
+                "description": "Let's face it, some of us have it, and some of us don't. Although they do say that beauty is in the eye of the beholder.\r\n\r\nThis is about genes, skin weathering, preference, or makeup. For weight and health, see [Fitness](/configure/attrib/4)."
+            },
+            {
+                "id": 194,
+                "name": "Birth Control",
+                "description": "Set to true if wearing a condom, on the pill, spermicide, or monthly cycle planning. The \"early withdrawal\" method does not count.",
+                "is_binary": true
+            },
+            {
+                "id": 9,
+                "name": "Can Lecture",
+                "description": "1 if true, otherwise 0",
+                "is_binary": true
+            },
+            {
+                "id": 8,
+                "name": "Can Listen to Lecture",
+                "description": "1 if true, otherwise 0",
+                "is_binary": true
+            },
+            {
+                "id": 12,
+                "name": "Charisma",
+                "description": "Being persuasive and likeable is useful for lots of things."
+            },
+            {
+                "id": 17,
+                "name": "Clean",
+                "description": "For example, spilled drink on clothing. Factors include how long since showered, and clothing washed.\r\n\r\nState of a person — not tracked by specific item of clothing.",
+                "enum_list": [
+                    "Disaster",
+                    "Spilled Or Muddied",
+                    "Needs Freshening",
+                    "Normal",
+                    "Squeaky"
+                ]
+            },
+            {
+                "id": 108,
+                "name": "Clothing Score",
+                "description": "Set up to 10 based on how well and appropriately dressed for the current situation."
+            },
+            {
+                "id": 15,
+                "name": "Day of Week",
+                "enum_list": [
+                    "Sunday",
+                    "Monday",
+                    "Tuesday",
+                    "Wednesday",
+                    "Thursday",
+                    "Friday",
+                    "Saturday"
+                ]
+            },
+            {
+                "id": 86,
+                "name": "Days Counter",
+                "description": "A simple running total, not necessarily important for months or seasons. Rather, used for example to track how long someone stays angry before they're willing to talk with you again."
+            },
+            {
+                "id": 85,
+                "name": "Employer ID",
+                "enum_list": [
+                    "Beach",
+                    "Cinema",
+                    "Department Store",
+                    "Electronics Store",
+                    "Friendly Community Church",
+                    "Gym",
+                    "Happy Hour Pub",
+                    "Petrol Station",
+                    "Supermarket",
+                    "Teria's Place"
+                ]
+            },
+            {
+                "id": 2,
+                "name": "Equipment Slots",
+                "description": "Equipment slots for characters.",
+                "enum_list": [
+                    "Held",
+                    "Torso",
+                    "Chest (Women)",
+                    "Legs",
+                    "Hips / Underwear",
+                    "Feet",
+                    "Full Body",
+                    "Accessories"
+                ]
+            },
+            {
+                "id": 7,
+                "name": "Feels about You",
+                "description": "A key metric to determine how NPCs will respond to you.\r\nGo to *Lookup* to see the full list.\r\n```\r\nLove:          above 50\r\nLike:         20 to  49\r\nInterested:    1 to  19\r\nUninterested: -1 to -19\r\nDislike:     -20 to -49\r\nLoathe:       below -50\r\n```"
+            },
+            {
+                "id": 4,
+                "name": "Fitness",
+                "description": "Scale from professional athletes down to overweight gamers who never leave the basement.\r\n\r\nTraining requires consistent exercise, at least 3 times per week. Increase fitness after the 3rd workout, then every 2 additional workouts as long as you keep up that schedule."
+            },
+            {
+                "id": 154,
+                "name": "Gift Bonus",
+                "description": "Provides temporary boosts to certain rolls."
+            },
+            {
+                "id": 130,
+                "name": "Hours Per Visit",
+                "description": "How many hours it takes for a typical visit to a certain location."
+            },
+            {
+                "id": 10,
+                "name": "Intelligence",
+                "description": "Measured by whether a person can calculate tips correctly, or how many lines of Shakespeare they can recite. Whether that makes conversations more interesting or not depends on who is listening."
+            },
+            {
+                "id": 158,
+                "name": "Intensity of Act",
+                "description": "For a positive response to a more intense physical act, your partner will probably need to be significantly aroused.",
+                "enum_list": ["No Pressure", "Gentle Touch", "Close Embrace", "Steamy", "Wild"]
+            },
+            {
+                "id": 14,
+                "name": "Intoxicated",
+                "description": "Even a little (1-2) could be relaxing. A moderate amount (5) is unsafe to drive under, while a lot (7-10) could mean acting wildly or even passing out.\r\n\r\nWears off after sleeping or waiting awhile."
+            },
+            {"id": 110, "name": "Job—Accepted", "is_binary": true},
+            {"id": 109, "name": "Job—Applied", "is_binary": true},
+            {"id": 88, "name": "Job—Hours Required"},
+            {"id": 89, "name": "Job—Wages Per Hour"},
+            {
+                "id": 5,
+                "name": "Modesty",
+                "description": "10 for fully modest, primarily based on wearing clothes in the right context. Wearing only underwear at home alone is not an issue, while neglecting to wear proper clothes in public could very well be.\r\n\r\nIf a person's clothes aren't listed but they have a reasonable modesty stat (or not shown), then that implies they're wearing normal clothes.\r\n\r\nBehaving lewdly or erotically can lower modesty even with clothes on."
+            },
+            {
+                "id": 144,
+                "name": "Relationship Status",
+                "description": "This character's romantic status with you.\r\nArranged by how difficult it is to move to that level.\r\nGo to *Lookup* to see the full list.",
+                "enum_list": [
+                    "Unaware",
+                    "Acquaintance",
+                    "Friend",
+                    "Love Interest",
+                    "Matched",
+                    "Hooked Up",
+                    "Friends With Benefits",
+                    "Ex-Girlfriend",
+                    "Ex-Lover",
+                    "Divorced",
+                    "Dating",
+                    "Courting",
+                    "Exclusive",
+                    "Cheating With",
+                    "Living Together",
+                    "Separated",
+                    "Open Relationship",
+                    "Engaged",
+                    "Married",
+                    "Polyamorous",
+                    "Widowed"
+                ]
+            },
+            {
+                "id": 156,
+                "name": "Relevant Skill",
+                "description": "General attribute to set based on the situation. For example, if dancing is relevant, then set this value to your **Dancing Skill.** If no skills apply to the situation then set to **5.**"
+            },
+            {
+                "id": 135,
+                "name": "Similar Personality",
+                "description": "Sometimes it's more important to be similar than to be great. Tells roughly how much you have in common with them.\r\n\r\nTo set for someone, run their **Similar Personality—Calculate** event."
+            },
+            {
+                "id": 164,
+                "name": "Their Action",
+                "description": "List for **Choose Action** event.",
+                "enum_list": [
+                    "Shares about family she cares about",
+                    "Shares about a bad experience",
+                    "Asks about your family",
+                    "Tells about their dad",
+                    "Talks about their work",
+                    "Asks about your work",
+                    "Talks about movies",
+                    "Talks about hobbies",
+                    "Talks about sports",
+                    "Talks about school",
+                    "Gives their philosophy",
+                    "Talks about the future",
+                    "Emotionally vulnerable",
+                    "Cries",
+                    "Complains about the situation",
+                    "Complains about a person",
+                    "Complains about the world",
+                    "Judges you",
+                    "Judges themself",
+                    "Points at someone else in the room",
+                    "Tells about goals",
+                    "Asks what your intentions are",
+                    "Asks what your goals are",
+                    "Physical advance",
+                    "Flirt",
+                    "Talks dirty",
+                    "Adjusts clothing",
+                    "Laughs at your joke",
+                    "Acts silly",
+                    "Burps or farts crudely",
+                    "Makes up a fake story",
+                    "Lies about interest in other partners",
+                    "Lies about past with other partners",
+                    "Demand to know about your interest in them",
+                    "Demand to know about your interest in others",
+                    "Interacts with someone else",
+                    "Avoids a question",
+                    "Takes a bathroom break",
+                    "Slips",
+                    "Bumps into something and gets a bruise",
+                    "Accidentally elbows you",
+                    "Trips you",
+                    "Slaps you a bit hard",
+                    "Breaks something",
+                    "Leaves or runs away",
+                    "Gets angry at what you say",
+                    "Gets angry at what they see you do",
+                    "Gets angry at what you forgot to do",
+                    "Starts a petty argument",
+                    "Refuses to talk",
+                    "Suggests a social game",
+                    "Tabletop game such as cards",
+                    "Active game such as ping pong",
+                    "Dares you",
+                    "You dare them",
+                    "Ask truth question",
+                    "They ask you a truth question",
+                    "Wants to go out and have fun",
+                    "Does something rash",
+                    "Does something illegal",
+                    "Gets injured",
+                    "Gets sick",
+                    "Brings you to see someone",
+                    "Go on an adventure",
+                    "The great outdoors",
+                    "Gardening or yard work",
+                    "Music",
+                    "Painting",
+                    "Crafting or building",
+                    "Try something difficult",
+                    "Sit quietly together"
+                ]
+            },
+            {
+                "id": 132,
+                "name": "Their Attitude",
+                "description": "How the NPC typically interacts.\r\n\r\n- **Burned:** Cynical and guarded based on past experience.\r\n- **Dutiful:** Loyal to family; their own needs are secondary.\r\n- **Unstable:** Can easily turn from hot to cold.\r\n- **Wild:** Dislikes rules and wants to try new things spontaneously.\r\n- **Flirty:** Friendly or seductive with just about anyone.\r\n- **Crude:** Enjoys talking dirty, poor table manners.\r\n- **Aggressive:** Hot tempered and also quick to arousal.\r\n- **Domineering:** They expect to be in control.\r\n- **Fearful:** Quiet and hesitant to speak up, preferring to avoid problems.\r\n- **Distrustful:** Jealous and questioning.\r\n- **Secretive:** Tends to lie and cover up motivations.",
+                "enum_list": [
+                    "Burned",
+                    "Dutiful",
+                    "Unstable",
+                    "Wild",
+                    "Flirty",
+                    "Crude",
+                    "Aggressive",
+                    "Domineering",
+                    "Fearful",
+                    "Distrustful",
+                    "Secretive"
+                ]
+            },
+            {
+                "id": 131,
+                "name": "Their Goal",
+                "description": "What the NPC hopes to achieve. Supporting this goal is important for furthering a relationship.\r\n\r\n- **Wealth:** Career-driven or looking for a rich or ambitious partner.\r\n- **Stability:** Build a quiet, safe life.\r\n- **Excitement:** Avoid mundane existence, boring jobs or school.\r\n- **Discovery:** Create or learn new things that may improve the world.\r\n- **Positivity:** Deal with toxic parents, friends, or online comments.\r\n- **Noble Cause:** Feed the poor or join a political movement.\r\n- **Saving Myself:** Believes in waiting until marriage.\r\n- **Hookup:** Looking for one-night stands, anything to get into bed.\r\n- **Wounded:** Trying not to dwell on their recent breakup.\r\n- **Revenge:** Angry at someone or something.",
+                "enum_list": [
+                    "Wealth",
+                    "Stability",
+                    "Excitement",
+                    "Discovery",
+                    "Positivity",
+                    "Noble Cause",
+                    "Saving Myself",
+                    "Hookup",
+                    "Wounded",
+                    "Revenge"
+                ]
+            },
+            {
+                "id": 165,
+                "name": "Their Tone",
+                "description": "List for **Choose Tone** event.",
+                "enum_list": [
+                    "Sensitive",
+                    "Kind",
+                    "Loving",
+                    "Intimate",
+                    "Distant",
+                    "Cold",
+                    "Sad",
+                    "Happy",
+                    "Excited",
+                    "Goofy",
+                    "Angry",
+                    "Irrational",
+                    "Argumentative",
+                    "Jealous",
+                    "Cute",
+                    "Seductive",
+                    "Steamy",
+                    "Pleasant",
+                    "Needy",
+                    "Hungry",
+                    "Casual",
+                    "Uncomfortable",
+                    "Awkward",
+                    "Fun",
+                    "Confident",
+                    "Brave",
+                    "Quiet",
+                    "Fearful",
+                    "Uncertain",
+                    "Confused"
+                ]
+            },
+            {
+                "id": 183,
+                "name": "Who",
+                "description": "List for **Chance Encounter—Who.**",
+                "enum_list": ["Art", "Claudia", "Dreschsel", "Sydney", "Teria", "Zelest"]
+            }
+        ],
         "items": [
             {
                 "id": 162,
@@ -98,6 +428,14 @@
                             {"item_id": 70, "q_required": 3.0},
                             {"item_id": 220, "q_required": 1.0}
                         ]
+                    },
+                    {
+                        "id": 240,
+                        "rate_duration": 8,
+                        "sources": [
+                            {"item_id": 70, "q_required": 3.0},
+                            {"item_id": 237, "q_required": 1.0}
+                        ]
                     }
                 ]
             },
@@ -142,7 +480,7 @@
                 "name": "Calendar",
                 "description": "Shows date and time information.",
                 "attribs": [
-                    [15, 1.0],
+                    [15, "Monday"],
                     [86, 1.0]
                 ],
                 "abilities": [69],
@@ -171,7 +509,7 @@
             {
                 "id": 196,
                 "name": "Condom",
-                "slot": "Hips (Underwear)",
+                "slot": "Hips / Underwear",
                 "recipes": [
                     {
                         "id": 197,
@@ -328,8 +666,8 @@
                 "name": "Date",
                 "description": "To plan dates with different people at the same time, you'd need to save and duplicate this item. But there are several ways that could get you into trouble.\r\n\r\nIt's up to you to choose the location thoughtfully — there's no event that selects randomly for you.",
                 "attribs": [
-                    [15, 0.0],
-                    [85, 0.0],
+                    [15, "Sunday"],
+                    [85, "Beach"],
                     [86, 0.0]
                 ],
                 "q_limit": 1.0
@@ -448,7 +786,7 @@
                     {
                         "id": 152,
                         "sources": [
-                            {"item_id": 81, "q_required": 6.0},
+                            {"item_id": 81, "q_required": 10.0},
                             {"item_id": 150, "q_required": 1.0, "preserve": true}
                         ]
                     }
@@ -517,6 +855,37 @@
                 ]
             },
             {
+                "id": 237,
+                "name": "Food—Stir Fry",
+                "description": "Vegetables provide a nutritious base. Adding chicken chunks makes it more substantial.\r\n\r\nThe standard dish goes on a large pile of noodles with soy and chili sauce. You could make it healthier by limiting the noodles and eating larger portions of the vegetables and meat.",
+                "recipes": [
+                    {
+                        "id": 239,
+                        "rate_duration": 4,
+                        "sources": [
+                            {"item_id": 70, "q_required": 1.0},
+                            {"item_id": 123, "q_required": 1.0, "preserve": true},
+                            {"item_id": 235, "q_required": 1.0}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 235,
+                "name": "Food—Stir Fry Ingredients",
+                "description": "Convenient to cook because everything goes together in a wok.",
+                "recipes": [
+                    {
+                        "id": 236,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 81, "q_required": 5.0},
+                            {"item_id": 121, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
                 "id": 190,
                 "name": "Full Body—One-Piece Bathing Suit",
                 "slot": "Full Body"
@@ -564,7 +933,7 @@
                 "name": "Job Listing 1",
                 "description": "Use the sequence of 3 events to \"read\" this listing: **Location, Hours,** and **Wages.** Then do the same for the other listing.\r\n\r\nAfter reading, go to the listing you plan to apply for and **Circle Job Listing.** If it doesn't work out, then you may circle the other one afterwards. *Note: the recipes are for information only.*",
                 "attribs": [
-                    [85, 0.0],
+                    [85, "Beach"],
                     [88, 0.0],
                     [89, 0.0]
                 ],
@@ -585,7 +954,7 @@
                 "id": 92,
                 "name": "Job Listing 2",
                 "attribs": [
-                    [85, 0.0],
+                    [85, "Beach"],
                     [88, 0.0],
                     [89, 0.0]
                 ],
@@ -605,7 +974,7 @@
             {
                 "id": 82,
                 "name": "Job Listings—New",
-                "description": "Purchase a newspaper from the store, or have it delivered every morning with a subscription, or buy local online news from a computer.\r\n\r\nTwo jobs are posted every weekday. If a posting is listed then it's guaranteed to be available for the day, though you'll still need to apply. Otherwise, there's a small chance of finding a job by asking around.",
+                "description": "Purchase a newspaper from the store, or have it delivered every morning with a subscription, or buy local online news from a computer.\r\n\r\nTwo jobs are posted every weekday. If a posting is listed then it's guaranteed to be available for the day, though you'll still need to apply. Otherwise, there's a small chance of finding a job by asking around.\r\n\r\nYour Maa slides the newspaper under your bedroom door every morning so you don't have to come out in your underwear and get it.",
                 "storage_type": "u",
                 "q_limit": 2.0,
                 "toplevel": true
@@ -615,11 +984,11 @@
                 "name": "Job—Circled",
                 "description": "Circle a job listing, then visit the location to apply.\r\n\r\nTypically, you'd work one job per day, but there could be time for two short jobs. Getting dirty in the first job makes this harder. You may need to change clothes or shower in between, and consider how far away the locations are.\r\n\r\nIf the job is from asking directly at the site instead of a listing, then roll for hours and wages here.",
                 "attribs": [
-                    [85, 0.0],
+                    [85, "Beach"],
                     [88, 0.0],
                     [89, 0.0],
-                    [109, 0.0],
-                    [110, 0.0]
+                    [109, false],
+                    [110, false]
                 ],
                 "abilities": [95],
                 "storage_type": "u",
@@ -854,7 +1223,7 @@
                 "name": "Beach",
                 "description": "Might be a good place to bring a date, or happen to run into someone you're interested in. Strangers might not appreciate advances here though, even if they're hot.\r\n\r\nThere's swimming, sand volleyball, or jogging on the beach for exercise.\r\n\r\nJobs include rentals, lifeguard, and surfing instructor.",
                 "attribs": [
-                    [85, 0.0],
+                    [85, "Beach"],
                     [130, 5.0]
                 ],
                 "abilities": [101, 129]
@@ -894,7 +1263,7 @@
                 "name": "Cinema",
                 "description": "One or two new movies come out each week, but there is also a large selection of classic movie showings for cheaper tickets.\r\n\r\nAvailable jobs: ticket vendor, popcorn popper, play button presser, clean sticky floors.",
                 "attribs": [
-                    [85, 1.0],
+                    [85, "Cinema"],
                     [130, 3.0]
                 ],
                 "abilities": [101, 129]
@@ -915,7 +1284,7 @@
                 "name": "Department Store",
                 "description": "All the name brands. Buy better clothes, maybe one day even a ring.\r\n\r\nAvailable jobs: outfit fetcher, checkout counter, security monitors.",
                 "attribs": [
-                    [85, 2.0],
+                    [85, "Department Store"],
                     [130, 2.0]
                 ],
                 "abilities": [101, 129],
@@ -942,7 +1311,7 @@
                 "name": "Electronics Store",
                 "description": "Available jobs: customer assistant, product returns, repair squad, checkout register.",
                 "attribs": [
-                    [85, 3.0],
+                    [85, "Electronics Store"],
                     [130, 3.0]
                 ],
                 "abilities": [101, 129],
@@ -955,7 +1324,7 @@
                 "name": "Friendly Community Church",
                 "description": "The message board out front says, \"All are welcome. So don't blame the pastor when someone else as bad as you comes!\"\r\n\r\nIf your character is religious, then this is one of the best places to meet like-minded people. If not, you could go the dark route of trying to seduce some good girls and lead them astray.\r\n\r\nServices are Sunday mornings, young singles group is Monday evenings, and mid-week meetings are Wednesday evenings. There are also retreats from time to time, and special activities such as assisting at homeless shelters.\r\n\r\nA few paid jobs are available: childcare, printing bulletins, landscaping.",
                 "attribs": [
-                    [85, 4.0],
+                    [85, "Friendly Community Church"],
                     [130, 4.0]
                 ],
                 "abilities": [101, 129],
@@ -970,7 +1339,7 @@
                 "name": "Gym",
                 "description": "Improve your fitness and perhaps meet people. South wing of the **Rec Center.**\r\n\r\nAvailable jobs: yoga instructor, masseuse, pick up weights, pool scraper.",
                 "attribs": [
-                    [85, 5.0],
+                    [85, "Gym"],
                     [130, 4.0]
                 ],
                 "abilities": [101, 129],
@@ -983,7 +1352,7 @@
                 "name": "Happy Hour Pub",
                 "description": "Where else would you go to blow off steam and have a good time? There's certain to be people here to meet. The only question is whether the types who frequent this joint are worth your time.\r\n\r\nEven if you'd normally consider yourself too moral to indulge in such a lifestyle, you could still choose someone less worthy (but good-looking) in an attempt to get them back on the right road.\r\n\r\nTwo pool tables and a juke box are on one side.\r\n\r\nAvailable jobs: drink mixer, piano man, bouncer, bathroom cleaner.",
                 "attribs": [
-                    [85, 6.0],
+                    [85, "Happy Hour Pub"],
                     [130, 4.0]
                 ],
                 "abilities": [101, 129],
@@ -1011,7 +1380,7 @@
                 "name": "Petrol Station",
                 "description": "Not only sells petrol but also any kind of vehicle maintenance, from selling wipers to repainting and replacing engine parts.\r\n\r\nAvailable jobs: pump receipt printing, oil changer, mechanic, order parts from catalog.",
                 "attribs": [
-                    [85, 7.0],
+                    [85, "Petrol Station"],
                     [130, 2.0]
                 ],
                 "abilities": [101, 129],
@@ -1042,7 +1411,7 @@
                 "name": "Supermarket",
                 "description": "Good prices for everyday items, such as:\r\n\r\n- Groceries\r\n- Basic clothes\r\n- Over-the-counter medicine\r\n\r\nAvailable jobs: stocker, bagger, cashier, alcohol scanner.",
                 "attribs": [
-                    [85, 8.0],
+                    [85, "Supermarket"],
                     [130, 2.0]
                 ],
                 "abilities": [101, 129],
@@ -1055,7 +1424,7 @@
                 "name": "Teria's Place",
                 "description": "Cafeteria style restaurant — go through the line and ask for what to put on your plate. A variety of options: noodles, meat, salads.\r\n\r\nThe owner named the place after his daughter. To meet her, start setting her up by duplicating one of the other characters.\r\n\r\nAvailable jobs: server, cook, dish washer.",
                 "attribs": [
-                    [85, 9.0],
+                    [85, "Teria's Place"],
                     [130, 2.0]
                 ],
                 "abilities": [101, 129],
@@ -1185,18 +1554,18 @@
                 "name": "Claudia",
                 "description": "Neatly dressed young woman with braided long brown hair. Looks welcoming but someone who should be greeted respectfully.",
                 "attribs": [
-                    [2, 4.0],
                     [3, 5.0],
                     [4, 7.0],
                     [5, 10.0],
                     [7, 1.0],
                     [10, 5.0],
                     [11, 1.0],
-                    [131, 0.0],
-                    [132, 0.0],
+                    [12, 4.0],
+                    [131, "Wealth"],
+                    [132, "Burned"],
                     [135, 0.0],
-                    [144, 0.0],
-                    [194, 0.0]
+                    [144, "Unaware"],
+                    [194, false]
                 ],
                 "abilities": [134, 136, 139, 166],
                 "location_id": 52,
@@ -1220,9 +1589,9 @@
                 "name": "Daveed",
                 "description": "Leads the young singles' group. Also young and single himself. Prematurely balding, but with a warm personality, even if overeager.",
                 "attribs": [
-                    [2, 7.0],
                     [3, 3.0],
-                    [10, 5.0]
+                    [10, 5.0],
+                    [12, 7.0]
                 ],
                 "location_id": 52,
                 "travel_party": "Church Singles",
@@ -1241,19 +1610,19 @@
                 "name": "(Enter a name)",
                 "description": "College has left little time for social life, until now. With a few months' holiday, this is the perfect time to reawaken that hidden charisma and those stifled interpersonal skills.\r\n\r\nThe default setup is male seeking female, configurable of course.\r\n\r\nAlso, you could change the win conditions, for example, having a baby with someone who you're in a committed relationship with. Best not to make the primary condition a certain **Feels** score, as that is a general metric rather than an objective status.",
                 "attribs": [
-                    [2, 5.0],
                     [3, 5.0],
                     [4, 4.0],
                     [5, 10.0],
-                    [8, 1.0],
+                    [8, true],
                     [10, 5.0],
+                    [12, 5.0],
                     [14, 0.0],
-                    [17, 3.0],
-                    [108, 8.0],
+                    [17, "Normal"],
+                    [108, 10.0],
                     [154, 0.0],
                     [156, 5.0],
-                    [158, 0.0],
-                    [194, 0.0]
+                    [158, "No Pressure"],
+                    [194, false]
                 ],
                 "abilities": [63, 64, 101, 107, 145, 146, 157, 178, 180, 181, 195, 198],
                 "toplevel": true,
@@ -1272,8 +1641,8 @@
                 "name": "Leighy",
                 "description": "Happy to wait on you for tips, but highly uninterested in any relationship with a customer, as she's had more than her fill of advances from drunks. Possibly you could get to know her personally while working at the pub, maybe helping her on a busy day.",
                 "attribs": [
-                    [2, 7.0],
-                    [144, 0.0]
+                    [12, 7.0],
+                    [144, "Unaware"]
                 ],
                 "location_id": 44
             },
@@ -1283,7 +1652,7 @@
                 "description": "Only wants the best for you, and makes sure to let you know what that is. Which includes eating, good grades, avoiding dangerous sports, and of course, finding a favorable match.",
                 "attribs": [
                     [7, 100.0],
-                    [9, 1.0]
+                    [9, true]
                 ],
                 "abilities": [66],
                 "location_id": 47
@@ -1303,10 +1672,16 @@
                 "description": "Athletic. The guy in the plastic white chair next to her is holding her hand. Does that mean they're seeing each other exclusively?",
                 "attribs": [
                     [4, 8.0],
-                    [144, 0.0]
+                    [144, "Unaware"]
                 ],
                 "location_id": 52,
                 "travel_party": "Church Singles"
+            },
+            {
+                "id": 213,
+                "name": "Teria's Father",
+                "description": "Owner of the cafeteria. Lives upstairs with his daughter in a small room. Generally, work is his life.",
+                "location_id": 140
             },
             {
                 "id": 141,
@@ -1323,19 +1698,19 @@
                 "name": "Zelest",
                 "description": "A young woman, but judging from her appearance, not a \"lady.\" Auburn shoulder-length hair. Loves dancing even if she's not particularly skilled at it.",
                 "attribs": [
-                    [2, 5.0],
                     [3, 9.0],
                     [4, 5.0],
                     [5, 7.0],
                     [7, 1.0],
                     [10, 2.0],
                     [11, 1.0],
+                    [12, 5.0],
                     [14, 0.0],
-                    [131, 0.0],
-                    [132, 0.0],
+                    [131, "Wealth"],
+                    [132, "Burned"],
                     [135, 0.0],
-                    [144, 0.0],
-                    [194, 0.0]
+                    [144, "Unaware"],
+                    [194, false]
                 ],
                 "abilities": [134, 136, 139, 166],
                 "location_id": 44,
@@ -1353,331 +1728,6 @@
                     [14, 6.0]
                 ],
                 "location_id": 46
-            }
-        ],
-        "attribs": [
-            {
-                "id": 11,
-                "name": "Arousal",
-                "description": "Physical arousal. **1** means average for a person of their age, while negative values indicate feeling sluggish or cold.\r\n\r\nThe number temporarily increases in steamy situations, up to **50** or higher. Arousal doesn't have to reach a certain target such as **100,** although doing so would make the rolls all but guaranteed.\r\n\r\nReset to **1** when meeting someone again on a new day."
-            },
-            {
-                "id": 3,
-                "name": "Beauty",
-                "description": "Let's face it, some of us have it, and some of us don't. Although they do say that beauty is in the eye of the beholder.\r\n\r\nThis is about genes, skin weathering, preference, or makeup. For weight and health, see [Fitness](/configure/attrib/4)."
-            },
-            {
-                "id": 194,
-                "name": "Birth Control",
-                "description": "Set to true if wearing a condom, on the pill, spermicide, or monthly cycle planning. The \"early withdrawal\" method does not count.",
-                "is_binary": true
-            },
-            {
-                "id": 9,
-                "name": "Can Lecture",
-                "description": "1 if true, otherwise 0",
-                "is_binary": true
-            },
-            {
-                "id": 8,
-                "name": "Can Listen to Lecture",
-                "description": "1 if true, otherwise 0",
-                "is_binary": true
-            },
-            {
-                "id": 2,
-                "name": "Charisma",
-                "description": "Being persuasive and likeable is useful for lots of things."
-            },
-            {
-                "id": 17,
-                "name": "Clean",
-                "description": "For example, spilled drink on clothing. Factors include how long since showered, and clothing washed.\r\n\r\nState of a person — not tracked by specific item of clothing.",
-                "enum_list": [
-                    "Disaster",
-                    "Spilled Or Muddied",
-                    "Needs Freshening",
-                    "Normal",
-                    "Squeaky"
-                ]
-            },
-            {
-                "id": 108,
-                "name": "Clothing Score",
-                "description": "Set up to 10 based on how well and appropriately dressed for the current situation."
-            },
-            {
-                "id": 15,
-                "name": "Day of Week",
-                "enum_list": [
-                    "Sunday",
-                    "Monday",
-                    "Tuesday",
-                    "Wednesday",
-                    "Thursday",
-                    "Friday",
-                    "Saturday"
-                ]
-            },
-            {
-                "id": 86,
-                "name": "Days Counter",
-                "description": "A simple running total, not necessarily important for months or seasons. Rather, used for example to track how long someone stays angry before they're willing to talk with you again."
-            },
-            {
-                "id": 85,
-                "name": "Employer ID",
-                "enum_list": [
-                    "Beach",
-                    "Cinema",
-                    "Department Store",
-                    "Electronics Store",
-                    "Friendly Community Church",
-                    "Gym",
-                    "Happy Hour Pub",
-                    "Petrol Station",
-                    "Supermarket",
-                    "Teria's Place"
-                ]
-            },
-            {
-                "id": 7,
-                "name": "Feels about You",
-                "description": "A key metric to determine how NPCs will respond to you. Somewhat subjective and variable.\r\n```\r\nLove:          above 50\r\nLike:         20 to  49\r\nInterested:    1 to  19\r\nUninterested: -1 to -19\r\nDislike:     -20 to -49\r\nLoathe:       below -50\r\n```\r\n\r\n[Click here](/configure/lookup/attrib/7) to see the full list. Or, get to lookup from *Main Setup* by hovering *Feels About You* and clicking on the magnifying glass."
-            },
-            {
-                "id": 4,
-                "name": "Fitness",
-                "description": "Scale from professional athletes down to overweight gamers who never leave the basement.\r\n\r\nTraining requires consistent exercise, at least 3 times per week. Increase fitness after the 3rd workout, then every 2 additional workouts as long as you keep up that schedule."
-            },
-            {
-                "id": 154,
-                "name": "Gift Bonus",
-                "description": "Provides temporary boosts to certain rolls."
-            },
-            {
-                "id": 130,
-                "name": "Hours Per Visit",
-                "description": "How many hours it takes for a typical visit to a certain location."
-            },
-            {
-                "id": 10,
-                "name": "Intelligence",
-                "description": "Measured by whether a person can calculate tips correctly, or how many lines of Shakespeare they can recite. Whether that makes conversations more interesting or not depends on who is listening."
-            },
-            {
-                "id": 158,
-                "name": "Intensity of Act",
-                "description": "For a positive response to a more intense physical act, your partner will probably need to be significantly aroused.",
-                "enum_list": ["No Pressure", "Gentle Touch", "Close Embrace", "Steamy", "Wild"]
-            },
-            {
-                "id": 14,
-                "name": "Intoxicated",
-                "description": "Even a little (1-2) could be relaxing. A moderate amount (5) is unsafe to drive under, while a lot (7-10) could mean acting wildly or even passing out.\r\n\r\nWears off after sleeping or waiting awhile."
-            },
-            {"id": 110, "name": "Job—Accepted", "is_binary": true},
-            {"id": 109, "name": "Job—Applied", "is_binary": true},
-            {"id": 88, "name": "Job—Hours Required"},
-            {"id": 89, "name": "Job—Wages Per Hour"},
-            {
-                "id": 5,
-                "name": "Modesty",
-                "description": "10 for fully modest, primarily based on wearing clothes in the right context. Wearing only underwear at home alone is not an issue, while neglecting to wear proper clothes in public could very well be.\r\n\r\nIf a person's clothes aren't listed but they have a reasonable modesty stat (or not shown), then that implies they're wearing normal clothes.\r\n\r\nBehaving lewdly or erotically can lower modesty even with clothes on."
-            },
-            {
-                "id": 144,
-                "name": "Relationship Status",
-                "description": "This character's romantic status with you.\r\nOnly applies to potential romantic partners.\r\nArranged by how difficult it is to move to that level.",
-                "enum_list": [
-                    "Unaware",
-                    "Acquaintance",
-                    "Friend",
-                    "Love Interest",
-                    "Matched",
-                    "Friends With Benefits",
-                    "Ex-Girlfriend",
-                    "Ex-Lover",
-                    "Divorced",
-                    "Dating",
-                    "Courting",
-                    "Exclusive",
-                    "Cheating With",
-                    "Mistress",
-                    "Living Together",
-                    "Separated",
-                    "Open Relationship",
-                    "Engaged",
-                    "Married",
-                    "Polyamorous",
-                    "Widowed"
-                ]
-            },
-            {
-                "id": 156,
-                "name": "Relevant Skill",
-                "description": "General attribute to set based on the situation. For example, if dancing is relevant, then set this value to your **Dancing Skill.** If no skills apply to the situation then set to **5.**"
-            },
-            {
-                "id": 135,
-                "name": "Similar Personality",
-                "description": "Sometimes it's more important to be similar than to be great. Tells roughly how much you have in common with them.\r\n\r\nTo set for someone, run their **Similar Personality—Calculate** event."
-            },
-            {
-                "id": 164,
-                "name": "Their Action",
-                "description": "List for **Choose Action** event.",
-                "enum_list": [
-                    "Shares about family she cares about",
-                    "Shares about a bad experience",
-                    "Asks about your family",
-                    "Tells about their dad",
-                    "Talks about their work",
-                    "Asks about your work",
-                    "Talks about movies",
-                    "Talks about hobbies",
-                    "Talks about sports",
-                    "Talks about school",
-                    "Gives their philosophy",
-                    "Talks about the future",
-                    "Emotionally vulnerable",
-                    "Cries",
-                    "Complains about the situation",
-                    "Complains about a person",
-                    "Complains about the world",
-                    "Judges you",
-                    "Judges themself",
-                    "Points at someone else in the room",
-                    "Tells about goals",
-                    "Asks what your intentions are",
-                    "Asks what your goals are",
-                    "Physical advance",
-                    "Flirt",
-                    "Talks dirty",
-                    "Adjusts clothing",
-                    "Laughs at your joke",
-                    "Acts silly",
-                    "Burps or farts crudely",
-                    "Makes up a fake story",
-                    "Lies about interest in other partners",
-                    "Lies about past with other partners",
-                    "Demand to know about your interest in them",
-                    "Demand to know about your interest in others",
-                    "Interacts with someone else",
-                    "Avoids a question",
-                    "Takes a bathroom break",
-                    "Slips",
-                    "Bumps into something and gets a bruise",
-                    "Accidentally elbows you",
-                    "Trips you",
-                    "Slaps you a bit hard",
-                    "Breaks something",
-                    "Leaves or runs away",
-                    "Gets angry at what you say",
-                    "Gets angry at what they see you do",
-                    "Gets angry at what you forgot to do",
-                    "Starts a petty argument",
-                    "Refuses to talk",
-                    "Suggests a social game",
-                    "Tabletop game such as cards",
-                    "Active game such as ping pong",
-                    "Dares you",
-                    "You dare them",
-                    "Ask truth question",
-                    "They ask you a truth question",
-                    "Wants to go out and have fun",
-                    "Does something rash",
-                    "Does something illegal",
-                    "Gets injured",
-                    "Gets sick",
-                    "Brings you to see someone",
-                    "Go on an adventure",
-                    "The great outdoors",
-                    "Gardening or yard work",
-                    "Music",
-                    "Painting",
-                    "Crafting or building",
-                    "Try something difficult",
-                    "Sit quietly together"
-                ]
-            },
-            {
-                "id": 132,
-                "name": "Their Attitude",
-                "description": "How the NPC typically interacts.\r\n\r\n- **Burned:** Cynical and guarded based on past experience.\r\n- **Dutiful:** Loyal to family; their own needs are secondary.\r\n- **Unstable:** Can easily turn from hot to cold.\r\n- **Wild:** Dislikes rules and wants to try new things spontaneously.\r\n- **Flirty:** Friendly or seductive with just about anyone.\r\n- **Crude:** Enjoys talking dirty, poor table manners.\r\n- **Aggressive:** Hot tempered and also quick to arousal.\r\n- **Domineering:** They expect to be in control.\r\n- **Fearful:** Quiet and hesitant to speak up, preferring to avoid problems.\r\n- **Distrustful:** Jealous and questioning.\r\n- **Secretive:** Tends to lie and cover up motivations.",
-                "enum_list": [
-                    "Burned",
-                    "Dutiful",
-                    "Unstable",
-                    "Wild",
-                    "Flirty",
-                    "Crude",
-                    "Aggressive",
-                    "Domineering",
-                    "Fearful",
-                    "Distrustful",
-                    "Secretive"
-                ]
-            },
-            {
-                "id": 131,
-                "name": "Their Goal",
-                "description": "What the NPC hopes to achieve. Supporting this goal is important for furthering a relationship.\r\n\r\n- **Wealth:** Career-driven or looking for a rich or ambitious partner.\r\n- **Stability:** Build a quiet, safe life.\r\n- **Excitement:** Avoid mundane existence, boring jobs or school.\r\n- **Discovery:** Create or learn new things that may improve the world.\r\n- **Positivity:** Deal with toxic parents, friends, or online comments.\r\n- **Noble Cause:** Feed the poor or join a political movement.\r\n- **Saving Myself:** Believes in waiting until marriage.\r\n- **Hookup:** Looking for one-night stands, anything to get into bed.\r\n- **Wounded:** Trying not to dwell on their recent breakup.\r\n- **Revenge:** Angry at someone or something.",
-                "enum_list": [
-                    "Wealth",
-                    "Stability",
-                    "Excitement",
-                    "Discovery",
-                    "Positivity",
-                    "Noble Cause",
-                    "Saving Myself",
-                    "Hookup",
-                    "Wounded",
-                    "Revenge"
-                ]
-            },
-            {
-                "id": 165,
-                "name": "Their Tone",
-                "description": "List for **Choose Tone** event.",
-                "enum_list": [
-                    "Sensitive",
-                    "Kind",
-                    "Loving",
-                    "Intimate",
-                    "Distant",
-                    "Cold",
-                    "Sad",
-                    "Happy",
-                    "Excited",
-                    "Goofy",
-                    "Angry",
-                    "Irrational",
-                    "Argumentative",
-                    "Jealous",
-                    "Cute",
-                    "Seductive",
-                    "Steamy",
-                    "Pleasant",
-                    "Needy",
-                    "Hungry",
-                    "Casual",
-                    "Uncomfortable",
-                    "Awkward",
-                    "Fun",
-                    "Confident",
-                    "Brave",
-                    "Quiet",
-                    "Fearful",
-                    "Uncertain",
-                    "Confused"
-                ]
-            },
-            {
-                "id": 183,
-                "name": "Who",
-                "description": "List for **Chance Encounter—Who.**",
-                "enum_list": ["Art", "Claudia", "Dreschsel", "Sydney", "Teria", "Zelest"]
             }
         ],
         "events": [
@@ -1830,7 +1880,7 @@
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
-                        "infield": {"attrib_id": 2}
+                        "infield": {"attrib_id": 12}
                     },
                     {
                         "infield": {"attrib_id": 108}
@@ -2227,7 +2277,7 @@
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
-                        "infield": {"attrib_id": 2}
+                        "infield": {"attrib_id": 12}
                     },
                     {
                         "infield": {"attrib_id": 108}
@@ -2677,10 +2727,10 @@
                 "outcome_type": "determined",
                 "determinants": [
                     {
-                        "infield": {"attrib_id": 2}
+                        "infield": {"attrib_id": 12}
                     },
                     {
-                        "infield": {"role": "target char", "attrib_id": 2},
+                        "infield": {"role": "target char", "attrib_id": 12},
                         "op_application": "-"
                     },
                     {"op_application": "m:=", "op_transform": "abs"},
