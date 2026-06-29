@@ -2,7 +2,6 @@
     "overall settings": {
         "title": "Farm Breeding",
         "description": "Offspring have event-based chances to inherit {blue|traits}. Could also grow crops.",
-        "slots": [],
         "win_reqs": [],
         "tag_introduce_order": 60,
         "tag_best_order": 80,
@@ -10,6 +9,60 @@
         "tag_complete": "03 Starter Kit / Not Tested"
     },
     "entities": {
+        "attribs": [
+            {"id": 5, "name": "age (female)"},
+            {"id": 4, "name": "age (male)"},
+            {
+                "id": 9,
+                "name": "birth year",
+                "description": "Use this to calculate age at any given time."
+            },
+            {
+                "id": 23,
+                "name": "bovine color",
+                "enum_list": ["Black and White", "Brown", "Red", "Black", "White"]
+            },
+            {
+                "id": 22,
+                "name": "inherit parent trait — list",
+                "description": "selection list for the event",
+                "enum_list": [
+                    "Mother",
+                    "Mother",
+                    "Mother",
+                    "Mother",
+                    "Mother",
+                    "New Trait",
+                    "Father",
+                    "Father",
+                    "Father",
+                    "Father",
+                    "Father"
+                ]
+            },
+            {"id": 8, "name": "life expectancy"},
+            {
+                "id": 3,
+                "name": "sex",
+                "description": "Determines which pairs can breed.",
+                "enum_list": ["Male ♂", "Female ♀"]
+            },
+            {
+                "id": 7,
+                "name": "species (female)",
+                "enum_list": ["Bovine", "Sheep", "Goat", "Chicken"]
+            },
+            {
+                "id": 6,
+                "name": "species (male)",
+                "enum_list": ["Bovine", "Sheep", "Goat", "Chicken"]
+            },
+            {
+                "id": 10,
+                "name": "year",
+                "description": "What year it currently is. Increment to progress through life cycles."
+            }
+        ],
         "items": [
             {
                 "id": 13,
@@ -111,60 +164,6 @@
                 "items": [
                     {"item_id": 14, "quantity": 1.0}
                 ]
-            }
-        ],
-        "attribs": [
-            {"id": 5, "name": "age (female)"},
-            {"id": 4, "name": "age (male)"},
-            {
-                "id": 9,
-                "name": "birth year",
-                "description": "Use this to calculate age at any given time."
-            },
-            {
-                "id": 8,
-                "name": "bovine color",
-                "enum_list": ["Black and White", "Brown", "Red", "Black", "White"]
-            },
-            {
-                "id": 22,
-                "name": "inherit parent trait — list",
-                "description": "selection list for the event",
-                "enum_list": [
-                    "Mother",
-                    "Mother",
-                    "Mother",
-                    "Mother",
-                    "Mother",
-                    "New Trait",
-                    "Father",
-                    "Father",
-                    "Father",
-                    "Father",
-                    "Father"
-                ]
-            },
-            {"id": 2, "name": "life expectancy"},
-            {
-                "id": 3,
-                "name": "sex",
-                "description": "Determines which pairs can breed.",
-                "enum_list": ["Male ♂", "Female ♀"]
-            },
-            {
-                "id": 7,
-                "name": "species (female)",
-                "enum_list": ["Bovine", "Sheep", "Goat", "Chicken"]
-            },
-            {
-                "id": 6,
-                "name": "species (male)",
-                "enum_list": ["Bovine", "Sheep", "Goat", "Chicken"]
-            },
-            {
-                "id": 10,
-                "name": "year",
-                "description": "What year it currently is. Increment to progress through life cycles."
             }
         ],
         "events": [

@@ -2,7 +2,6 @@
     "overall settings": {
         "title": "Furniture",
         "description": "Play as a newly arrived sofa in the central hall. Upgrades such as softer cushions {lemonchiffon|encourage potential sitters}. Relocation may make a difference, if you can manage it somehow, whether that be to a different spot in the room or somewhere else entirely.",
-        "slots": [],
         "win_reqs": [
             {"item_id": 20, "quantity": 1.0, "loc_id": 27, "attrib_value": 0.0}
         ],
@@ -12,290 +11,6 @@
         "tag_complete": "03 Starter Kit / Missing Logic"
     },
     "entities": {
-        "items": [
-            {
-                "id": 17,
-                "name": "@Beige Sofa",
-                "description": "Yes, this is your player character. 😊 Its role is mostly passive, observing and planning.\r\n\r\nPet hair and spilled food are not something this sofa appreciates.",
-                "attribs": [
-                    [2, 10.0],
-                    [3, 4.0],
-                    [7, 10.0],
-                    [12, 5.0]
-                ],
-                "abilities": [37, 38, 39, 40, 41],
-                "q_limit": 1.0
-            },
-            {
-                "id": 14,
-                "name": "Brand New Lounge Chair",
-                "description": "All black leather, seems suspicious.\r\n\r\nThis looks like potential competition, intent on getting people to sit on it instead, perhaps for some insidious purpose such as giving them a backache.",
-                "storage_type": "l",
-                "q_limit": 1.0
-            },
-            {
-                "id": 16,
-                "name": "🌷Coffee Table",
-                "description": "Low glass table with flowers in the middle. Saucers to hold teacups.",
-                "storage_type": "l",
-                "q_limit": 1.0
-            },
-            {
-                "id": 19,
-                "name": "Family",
-                "description": "Sum totals for all family members, possibly including pets and servants.",
-                "storage_type": "u",
-                "q_limit": 1.0
-            },
-            {
-                "id": 18,
-                "name": "🔥Fireplace",
-                "description": "You're not a fan of the dangerous sparks, although if it makes people happy, then being close might be worth the risk.",
-                "storage_type": "l",
-                "q_limit": 1.0
-            },
-            {
-                "id": 15,
-                "name": "🕰️Grandfather Clock",
-                "description": "Drives everyday affairs in this scenario. Tells time, although it must constantly be wound by hand. \r\n\r\nDuring the day or other likely times, try running for what counts as an hour (real time 8s). It can potentially run for multiple hours, until something happens.",
-                "storage_type": "l",
-                "q_limit": 1.0,
-                "recipes": [
-                    {
-                        "id": 13,
-                        "rate_amount": 0.0,
-                        "rate_duration": 8,
-                        "sources": [
-                            {"item_id": 15, "q_required": 1.0, "preserve": true}
-                        ]
-                    }
-                ]
-            },
-            {
-                "id": 20,
-                "name": "🎨Sofa Painting",
-                "description": "Your family is so pleased with you that they hire a painter to memorialize you for future generations. This picture would look lovely on the wall in the Central Hall.",
-                "storage_type": "l",
-                "q_limit": 1.0,
-                "recipes": [
-                    {
-                        "id": 14,
-                        "rate_duration": 15,
-                        "sources": [
-                            {"item_id": 17, "q_required": 1.0, "preserve": true},
-                            {"item_id": 19, "q_required": 1.0, "preserve": true}
-                        ],
-                        "attrib_reqs": [
-                            {
-                                "attrib_id": 6,
-                                "value_range": [200.0, 200.0],
-                                "range_inclusive": [true, true]
-                            }
-                        ]
-                    }
-                ]
-            }
-        ],
-        "locations": [
-            {
-                "id": 27,
-                "name": "Central Hall",
-                "description": "Used for both transit and gathering.",
-                "dimensions": [8, 8],
-                "toplevel": true,
-                "items": [
-                    {
-                        "item_id": 15,
-                        "quantity": 1.0,
-                        "position": [8, 3]
-                    },
-                    {
-                        "item_id": 16,
-                        "quantity": 1.0,
-                        "position": [6, 5]
-                    },
-                    {
-                        "item_id": 17,
-                        "quantity": 1.0,
-                        "position": [8, 5]
-                    },
-                    {
-                        "item_id": 18,
-                        "quantity": 1.0,
-                        "position": [4, 2]
-                    }
-                ],
-                "destinations": [
-                    {
-                        "loc2_id": 22,
-                        "door1": [7, 1]
-                    },
-                    {
-                        "loc2_id": 23,
-                        "door1": [8, 7]
-                    },
-                    {
-                        "loc2_id": 24,
-                        "door1": [1, 4]
-                    },
-                    {
-                        "loc2_id": 26,
-                        "door1": [2, 1]
-                    },
-                    {
-                        "loc2_id": 28,
-                        "door1": [4, 8]
-                    }
-                ],
-                "zones": [
-                    {
-                        "coords": [3, 1, 6, 2]
-                    },
-                    {
-                        "coords": [8, 5, 8, 5],
-                        "label": "Sofa's Normal Spot",
-                        "color": "#c8ad7f",
-                        "prevents_travel": false
-                    }
-                ]
-            },
-            {
-                "id": 24,
-                "name": "Dining Room",
-                "description": "A popular destination, as humans require food every day for sustenance. Servants are often in this area to prepare meals."
-            },
-            {
-                "id": 21,
-                "name": "House",
-                "description": "You don't know everything about it yet (you were initially wrapped on arrival and couldn't see), but it seems to be rather large, with several people living in it."
-            },
-            {
-                "id": 26,
-                "name": "Master Bedroom",
-                "description": "The creaky bed is a good indication of how long the master and missus are sleeping."
-            },
-            {
-                "id": 22,
-                "name": "Northeast Room",
-                "description": "Since there is another room to the side of this one, this room must be open enough to make it easy to walk through. Reginald sleeps here."
-            },
-            {
-                "id": 25,
-                "name": "Nursery",
-                "description": "There's another room back there, because you often hear Francis stomp into the northwest room, then a door closes and the footsteps become much quieter. It's where Lucy sleeps too.",
-                "destinations": [
-                    {"loc2_id": 22}
-                ]
-            },
-            {
-                "id": 28,
-                "name": "Outside",
-                "description": "Nearby are gardens and a forest for hunting."
-            },
-            {
-                "id": 23,
-                "name": "Study",
-                "description": "Shelves filled with books. The desk is a bit dusty as Charles doesn't always keep up with paperwork. Others in the family (but not Dash or Mittens) may use it for reading."
-            }
-        ],
-        "characters": [
-            {
-                "id": 30,
-                "name": "👨🏼Charles",
-                "description": "The husband, not yet middle aged. Pleasant although a bit lazy and entitled. Has an actual title, although people don't normally use it when addressing him.\r\n\r\nSchedule\r\n~~~~~~~~\r\nMorning: Comes from northeast room.",
-                "attribs": [
-                    [5, 11.0],
-                    [6, 10.0],
-                    [10, 6.0],
-                    [11, 5.0]
-                ],
-                "location_id": 26
-            },
-            {
-                "id": 33,
-                "name": "🐕Dash",
-                "description": "Irish wolfhound, fast and strong enough to encircle deer during a hunt.",
-                "attribs": [
-                    [6, 15.0],
-                    [10, 6.0],
-                    [11, 5.0]
-                ],
-                "location_id": 27,
-                "position": [5, 7]
-            },
-            {
-                "id": 35,
-                "name": "👩🏽Eliza",
-                "description": "Cute young maidservant that comes to the house for work every day. Cooks and cleans, finishing up in the kitchen early afternoon before moving on to the rest of the house. Might be exhausted enough to sit on the sofa when the master, or more importantly, the missus, isn't around.\r\n\r\nSchedule\r\n~~~~~~~~\r\nMorning: Comes inside and goes to dining room.\r\nEarly Afternoon: Comes from dining room.\r\nEvening: Leaves the house.",
-                "attribs": [
-                    [5, 8.0],
-                    [6, 10.0],
-                    [8, 13.0],
-                    [9, 19.0],
-                    [10, 6.0],
-                    [11, 5.0]
-                ],
-                "location_id": 28
-            },
-            {
-                "id": 34,
-                "name": "👦🏽Francis",
-                "description": "School-age boy, expected to study hard but often overlooked, leaving plenty of opportunities for playing outside and getting into mischief.\r\n\r\nSchedule\r\n~~~~~~~~\r\nMorning: Comes from northwest room.",
-                "attribs": [
-                    [5, 8.0],
-                    [6, 10.0],
-                    [10, 6.0],
-                    [11, 5.0]
-                ],
-                "location_id": 25
-            },
-            {
-                "id": 36,
-                "name": "👶Lucy",
-                "description": "Baby girl, toddler. Gets grumpy if not put to bed early enough. Doesn't see the point of having rules, and has the intention of breaking them whenever possible, although not nearly clever enough to avoid getting caught.\r\n\r\nSchedule\r\n~~~~~~~~\r\nUnpredictable.",
-                "attribs": [
-                    [6, 10.0],
-                    [10, 6.0],
-                    [11, 5.0]
-                ],
-                "location_id": 25
-            },
-            {
-                "id": 31,
-                "name": "👩🏿Margaret",
-                "description": "The wife. Pretty and intelligent, with a strong sense of self-worth — sometimes critical of her husband, the staff, and even the furniture.\r\n\r\nSchedule\r\n~~~~~~~~\r\nMorning: Comes from northeast room.",
-                "attribs": [
-                    [5, 9.0],
-                    [6, 10.0],
-                    [10, 6.0],
-                    [11, 5.0]
-                ],
-                "location_id": 26
-            },
-            {
-                "id": 29,
-                "name": "🐈Mittens",
-                "description": "Shorthair cat with a dense coat, white fur on the paws, stocky and well-built. Good mouser.",
-                "attribs": [
-                    [6, 20.0],
-                    [10, 6.0],
-                    [11, 5.0]
-                ],
-                "location_id": 22
-            },
-            {
-                "id": 32,
-                "name": "👴🏾Reginald",
-                "description": "The senior servant, and old man, practically part of the family, now primarily manages and has some freedom for leisure. Punctual; doesn't sleep late. Maybe a nice soft sofa is just what he needs to rest those weary bones.\r\n\r\nSchedule\r\n~~~~~~~~\r\nEarly morning: Comes from northwest room.",
-                "attribs": [
-                    [5, 6.0],
-                    [6, 10.0],
-                    [10, 2.0],
-                    [11, 5.0]
-                ],
-                "location_id": 22
-            }
-        ],
         "attribs": [
             {
                 "id": 5,
@@ -458,7 +173,7 @@
                 "description": "Soft is cozy — is that what people want in furniture?"
             },
             {
-                "id": 2,
+                "id": 14,
                 "name": "Wear Level",
                 "description": "How worn down furniture covering or other parts are. 0 is brand new, 100 is completely done for."
             },
@@ -476,6 +191,290 @@
                     "Dash",
                     "Mittens"
                 ]
+            }
+        ],
+        "items": [
+            {
+                "id": 17,
+                "name": "@Beige Sofa",
+                "description": "Yes, this is your player character. 😊 Its role is mostly passive, observing and planning.\r\n\r\nPet hair and spilled food are not something this sofa appreciates.",
+                "attribs": [
+                    [14, 10.0],
+                    [3, 4.0],
+                    [7, 10.0],
+                    [12, 5.0]
+                ],
+                "abilities": [37, 38, 39, 40, 41],
+                "q_limit": 1.0
+            },
+            {
+                "id": 43,
+                "name": "Brand New Lounge Chair",
+                "description": "All black leather, seems suspicious.\r\n\r\nThis looks like potential competition, intent on getting people to sit on it instead, perhaps for some insidious purpose such as giving them a backache.",
+                "storage_type": "l",
+                "q_limit": 1.0
+            },
+            {
+                "id": 16,
+                "name": "🌷Coffee Table",
+                "description": "Low glass table with flowers in the middle. Saucers to hold teacups.",
+                "storage_type": "l",
+                "q_limit": 1.0
+            },
+            {
+                "id": 19,
+                "name": "Family",
+                "description": "Sum totals for all family members, possibly including pets and servants.",
+                "storage_type": "u",
+                "q_limit": 1.0
+            },
+            {
+                "id": 18,
+                "name": "🔥Fireplace",
+                "description": "You're not a fan of the dangerous sparks, although if it makes people happy, then being close might be worth the risk.",
+                "storage_type": "l",
+                "q_limit": 1.0
+            },
+            {
+                "id": 15,
+                "name": "🕰️Grandfather Clock",
+                "description": "Drives everyday affairs in this scenario. Tells time, although it must constantly be wound by hand. \r\n\r\nDuring the day or other likely times, try running for what counts as an hour (real time 8s). It can potentially run for multiple hours, until something happens.",
+                "storage_type": "l",
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 45,
+                        "rate_amount": 0.0,
+                        "rate_duration": 8,
+                        "sources": [
+                            {"item_id": 15, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 20,
+                "name": "🎨Sofa Painting",
+                "description": "Your family is so pleased with you that they hire a painter to memorialize you for future generations. This picture would look lovely on the wall in the Central Hall.",
+                "storage_type": "l",
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 46,
+                        "rate_duration": 15,
+                        "sources": [
+                            {"item_id": 17, "q_required": 1.0, "preserve": true},
+                            {"item_id": 19, "q_required": 1.0, "preserve": true}
+                        ],
+                        "attrib_reqs": [
+                            {
+                                "attrib_id": 6,
+                                "value_range": [200.0, 200.0],
+                                "range_inclusive": [true, true]
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "locations": [
+            {
+                "id": 27,
+                "name": "Central Hall",
+                "description": "Used for both transit and gathering.",
+                "dimensions": [8, 8],
+                "toplevel": true,
+                "items": [
+                    {
+                        "item_id": 15,
+                        "quantity": 1.0,
+                        "position": [8, 3]
+                    },
+                    {
+                        "item_id": 16,
+                        "quantity": 1.0,
+                        "position": [6, 5]
+                    },
+                    {
+                        "item_id": 17,
+                        "quantity": 1.0,
+                        "position": [8, 5]
+                    },
+                    {
+                        "item_id": 18,
+                        "quantity": 1.0,
+                        "position": [4, 2]
+                    }
+                ],
+                "destinations": [
+                    {
+                        "loc2_id": 22,
+                        "door1": [7, 1]
+                    },
+                    {
+                        "loc2_id": 23,
+                        "door1": [8, 7]
+                    },
+                    {
+                        "loc2_id": 24,
+                        "door1": [1, 4]
+                    },
+                    {
+                        "loc2_id": 26,
+                        "door1": [2, 1]
+                    },
+                    {
+                        "loc2_id": 28,
+                        "door1": [4, 8]
+                    }
+                ],
+                "zones": [
+                    {
+                        "coords": [3, 1, 6, 2]
+                    },
+                    {
+                        "coords": [8, 5, 8, 5],
+                        "label": "Sofa's Normal Spot",
+                        "color": "#c8ad7f",
+                        "prevents_travel": false
+                    }
+                ]
+            },
+            {
+                "id": 24,
+                "name": "Dining Room",
+                "description": "A popular destination, as humans require food every day for sustenance. Servants are often in this area to prepare meals."
+            },
+            {
+                "id": 21,
+                "name": "House",
+                "description": "You don't know everything about it yet (you were initially wrapped on arrival and couldn't see), but it seems to be rather large, with several people living in it."
+            },
+            {
+                "id": 26,
+                "name": "Master Bedroom",
+                "description": "The creaky bed is a good indication of how long the master and missus are sleeping."
+            },
+            {
+                "id": 22,
+                "name": "Northeast Room",
+                "description": "Since there is another room to the side of this one, this room must be open enough to make it easy to walk through. Reginald sleeps here."
+            },
+            {
+                "id": 25,
+                "name": "Nursery",
+                "description": "There's another room back there, because you often hear Francis stomp into the northwest room, then a door closes and the footsteps become much quieter. It's where Lucy sleeps too.",
+                "destinations": [
+                    {"loc2_id": 22}
+                ]
+            },
+            {
+                "id": 28,
+                "name": "Outside",
+                "description": "Nearby are gardens and a forest for hunting."
+            },
+            {
+                "id": 23,
+                "name": "Study",
+                "description": "Shelves filled with books. The desk is a bit dusty as Charles doesn't always keep up with paperwork. Others in the family (but not Dash or Mittens) may use it for reading."
+            }
+        ],
+        "characters": [
+            {
+                "id": 30,
+                "name": "👨🏼Charles",
+                "description": "The husband, not yet middle aged. Pleasant although a bit lazy and entitled. Has an actual title, although people don't normally use it when addressing him.\r\n\r\nSchedule\r\n~~~~~~~~\r\nMorning: Comes from northeast room.",
+                "attribs": [
+                    [5, "11am"],
+                    [6, 10.0],
+                    [10, 6.0],
+                    [11, 5.0]
+                ],
+                "location_id": 26
+            },
+            {
+                "id": 33,
+                "name": "🐕Dash",
+                "description": "Irish wolfhound, fast and strong enough to encircle deer during a hunt.",
+                "attribs": [
+                    [6, 15.0],
+                    [10, 6.0],
+                    [11, 5.0]
+                ],
+                "location_id": 27,
+                "position": [5, 7]
+            },
+            {
+                "id": 35,
+                "name": "👩🏽Eliza",
+                "description": "Cute young maidservant that comes to the house for work every day. Cooks and cleans, finishing up in the kitchen early afternoon before moving on to the rest of the house. Might be exhausted enough to sit on the sofa when the master, or more importantly, the missus, isn't around.\r\n\r\nSchedule\r\n~~~~~~~~\r\nMorning: Comes inside and goes to dining room.\r\nEarly Afternoon: Comes from dining room.\r\nEvening: Leaves the house.",
+                "attribs": [
+                    [5, "8am"],
+                    [6, 10.0],
+                    [8, "1pm"],
+                    [9, "7pm"],
+                    [10, 6.0],
+                    [11, 5.0]
+                ],
+                "location_id": 28
+            },
+            {
+                "id": 34,
+                "name": "👦🏽Francis",
+                "description": "School-age boy, expected to study hard but often overlooked, leaving plenty of opportunities for playing outside and getting into mischief.\r\n\r\nSchedule\r\n~~~~~~~~\r\nMorning: Comes from northwest room.",
+                "attribs": [
+                    [5, "8am"],
+                    [6, 10.0],
+                    [10, 6.0],
+                    [11, 5.0]
+                ],
+                "location_id": 25
+            },
+            {
+                "id": 36,
+                "name": "👶Lucy",
+                "description": "Baby girl, toddler. Gets grumpy if not put to bed early enough. Doesn't see the point of having rules, and has the intention of breaking them whenever possible, although not nearly clever enough to avoid getting caught.\r\n\r\nSchedule\r\n~~~~~~~~\r\nUnpredictable.",
+                "attribs": [
+                    [6, 10.0],
+                    [10, 6.0],
+                    [11, 5.0]
+                ],
+                "location_id": 25
+            },
+            {
+                "id": 31,
+                "name": "👩🏿Margaret",
+                "description": "The wife. Pretty and intelligent, with a strong sense of self-worth — sometimes critical of her husband, the staff, and even the furniture.\r\n\r\nSchedule\r\n~~~~~~~~\r\nMorning: Comes from northeast room.",
+                "attribs": [
+                    [5, "9am"],
+                    [6, 10.0],
+                    [10, 6.0],
+                    [11, 5.0]
+                ],
+                "location_id": 26
+            },
+            {
+                "id": 29,
+                "name": "🐈Mittens",
+                "description": "Shorthair cat with a dense coat, white fur on the paws, stocky and well-built. Good mouser.",
+                "attribs": [
+                    [6, 20.0],
+                    [10, 6.0],
+                    [11, 5.0]
+                ],
+                "location_id": 22
+            },
+            {
+                "id": 32,
+                "name": "👴🏾Reginald",
+                "description": "The senior servant, and old man, practically part of the family, now primarily manages and has some freedom for leisure. Punctual; doesn't sleep late. Maybe a nice soft sofa is just what he needs to rest those weary bones.\r\n\r\nSchedule\r\n~~~~~~~~\r\nEarly morning: Comes from northwest room.",
+                "attribs": [
+                    [5, "6am"],
+                    [6, 10.0],
+                    [10, 2.0],
+                    [11, 5.0]
+                ],
+                "location_id": 22
             }
         ],
         "events": [
@@ -512,7 +511,7 @@
                         "infield": {"attrib_id": 3}
                     },
                     {
-                        "infield": {"attrib_id": 2}
+                        "infield": {"attrib_id": 14}
                     },
                     {
                         "infield": {"role": "target char", "field_mode": "dist", "item_id": 17}
@@ -535,7 +534,7 @@
                         "infield": {"attrib_id": 3}
                     },
                     {
-                        "infield": {"attrib_id": 2}
+                        "infield": {"attrib_id": 14}
                     },
                     {
                         "infield": {"attrib_id": 12}
@@ -552,7 +551,7 @@
                 "numeric_range": [-10, 50],
                 "determinants": [
                     {
-                        "infield": {"attrib_id": 2}
+                        "infield": {"attrib_id": 14}
                     },
                     {
                         "label": "Person 1",

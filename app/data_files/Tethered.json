@@ -2,7 +2,6 @@
     "overall settings": {
         "title": "Tethered",
         "description": "How did a pure spirit come to be bound to the earthly plane?\r\n\r\nQuest-driven story like *Bacon for Dinner* set in {#b3a25d|d}{#af9d6e|e}{#aa997f|e}{#a69491|p} {#a28fa2|m}{#9d8ab3|y}{#9985c4|t}{#9581d5|h}{#907ce7|o}{#8c77f8|l}{#a38cfb|o}{#ba9fff|g}{#d1b3ff|y}.",
-        "slots": ["Main Hand", "Off Hand", "Body", "Head", "Feet", "Back"],
         "win_reqs": [
             {"char_id": 4, "attrib_id": 7, "attrib_value": 0.0},
             {"item_id": 125, "quantity": 1.0, "char_id": 52},
@@ -14,6 +13,63 @@
         "tag_complete": "07 Playable / Under Construction"
     },
     "entities": {
+        "attribs": [
+            {"id": 28, "name": "Base Accuracy"},
+            {"id": 29, "name": "Base Damage"},
+            {
+                "id": 7,
+                "name": "Bound",
+                "description": "For example, hands tied. Limits movement or other actions.",
+                "is_binary": true
+            },
+            {"id": 88, "name": "Can Enter BH", "is_binary": true},
+            {"id": 89, "name": "Can Exit BH", "is_binary": true},
+            {
+                "id": 153,
+                "name": "Cha",
+                "description": "Charisma helps in persuasion or negotiating prices."
+            },
+            {"id": 25, "name": "Conscious"},
+            {"id": 31, "name": "Dex", "description": "Accuracy, evasion"},
+            {
+                "id": 2,
+                "name": "Equipment Slots",
+                "description": "Equipment slots for characters.",
+                "enum_list": [
+                    "Main Hand",
+                    "Off Hand",
+                    "Body",
+                    "Head",
+                    "Feet",
+                    "Back"
+                ]
+            },
+            {"id": 22, "name": "HP"},
+            {"id": 116, "name": "Is Atlanth", "is_binary": true},
+            {"id": 128, "name": "Is Crush", "is_binary": true},
+            {"id": 109, "name": "Is Danglars", "is_binary": true},
+            {"id": 140, "name": "Is Dulcie", "is_binary": true},
+            {"id": 14, "name": "Is Kormak", "is_binary": true},
+            {"id": 15, "name": "Is Lyria", "is_binary": true},
+            {"id": 95, "name": "Is Tethered One", "is_binary": true},
+            {"id": 158, "name": "Is Thaddeus", "is_binary": true},
+            {
+                "id": 12,
+                "name": "Perception",
+                "description": "Awareness, stealth detection"
+            },
+            {"id": 30, "name": "Str", "description": "Physical dmg"},
+            {
+                "id": 11,
+                "name": "Trickery",
+                "description": "Stealing (including locks), knots, stealth, deception."
+            },
+            {
+                "id": 154,
+                "name": "Wil",
+                "description": "Emotional and mental fortitude, comparable to Con or Str."
+            }
+        ],
         "items": [
             {
                 "id": 93,
@@ -125,7 +181,7 @@
                 "q_limit": 1.0,
                 "recipes": [
                     {
-                        "id": 125,
+                        "id": 197,
                         "sources": [
                             {"item_id": 122, "q_required": 1.0, "preserve": true}
                         ],
@@ -433,7 +489,7 @@
                 "q_limit": 2.0,
                 "recipes": [
                     {
-                        "id": 17,
+                        "id": 191,
                         "sources": [
                             {"item_id": 16, "q_required": 1.0, "preserve": true}
                         ],
@@ -650,7 +706,7 @@
                 "name": "Cordage",
                 "recipes": [
                     {
-                        "id": 48,
+                        "id": 193,
                         "rate_duration": 8,
                         "sources": [
                             {"item_id": 46, "q_required": 1.0}
@@ -686,7 +742,7 @@
                 "description": "Can mine spectrum ore."
             },
             {
-                "id": 8,
+                "id": 183,
                 "name": "Iron Dagger",
                 "description": "Piercing dmg",
                 "attribs": [
@@ -726,7 +782,7 @@
                 "q_limit": 1.0,
                 "recipes": [
                     {
-                        "id": 50,
+                        "id": 195,
                         "rate_duration": 15,
                         "sources": [
                             {"item_id": 37, "q_required": 1.0, "preserve": true},
@@ -774,8 +830,8 @@
                         "id": 175,
                         "rate_duration": 20,
                         "sources": [
-                            {"item_id": 174, "q_required": 1.0, "preserve": true},
-                            {"item_id": 68, "q_required": 1.0, "preserve": true}
+                            {"item_id": 68, "q_required": 1.0, "preserve": true},
+                            {"item_id": 174, "q_required": 1.0, "preserve": true}
                         ]
                     }
                 ]
@@ -790,8 +846,8 @@
                         "id": 170,
                         "rate_duration": 8,
                         "sources": [
-                            {"item_id": 168, "q_required": 2.0},
                             {"item_id": 78, "q_required": 5.0},
+                            {"item_id": 168, "q_required": 2.0},
                             {"item_id": 178, "q_required": 1.0, "preserve": true}
                         ]
                     }
@@ -821,7 +877,7 @@
                 "q_limit": 1.0,
                 "recipes": [
                     {
-                        "id": 108,
+                        "id": 196,
                         "rate_duration": 15,
                         "attrib_reqs": [
                             {
@@ -850,7 +906,7 @@
                 "q_limit": 1.0,
                 "recipes": [
                     {
-                        "id": 47,
+                        "id": 192,
                         "sources": [
                             {"item_id": 41, "q_required": 1.0, "preserve": true}
                         ]
@@ -870,7 +926,7 @@
                         ]
                     },
                     {
-                        "id": 49,
+                        "id": 194,
                         "rate_duration": 12,
                         "sources": [
                             {"item_id": 41, "q_required": 1.0, "preserve": true},
@@ -1052,9 +1108,9 @@
                 "name": "Dustridge Town",
                 "description": "Busy working class community. The most important local industry is mining.",
                 "destinations": [
+                    {"loc2_id": 17, "bidirectional": false},
                     {"loc2_id": 61},
-                    {"loc2_id": 71},
-                    {"loc2_id": 17, "bidirectional": false}
+                    {"loc2_id": 71}
                 ]
             },
             {
@@ -1105,7 +1161,7 @@
                 "dimensions": [5, 8],
                 "destinations": [
                     {
-                        "loc2_id": 3,
+                        "loc2_id": 8,
                         "door1": [2, 1],
                         "door2": [9, 10]
                     },
@@ -1125,7 +1181,7 @@
                 ]
             },
             {
-                "id": 3,
+                "id": 8,
                 "name": "Narrow Glade",
                 "description": "A day's journey southeast of **Blackvein Hold.**\r\n\r\nGuards are starting the long march back with their prisoners, worried they're too far away.  Looking at the pond, **Kormak** considers that if he could free his hands, this might be a chance to escape by swimming. Suddenly, he notices a creature in green briefly popping above the pond surface before re-emerging. Curious, he looks carefully and discovers it's a young woman.",
                 "dimensions": [10, 10],
@@ -1313,7 +1369,7 @@
                 "name": "Atlanth Tiderender",
                 "description": "Sea deity, keeper of drowned truths",
                 "attribs": [
-                    [116, 1.0]
+                    [116, true]
                 ],
                 "abilities": [155],
                 "location_id": 48
@@ -1327,11 +1383,11 @@
                     [22, 12.0]
                 ],
                 "abilities": [24],
-                "location_id": 3,
+                "location_id": 8,
                 "position": [10, 3],
                 "travel_party": "Chain Gang",
                 "items": [
-                    {"item_id": 8, "quantity": 1.0}
+                    {"item_id": 183, "quantity": 1.0}
                 ]
             },
             {
@@ -1343,7 +1399,7 @@
                     [22, 20.0]
                 ],
                 "abilities": [27, 33],
-                "location_id": 3,
+                "location_id": 8,
                 "position": [10, 4],
                 "travel_party": "Chain Gang",
                 "items": [
@@ -1355,7 +1411,7 @@
                 "name": "Crush",
                 "description": "- **Ancestry:** {peru|Stonereach}, taciturn, can shape stone, from Dustridge\r\n- **Specialties:** lumberjack, axe proficency, boxing skill\r\n- **Appearance:** thick and sturdy, dark gray skin",
                 "attribs": [
-                    [128, 1.0]
+                    [128, true]
                 ],
                 "abilities": [119, 150],
                 "location_id": 64
@@ -1365,7 +1421,7 @@
                 "name": "Danglars",
                 "description": "- **Ancestry:** {CornflowerBlue|Frostblended}, reserved, inviting\r\n- **Specialties:** seal hunter, ice hook proficiency\r\n- **Appearance:** fur clothing, bonelike skin not susceptible to frostbite, does not sweat",
                 "attribs": [
-                    [109, 1.0]
+                    [109, true]
                 ],
                 "abilities": [108],
                 "location_id": 50,
@@ -1388,7 +1444,7 @@
                 "name": "Dulcie",
                 "description": "- **Ancestry:** {pink|Jovial}, charismatic\r\n- **Specialties:** brings drinks and entertains tavern goers, usually men, not paid to be a prostitute although her job has at times led to sleeping with patrons\r\n- **Appearance:** age 30, soft and curvy build, light chocolate skin, low-cut bodice, messy layered colorful skirts",
                 "attribs": [
-                    [140, 1.0],
+                    [140, true],
                     [153, 8.0]
                 ],
                 "abilities": [139],
@@ -1399,8 +1455,8 @@
                 "name": "Evelyn",
                 "description": "- **Ancestry:** {yellow|Anorkind}\r\n- **Specialties:** legal clerk, divorced\r\n- **Appearance:** early 40's, wheelchair, business suit, blouse not fully buttoned, skirt",
                 "attribs": [
-                    [88, 1.0],
-                    [89, 1.0]
+                    [88, true],
+                    [89, true]
                 ],
                 "location_id": 56
             },
@@ -1409,8 +1465,8 @@
                 "name": "Galebane",
                 "description": "- **Ancestry:** {LemonChiffon|Aetherian}, aloof\r\n- **Specialties:** sorcerer, prison life skills instructor ostensibly to integrate into society\r\n\r\nEnjoys tormenting prisoners. Knowledge of the occult used to summon **Suhkh** through hell plane.",
                 "attribs": [
-                    [88, 1.0],
-                    [89, 1.0]
+                    [88, true],
+                    [89, true]
                 ],
                 "location_id": 56
             },
@@ -1419,16 +1475,16 @@
                 "name": "Kormak",
                 "description": "- **Ancestry:** {darkgray|Ithilborn}\r\n- **Specialties:** thief, archer\r\n\r\nEdit character and set *Leader* to \"Lyria\" to move with her.",
                 "attribs": [
-                    [7, 1.0],
+                    [7, true],
                     [11, 7.0],
                     [12, 6.0],
-                    [14, 1.0],
+                    [14, true],
                     [22, 10.0],
                     [30, 2.0],
                     [31, 6.0]
                 ],
                 "abilities": [10, 13],
-                "location_id": 3,
+                "location_id": 8,
                 "position": [9, 3],
                 "travel_party": "Chain Gang"
             },
@@ -1437,23 +1493,23 @@
                 "name": "Lorcan",
                 "description": "- **Ancestry:** {yellow|Anorkind}\r\n- **Specialties:** corrupt lawyer who twisted law for personal financial gain\r\n\r\nPrisoner.",
                 "attribs": [
-                    [88, 1.0],
-                    [89, 0.0]
+                    [88, true],
+                    [89, false]
                 ],
                 "location_id": 56
             },
             {
-                "id": 2,
+                "id": 3,
                 "name": "Lyria",
                 "description": "- **Ancestry:** {blue|Nalaran}, water affinity\r\n- **Specialties:** huntress, spear proficiency, young and brave explorer\r\n- **Appearance:** soft coral colored skin, slightly webbed fingers, popup fin flaps, lovely thin figure, tight dark green kelp-hide dress (sturdy leather), luminescent freckles across her nose and shoulders",
                 "attribs": [
-                    [15, 1.0],
+                    [15, true],
                     [22, 12.0],
                     [30, 6.0],
                     [31, 6.0],
-                    [89, 1.0]
+                    [89, true]
                 ],
-                "abilities": [26, 21, 33, 27],
+                "abilities": [21, 26, 27, 33],
                 "toplevel": true,
                 "location_id": 9,
                 "position": [3, 5]
@@ -1493,8 +1549,8 @@
                 "name": "Suhkh",
                 "description": "- **Ancestry:** {purple|Demon} (minor), succubus\r\n- **Specialties:** derives power from enticing and tormenting\r\n- **Appearance:** not visible in earthly plane, when seen in hell: orange pupils, blackened rotting bare flesh, whip-like tail, bodily fluids dripping, sulfur smell",
                 "attribs": [
-                    [88, 1.0],
-                    [89, 1.0]
+                    [88, true],
+                    [89, true]
                 ],
                 "location_id": 56
             },
@@ -1508,9 +1564,9 @@
                 "name": "Tethered One",
                 "description": "- **Ancestry:** not earthly, possibly celestial or demon\r\n- **Specialties:** partial existence in both spiritual and physical plane, dagger/knives proficiency, rogue, can slip through cracks, reportedly can stitch souls onto physical surfaces\r\n- **Appearance:** extroardinarily thin, {rebeccapurple|purple glow} rather than irises comes from within eye sockets, long smooth dark pants and shirt, pale face, slick hair",
                 "attribs": [
-                    [88, 1.0],
-                    [89, 0.0],
-                    [95, 1.0]
+                    [88, true],
+                    [89, false],
+                    [95, true]
                 ],
                 "abilities": [96, 145],
                 "location_id": 94
@@ -1521,7 +1577,7 @@
                 "description": "- **Ancestry:** {peru|Stonereach}\r\n- **Specialties:** wealthy mining foreman, somewhat of a bully",
                 "attribs": [
                     [154, 4.0],
-                    [158, 1.0]
+                    [158, true]
                 ],
                 "location_id": 66,
                 "items": [
@@ -1533,50 +1589,6 @@
                 "name": "Vull",
                 "description": "- god of molten rock, forges\r\n- passively upholds seal of Blackvein Hold\r\n- teamed up with Sunderforge to build the bridge in the depths of time",
                 "location_id": 75
-            }
-        ],
-        "attribs": [
-            {"id": 28, "name": "Base Accuracy"},
-            {"id": 29, "name": "Base Damage"},
-            {
-                "id": 7,
-                "name": "Bound",
-                "description": "For example, hands tied. Limits movement or other actions.",
-                "is_binary": true
-            },
-            {"id": 88, "name": "Can Enter BH", "is_binary": true},
-            {"id": 89, "name": "Can Exit BH", "is_binary": true},
-            {
-                "id": 153,
-                "name": "Cha",
-                "description": "Charisma helps in persuasion or negotiating prices."
-            },
-            {"id": 25, "name": "Conscious"},
-            {"id": 31, "name": "Dex", "description": "Accuracy, evasion"},
-            {"id": 22, "name": "HP"},
-            {"id": 116, "name": "Is Atlanth", "is_binary": true},
-            {"id": 128, "name": "Is Crush", "is_binary": true},
-            {"id": 109, "name": "Is Danglars", "is_binary": true},
-            {"id": 140, "name": "Is Dulcie", "is_binary": true},
-            {"id": 14, "name": "Is Kormak", "is_binary": true},
-            {"id": 15, "name": "Is Lyria", "is_binary": true},
-            {"id": 95, "name": "Is Tethered One", "is_binary": true},
-            {"id": 158, "name": "Is Thaddeus", "is_binary": true},
-            {
-                "id": 12,
-                "name": "Perception",
-                "description": "Awareness, stealth detection"
-            },
-            {"id": 30, "name": "Str", "description": "Physical dmg"},
-            {
-                "id": 11,
-                "name": "Trickery",
-                "description": "Stealing (including locks), knots, stealth, deception."
-            },
-            {
-                "id": 154,
-                "name": "Wil",
-                "description": "Emotional and mental fortitude, comparable to Con or Str."
             }
         ],
         "events": [

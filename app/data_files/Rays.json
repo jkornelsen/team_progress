@@ -2,7 +2,6 @@
     "overall settings": {
         "title": "Rays",
         "description": "Form {#FF0000|c}{#FF6600|o}{#CC9900|l}{#CCCC00|o}{#99CC00|r}{#66CC00|f}{#0099CC|u}{#0000FF|l} rectangular prisms at the beginning of space and time. Upgrade rates through events.\r\n\r\n        {red|[]]]]]]]]]]]]]]]]]]}        {green|######}     {blue|===}",
-        "slots": [],
         "win_reqs": [
             {"item_id": 13, "quantity": 1.0, "loc_id": 43, "attrib_value": 0.0}
         ],
@@ -22,6 +21,13 @@
         "This 'comments' field is for reference only, ignored by the game and not saved."
     ],
     "entities": {
+        "attribs": [
+            {
+                "id": 53,
+                "name": "Duration Multiplier",
+                "description": "For upgrades and other low-quantity items, you can reduce how long production takes. Set this multiplier according to the table below, generally 5% less per **{lemonchiffon|BSF}** above 1. Then, do **Recipe Durations** to apply the changes.\r\n\r\n```\r\n{lemonchiffon|BSF}    multiplier\r\n---    -------------\r\n0.5    1.1\r\n1      1 (no change)\r\n2      0.9\r\n4      0.8\r\n5      0.75\r\n8      0.6\r\n10     0.5\r\n```"
+            }
+        ],
         "items": [
             {
                 "id": 12,
@@ -59,7 +65,7 @@
                 "q_limit": 1.0,
                 "recipes": [
                     {
-                        "id": 34,
+                        "id": 84,
                         "instant": true,
                         "sources": [
                             {"item_id": 8, "q_required": 1.0, "preserve": true}
@@ -88,7 +94,7 @@
                 "masked": true,
                 "recipes": [
                     {
-                        "id": 5,
+                        "id": 75,
                         "instant": true,
                         "sources": [
                             {"item_id": 6, "q_required": 100.0},
@@ -125,7 +131,7 @@
                 "masked": true,
                 "recipes": [
                     {
-                        "id": 51,
+                        "id": 101,
                         "rate_duration": 10,
                         "sources": [
                             {"item_id": 16, "q_required": 33.0}
@@ -143,7 +149,7 @@
                 "masked": true,
                 "recipes": [
                     {
-                        "id": 32,
+                        "id": 82,
                         "rate_amount": 0.5,
                         "rate_duration": 30,
                         "sources": [
@@ -152,7 +158,7 @@
                         ]
                     },
                     {
-                        "id": 57,
+                        "id": 107,
                         "rate_amount": 100.0,
                         "sources": [
                             {"item_id": 5, "q_required": 1.0, "preserve": true},
@@ -171,7 +177,7 @@
                 "masked": true,
                 "recipes": [
                     {
-                        "id": 43,
+                        "id": 93,
                         "rate_duration": 12,
                         "sources": [
                             {"item_id": 26, "q_required": 1.0, "preserve": true},
@@ -189,7 +195,7 @@
                 "masked": true,
                 "recipes": [
                     {
-                        "id": 33,
+                        "id": 83,
                         "rate_duration": 15,
                         "sources": [
                             {"item_id": 16, "q_required": 1.0}
@@ -212,7 +218,7 @@
                 "masked": true,
                 "recipes": [
                     {
-                        "id": 50,
+                        "id": 100,
                         "rate_duration": 15,
                         "sources": [
                             {"item_id": 38, "q_required": 3.0, "preserve": true}
@@ -248,7 +254,7 @@
                 "masked": true,
                 "recipes": [
                     {
-                        "id": 54,
+                        "id": 104,
                         "rate_duration": 300,
                         "sources": [
                             {"item_id": 7, "q_required": 1.0, "preserve": true},
@@ -267,7 +273,7 @@
                 "masked": true,
                 "recipes": [
                     {
-                        "id": 53,
+                        "id": 103,
                         "rate_duration": 180,
                         "sources": [
                             {"item_id": 28, "q_required": 3.0, "preserve": true}
@@ -285,7 +291,7 @@
                 "masked": true,
                 "recipes": [
                     {
-                        "id": 3,
+                        "id": 73,
                         "rate_amount": 0.5,
                         "rate_duration": 8,
                         "sources": [
@@ -294,7 +300,7 @@
                         ]
                     },
                     {
-                        "id": 36,
+                        "id": 86,
                         "rate_amount": 0.5,
                         "instant": true,
                         "sources": [
@@ -303,7 +309,7 @@
                         ]
                     },
                     {
-                        "id": 58,
+                        "id": 108,
                         "rate_amount": 100.0,
                         "sources": [
                             {"item_id": 5, "q_required": 1.0, "preserve": true},
@@ -313,7 +319,7 @@
                 ]
             },
             {
-                "id": 2,
+                "id": 58,
                 "name": "Green Bar Boost I",
                 "description": "Increases *Gain per Batch* by +0.5 each. Go to **Green Bar Rate** to perform the upgrade.",
                 "abilities": [45],
@@ -322,7 +328,7 @@
                 "masked": true,
                 "recipes": [
                     {
-                        "id": 7,
+                        "id": 77,
                         "rate_duration": 12,
                         "sources": [
                             {"item_id": 6, "q_required": 7.0}
@@ -340,12 +346,12 @@
                 "masked": true,
                 "recipes": [
                     {
-                        "id": 38,
+                        "id": 88,
                         "rate_duration": 14,
                         "sources": [
-                            {"item_id": 2, "q_required": 2.0, "preserve": true},
                             {"item_id": 31, "q_required": 25.0},
-                            {"item_id": 34, "q_required": 100.0}
+                            {"item_id": 34, "q_required": 100.0},
+                            {"item_id": 58, "q_required": 2.0, "preserve": true}
                         ]
                     }
                 ]
@@ -358,7 +364,7 @@
                 "masked": true,
                 "recipes": [
                     {
-                        "id": 31,
+                        "id": 81,
                         "rate_duration": 15,
                         "sources": [
                             {"item_id": 39, "q_required": 30.0},
@@ -376,7 +382,7 @@
                 "masked": true,
                 "recipes": [
                     {
-                        "id": 52,
+                        "id": 102,
                         "rate_duration": 600,
                         "sources": [
                             {"item_id": 8, "q_required": 1.0},
@@ -397,7 +403,7 @@
                 "masked": true,
                 "recipes": [
                     {
-                        "id": 40,
+                        "id": 90,
                         "rate_duration": 20,
                         "sources": [
                             {"item_id": 6, "q_required": 5.0},
@@ -417,7 +423,7 @@
                 "masked": true,
                 "recipes": [
                     {
-                        "id": 48,
+                        "id": 98,
                         "rate_duration": 12,
                         "sources": [
                             {"item_id": 6, "q_required": 1000.0},
@@ -434,7 +440,7 @@
                 "masked": true,
                 "recipes": [
                     {
-                        "id": 42,
+                        "id": 92,
                         "rate_duration": 15,
                         "sources": [
                             {"item_id": 31, "q_required": 1000.0}
@@ -451,21 +457,21 @@
                 "toplevel": true,
                 "recipes": [
                     {
-                        "id": 1,
+                        "id": 71,
                         "rate_duration": 8,
                         "sources": [
                             {"item_id": 8, "q_required": 1.0, "preserve": true}
                         ]
                     },
                     {
-                        "id": 35,
+                        "id": 85,
                         "instant": true,
                         "sources": [
                             {"item_id": 24, "q_required": 1.0}
                         ]
                     },
                     {
-                        "id": 56,
+                        "id": 106,
                         "rate_amount": 100.0,
                         "sources": [
                             {"item_id": 5, "q_required": 1.0, "preserve": true},
@@ -484,7 +490,7 @@
                 "masked": true,
                 "recipes": [
                     {
-                        "id": 6,
+                        "id": 76,
                         "rate_duration": 12,
                         "sources": [
                             {"item_id": 34, "q_required": 20.0}
@@ -502,7 +508,7 @@
                 "masked": true,
                 "recipes": [
                     {
-                        "id": 4,
+                        "id": 74,
                         "rate_duration": 14,
                         "sources": [
                             {"item_id": 3, "q_required": 2.0, "preserve": true},
@@ -521,7 +527,7 @@
                 "masked": true,
                 "recipes": [
                     {
-                        "id": 49,
+                        "id": 99,
                         "rate_duration": 10,
                         "sources": [
                             {"item_id": 39, "q_required": 10.0}
@@ -561,7 +567,7 @@
                 "masked": true,
                 "recipes": [
                     {
-                        "id": 44,
+                        "id": 94,
                         "rate_duration": 300,
                         "sources": [
                             {"item_id": 6, "q_required": 10000.0},
@@ -583,7 +589,7 @@
                 "masked": true,
                 "recipes": [
                     {
-                        "id": 55,
+                        "id": 105,
                         "rate_duration": 120,
                         "sources": [
                             {"item_id": 28, "q_required": 18.0, "preserve": true}
@@ -631,7 +637,7 @@
                 "masked": true,
                 "recipes": [
                     {
-                        "id": 39,
+                        "id": 89,
                         "rate_duration": 20,
                         "sources": [
                             {"item_id": 19, "q_required": 1.0, "preserve": true},
@@ -649,7 +655,7 @@
                 "masked": true,
                 "recipes": [
                     {
-                        "id": 47,
+                        "id": 97,
                         "rate_duration": 15,
                         "sources": [
                             {"item_id": 7, "q_required": 1000.0}
@@ -686,7 +692,7 @@
                 "masked": true,
                 "recipes": [
                     {
-                        "id": 41,
+                        "id": 91,
                         "rate_duration": 20,
                         "sources": [
                             {"item_id": 6, "q_required": 1.0},
@@ -710,7 +716,7 @@
                 "masked": true,
                 "recipes": [
                     {
-                        "id": 59,
+                        "id": 109,
                         "rate_duration": 12,
                         "sources": [
                             {"item_id": 10, "q_required": 200.0},
@@ -727,7 +733,7 @@
                 "masked": true,
                 "recipes": [
                     {
-                        "id": 46,
+                        "id": 96,
                         "rate_duration": 15,
                         "sources": [
                             {"item_id": 16, "q_required": 100.0}
@@ -745,7 +751,7 @@
                 "masked": true,
                 "recipes": [
                     {
-                        "id": 2,
+                        "id": 72,
                         "rate_duration": 20,
                         "sources": [
                             {"item_id": 34, "q_required": 5.0},
@@ -764,7 +770,7 @@
                 "masked": true,
                 "recipes": [
                     {
-                        "id": 37,
+                        "id": 87,
                         "rate_duration": 12,
                         "sources": [
                             {"item_id": 16, "q_required": 2.0}
@@ -782,7 +788,7 @@
                 "masked": true,
                 "recipes": [
                     {
-                        "id": 45,
+                        "id": 95,
                         "rate_duration": 14,
                         "sources": [
                             {"item_id": 6, "q_required": 500.0},
@@ -809,12 +815,12 @@
                 "description": "Ever new possibilities present themselves as we begin to see what the Sticky Force can do in this place, Terra. Rather than cosmically large and powerful, things here are of lesser scale but beautiful.",
                 "masked": true,
                 "items": [
-                    {"item_id": 14, "quantity": 0.0, "position": null},
-                    {"item_id": 13, "quantity": 0.0, "position": null},
-                    {"item_id": 11, "quantity": 0.0, "position": null},
-                    {"item_id": 29, "quantity": 0.0, "position": null},
-                    {"item_id": 48, "quantity": 1.0, "position": null},
-                    {"item_id": 12, "quantity": 0.0, "position": null}
+                    {"item_id": 11},
+                    {"item_id": 12},
+                    {"item_id": 13},
+                    {"item_id": 14},
+                    {"item_id": 29},
+                    {"item_id": 48, "quantity": 1.0}
                 ]
             },
             {
@@ -825,13 +831,6 @@
             }
         ],
         "characters": [],
-        "attribs": [
-            {
-                "id": 53,
-                "name": "Duration Multiplier",
-                "description": "For upgrades and other low-quantity items, you can reduce how long production takes. Set this multiplier according to the table below, generally 5% less per **{lemonchiffon|BSF}** above 1. Then, do **Recipe Durations** to apply the changes.\r\n\r\n```\r\n{lemonchiffon|BSF}    multiplier\r\n---    -------------\r\n0.5    1.1\r\n1      1 (no change)\r\n2      0.9\r\n4      0.8\r\n5      0.75\r\n8      0.6\r\n10     0.5\r\n```"
-            }
-        ],
         "events": [
             {
                 "id": 55,
@@ -852,7 +851,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_amt",
                             "item_id": 16,
-                            "recipe_id": 5
+                            "recipe_id": 75
                         },
                         "op_application": ":=",
                         "auto_apply": true
@@ -876,7 +875,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_amt",
                             "item_id": 39,
-                            "recipe_id": 1
+                            "recipe_id": 71
                         },
                         "op_application": ":=",
                         "op_transform": "*"
@@ -894,7 +893,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_amt",
                             "item_id": 34,
-                            "recipe_id": 3
+                            "recipe_id": 73
                         },
                         "op_application": ":=",
                         "op_transform": "*",
@@ -929,7 +928,7 @@
                     },
                     {
                         "get_val_from": "const",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 2},
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 58},
                         "op_application": ":=",
                         "op_transform": "c"
                     },
@@ -964,7 +963,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_amt",
                             "item_id": 31,
-                            "recipe_id": 32
+                            "recipe_id": 82
                         },
                         "op_application": ":=",
                         "op_transform": "round",
@@ -985,7 +984,7 @@
                         "op_application": "*"
                     },
                     {
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 2},
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 58},
                         "op_application": "*"
                     },
                     {
@@ -1002,7 +1001,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_amt",
                             "item_id": 34,
-                            "recipe_id": 3
+                            "recipe_id": 73
                         },
                         "op_application": ":=",
                         "op_transform": "round",
@@ -1033,7 +1032,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_amt",
                             "item_id": 7,
-                            "recipe_id": 40
+                            "recipe_id": 90
                         },
                         "op_application": ":=",
                         "auto_apply": true
@@ -1064,7 +1063,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_dur",
                             "item_id": 21,
-                            "recipe_id": 43
+                            "recipe_id": 93
                         },
                         "op_application": ":=",
                         "op_transform": "*",
@@ -1075,8 +1074,8 @@
                         "outfield": {
                             "role": "blueprint",
                             "field_mode": "rate_dur",
-                            "item_id": 2,
-                            "recipe_id": 7
+                            "item_id": 58,
+                            "recipe_id": 77
                         },
                         "op_application": ":=",
                         "op_transform": "*",
@@ -1088,7 +1087,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_dur",
                             "item_id": 25,
-                            "recipe_id": 48
+                            "recipe_id": 98
                         },
                         "op_application": ":=",
                         "op_transform": "*",
@@ -1100,7 +1099,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_dur",
                             "item_id": 3,
-                            "recipe_id": 6
+                            "recipe_id": 76
                         },
                         "op_application": ":=",
                         "op_transform": "*",
@@ -1112,7 +1111,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_dur",
                             "item_id": 9,
-                            "recipe_id": 59
+                            "recipe_id": 109
                         },
                         "op_application": ":=",
                         "op_transform": "*",
@@ -1124,7 +1123,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_dur",
                             "item_id": 20,
-                            "recipe_id": 37
+                            "recipe_id": 87
                         },
                         "op_application": ":=",
                         "op_transform": "*",
@@ -1136,7 +1135,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_dur",
                             "item_id": 33,
-                            "recipe_id": 38
+                            "recipe_id": 88
                         },
                         "op_application": ":=",
                         "op_transform": "*",
@@ -1148,7 +1147,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_dur",
                             "item_id": 4,
-                            "recipe_id": 4
+                            "recipe_id": 74
                         },
                         "op_application": ":=",
                         "op_transform": "*",
@@ -1160,7 +1159,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_dur",
                             "item_id": 22,
-                            "recipe_id": 45
+                            "recipe_id": 95
                         },
                         "op_application": ":=",
                         "op_transform": "*",
@@ -1172,7 +1171,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_dur",
                             "item_id": 26,
-                            "recipe_id": 33
+                            "recipe_id": 83
                         },
                         "op_application": ":=",
                         "op_transform": "*",
@@ -1184,7 +1183,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_dur",
                             "item_id": 37,
-                            "recipe_id": 31
+                            "recipe_id": 81
                         },
                         "op_application": ":=",
                         "op_transform": "*",
@@ -1196,7 +1195,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_dur",
                             "item_id": 23,
-                            "recipe_id": 42
+                            "recipe_id": 92
                         },
                         "op_application": ":=",
                         "op_transform": "*",
@@ -1208,7 +1207,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_dur",
                             "item_id": 19,
-                            "recipe_id": 47
+                            "recipe_id": 97
                         },
                         "op_application": ":=",
                         "op_transform": "*",
@@ -1220,7 +1219,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_dur",
                             "item_id": 17,
-                            "recipe_id": 46
+                            "recipe_id": 96
                         },
                         "op_application": ":=",
                         "op_transform": "*",
@@ -1232,7 +1231,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_dur",
                             "item_id": 28,
-                            "recipe_id": 51
+                            "recipe_id": 101
                         },
                         "op_application": ":=",
                         "op_transform": "*",
@@ -1244,7 +1243,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_dur",
                             "item_id": 38,
-                            "recipe_id": 49
+                            "recipe_id": 99
                         },
                         "op_application": ":=",
                         "op_transform": "*",
@@ -1256,7 +1255,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_dur",
                             "item_id": 40,
-                            "recipe_id": 50
+                            "recipe_id": 100
                         },
                         "op_application": ":=",
                         "op_transform": "*",
@@ -1268,7 +1267,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_dur",
                             "item_id": 27,
-                            "recipe_id": 54
+                            "recipe_id": 104
                         },
                         "op_application": ":=",
                         "op_transform": "*",
@@ -1280,7 +1279,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_dur",
                             "item_id": 32,
-                            "recipe_id": 53
+                            "recipe_id": 103
                         },
                         "op_application": ":=",
                         "op_transform": "*",
@@ -1292,7 +1291,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_dur",
                             "item_id": 30,
-                            "recipe_id": 52
+                            "recipe_id": 102
                         },
                         "op_application": ":=",
                         "op_transform": "*",
@@ -1304,7 +1303,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_dur",
                             "item_id": 5,
-                            "recipe_id": 55
+                            "recipe_id": 105
                         },
                         "op_application": ":=",
                         "op_transform": "*",
@@ -1341,7 +1340,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_amt",
                             "item_id": 39,
-                            "recipe_id": 1
+                            "recipe_id": 71
                         },
                         "op_application": ":=",
                         "op_transform": "round",
@@ -1361,7 +1360,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_amt",
                             "item_id": 39,
-                            "recipe_id": 56
+                            "recipe_id": 106
                         },
                         "op_application": ":=",
                         "op_transform": "*",
@@ -1373,7 +1372,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_amt",
                             "item_id": 34,
-                            "recipe_id": 58
+                            "recipe_id": 108
                         },
                         "op_application": ":=",
                         "op_transform": "*",
@@ -1385,7 +1384,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_amt",
                             "item_id": 31,
-                            "recipe_id": 57
+                            "recipe_id": 107
                         },
                         "op_application": ":=",
                         "op_transform": "*",
@@ -1446,7 +1445,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_amt",
                             "item_id": 10,
-                            "recipe_id": 39
+                            "recipe_id": 89
                         },
                         "op_application": ":=",
                         "auto_apply": true
@@ -1475,7 +1474,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_amt",
                             "item_id": 18,
-                            "recipe_id": 41
+                            "recipe_id": 91
                         },
                         "op_application": ":=",
                         "auto_apply": true
@@ -1511,7 +1510,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_amt",
                             "item_id": 6,
-                            "recipe_id": 2
+                            "recipe_id": 72
                         },
                         "op_application": ":=",
                         "op_transform": "round",
@@ -1523,33 +1522,33 @@
     },
     "general data": {
         "piles": [
-            {"item_id": 2, "quantity": 1.0},
             {"item_id": 3, "quantity": 1.0},
-            {"item_id": 5, "quantity": 0.0},
-            {"item_id": 7, "quantity": 0.0},
+            {"item_id": 5},
+            {"item_id": 7},
             {"item_id": 8, "quantity": 1.0},
             {"item_id": 9, "quantity": 1.0},
-            {"item_id": 10, "quantity": 0.0},
+            {"item_id": 10},
             {"item_id": 15, "quantity": 1.0},
-            {"item_id": 17, "quantity": 0.0},
-            {"item_id": 18, "quantity": 0.0},
-            {"item_id": 19, "quantity": 0.0},
+            {"item_id": 17},
+            {"item_id": 18},
+            {"item_id": 19},
             {"item_id": 20, "quantity": 1.0},
             {"item_id": 21, "quantity": 1.0},
-            {"item_id": 23, "quantity": 0.0},
-            {"item_id": 24, "quantity": 0.0},
+            {"item_id": 23},
+            {"item_id": 24},
             {"item_id": 25, "quantity": 1.0},
-            {"item_id": 26, "quantity": 0.0},
-            {"item_id": 27, "quantity": 0.0},
-            {"item_id": 28, "quantity": 0.0},
-            {"item_id": 30, "quantity": 0.0},
-            {"item_id": 31, "quantity": 0.0},
-            {"item_id": 32, "quantity": 0.0},
-            {"item_id": 35, "quantity": 0.0},
+            {"item_id": 26},
+            {"item_id": 27},
+            {"item_id": 28},
+            {"item_id": 30},
+            {"item_id": 31},
+            {"item_id": 32},
+            {"item_id": 35},
             {"item_id": 36, "quantity": 1.5},
-            {"item_id": 38, "quantity": 0.0},
-            {"item_id": 40, "quantity": 0.0},
-            {"item_id": 41, "quantity": 1.0}
+            {"item_id": 38},
+            {"item_id": 40},
+            {"item_id": 41, "quantity": 1.0},
+            {"item_id": 58, "quantity": 1.0}
         ]
     },
     "progress": []

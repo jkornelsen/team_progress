@@ -2,7 +2,6 @@
     "overall settings": {
         "title": "Bacon for Dinner",
         "description": "Suzy must go to the farm for bacon and then return home to cook it.\r\n\r\nA good {yellow|introduction}, complete and fully set up.",
-        "slots": [],
         "win_reqs": [
             {"item_id": 8, "quantity": 20.0, "loc_id": 15, "attrib_value": 0.0},
             {"item_id": 11, "quantity": 2.0, "loc_id": 14, "attrib_value": 0.0}
@@ -13,9 +12,33 @@
         "tag_complete": "10 Polished"
     },
     "entities": {
-        "items": [
+        "attribs": [
+            {
+                "id": 28,
+                "name": "Climbing",
+                "description": "Often easier for kids than adults."
+            },
+            {
+                "id": 3,
+                "name": "Pathfinding",
+                "description": "Knowledge of the woods."
+            },
             {
                 "id": 5,
+                "name": "Pays for Odd Jobs",
+                "description": "Has money to pay for chores.",
+                "is_binary": true
+            },
+            {
+                "id": 4,
+                "name": "Willing to do Odd Jobs",
+                "description": "Can do chores.",
+                "is_binary": true
+            }
+        ],
+        "items": [
+            {
+                "id": 29,
                 "name": "Barn",
                 "description": "Where chores are done.",
                 "storage_type": "l",
@@ -33,7 +56,7 @@
                 "q_limit": 100.0,
                 "recipes": [
                     {
-                        "id": 1,
+                        "id": 31,
                         "rate_amount": 3.0,
                         "instant": true,
                         "sources": [
@@ -41,7 +64,7 @@
                         ],
                         "attrib_reqs": [
                             {
-                                "attrib_id": 3,
+                                "attrib_id": 5,
                                 "value_range": [1.0, 1.0],
                                 "range_inclusive": [true, true]
                             }
@@ -57,9 +80,9 @@
                 "q_limit": 10.0,
                 "recipes": [
                     {
-                        "id": 2,
+                        "id": 32,
                         "sources": [
-                            {"item_id": 5, "q_required": 1.0, "preserve": true}
+                            {"item_id": 29, "q_required": 1.0, "preserve": true}
                         ],
                         "attrib_reqs": [
                             {
@@ -78,7 +101,7 @@
                 "q_limit": 20.0,
                 "recipes": [
                     {
-                        "id": 3,
+                        "id": 33,
                         "rate_duration": 2,
                         "sources": [
                             {"item_id": 12, "q_required": 1.0},
@@ -107,14 +130,14 @@
                 "q_limit": 4.0,
                 "recipes": [
                     {
-                        "id": 4,
+                        "id": 34,
                         "rate_duration": 8,
                         "sources": [
                             {"item_id": 11, "q_required": 2.0, "preserve": true}
                         ]
                     },
                     {
-                        "id": 5,
+                        "id": 35,
                         "instant": true,
                         "sources": [
                             {"item_id": 6, "q_required": 60.0}
@@ -129,7 +152,7 @@
                 "q_limit": 20.0,
                 "recipes": [
                     {
-                        "id": 6,
+                        "id": 36,
                         "rate_amount": 4.0,
                         "rate_duration": 8,
                         "sources": [
@@ -168,8 +191,8 @@
                 "name": "Home",
                 "description": "Faded red bricks cover the front.",
                 "items": [
-                    {"item_id": 13, "quantity": 1.0, "position": null},
-                    {"item_id": 26, "quantity": 1.0, "position": null}
+                    {"item_id": 13, "quantity": 1.0},
+                    {"item_id": 26, "quantity": 1.0}
                 ]
             },
             {
@@ -187,12 +210,12 @@
                 ],
                 "destinations": [
                     {
-                        "loc2_id": 15,
-                        "door1": [1, 2]
-                    },
-                    {
                         "loc2_id": 14,
                         "door1": [10, 4]
+                    },
+                    {
+                        "loc2_id": 15,
+                        "door1": [1, 2]
                     }
                 ],
                 "zones": [
@@ -207,8 +230,8 @@
                 "description": "The property has a modestly inviting feel of fertile land.\r\n\r\nSuzy's uncle is okay with her butchering pigs, as long as there is a breeding pair left.",
                 "masked": true,
                 "items": [
-                    {"item_id": 11, "quantity": 4.0, "position": null},
-                    {"item_id": 5, "quantity": 1.0, "position": null}
+                    {"item_id": 29, "quantity": 1.0},
+                    {"item_id": 11, "quantity": 4.0}
                 ]
             }
         ],
@@ -218,7 +241,7 @@
                 "name": "Mom",
                 "description": "Suzy's mother. Good understanding of the trails in the woods.",
                 "attribs": [
-                    [2, 10.0],
+                    [3, 10.0],
                     [28, 2.0]
                 ],
                 "abilities": [25],
@@ -230,16 +253,16 @@
                 "name": "Suzy",
                 "description": "Sent to fetch bacon for dinner by her mother.",
                 "attribs": [
-                    [2, 1.0],
-                    [4, 1.0],
+                    [3, 1.0],
+                    [4, true],
                     [28, 7.0]
                 ],
                 "abilities": [21, 25, 27],
                 "toplevel": true,
                 "location_id": 15,
                 "items": [
-                    {"item_id": 9, "quantity": 1.0, "slot": ""},
-                    {"item_id": 10, "quantity": 1.0, "slot": ""}
+                    {"item_id": 9, "quantity": 1.0},
+                    {"item_id": 10, "quantity": 1.0}
                 ]
             },
             {
@@ -247,7 +270,7 @@
                 "name": "Uncle",
                 "description": "Will pay a modest salary for chores.",
                 "attribs": [
-                    [3, 1.0]
+                    [5, true]
                 ],
                 "location_id": 24
             },
@@ -256,30 +279,6 @@
                 "name": "Wolf",
                 "description": "Shaggy forest dweller with teeth and a snarl.\r\n\r\nTo appear, set location to *Sketchy-Path Forest* and grid position, for example `4,1`.",
                 "position": [4, 1]
-            }
-        ],
-        "attribs": [
-            {
-                "id": 28,
-                "name": "Climbing",
-                "description": "Often easier for kids than adults."
-            },
-            {
-                "id": 2,
-                "name": "Pathfinding",
-                "description": "Knowledge of the woods."
-            },
-            {
-                "id": 3,
-                "name": "Pays for Odd Jobs",
-                "description": "Has money to pay for chores.",
-                "is_binary": true
-            },
-            {
-                "id": 4,
-                "name": "Willing to do Odd Jobs",
-                "description": "Can do chores.",
-                "is_binary": true
             }
         ],
         "events": [
@@ -302,7 +301,7 @@
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
-                        "infield": {"attrib_id": 2}
+                        "infield": {"attrib_id": 3}
                     }
                 ]
             }
@@ -310,8 +309,8 @@
     },
     "general data": {
         "piles": [
-            {"item_id": 6, "quantity": 0.0},
-            {"item_id": 7, "quantity": 0.0}
+            {"item_id": 6},
+            {"item_id": 7}
         ]
     },
     "progress": []

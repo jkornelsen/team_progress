@@ -2,7 +2,6 @@
     "overall settings": {
         "title": "Lumber",
         "description": "Run an outfit to {saddlebrown|harvest resources} with a vehicle for transport.",
-        "slots": ["Held"],
         "win_reqs": [
             {"item_id": 28, "quantity": 20.0, "loc_id": 27}
         ],
@@ -12,6 +11,71 @@
         "tag_complete": "07 Playable / Under Construction"
     },
     "entities": {
+        "attribs": [
+            {
+                "id": 4,
+                "name": "Accuracy",
+                "description": "Increases likelihood of getting better rolls for chopping."
+            },
+            {
+                "id": 5,
+                "name": "Base Power",
+                "description": "Values are negative, to change a tree's HP. Similar to *Strength* but additive."
+            },
+            {"id": 51, "name": "Can Build Bridge", "is_binary": true},
+            {
+                "id": 61,
+                "name": "Chopping Mishap List",
+                "enum_list": [
+                    "Fewer resources gained",
+                    "Resources lost",
+                    "No progress",
+                    "Tool damaged",
+                    "Tool broken",
+                    "Tool destroyed",
+                    "Minor injury",
+                    "Severe injury"
+                ]
+            },
+            {
+                "id": 2,
+                "name": "Equipment Slots",
+                "description": "Equipment slots for characters.",
+                "enum_list": ["Held"]
+            },
+            {"id": 57, "name": "Hired", "is_binary": true},
+            {
+                "id": 54,
+                "name": "Hiring Capability",
+                "description": "1 for standard rate, while higher numbers make it cost more to hire people."
+            },
+            {
+                "id": 3,
+                "name": "HP",
+                "description": "How much chopping still needs to be done to finish chopping down the tree. Once HP is 0, the tree can be cut into logs."
+            },
+            {"id": 60, "name": "Max HP"},
+            {
+                "id": 9,
+                "name": "Mileage Left",
+                "description": "What shape a vehicle is in."
+            },
+            {
+                "id": 53,
+                "name": "Price to Hire",
+                "description": "One-time fee (no upkeep required in this scenario)"
+            },
+            {
+                "id": 40,
+                "name": "Repair",
+                "description": "What shape a vehicle is in. Higher numbers mean more reliable."
+            },
+            {
+                "id": 6,
+                "name": "Strength",
+                "description": "Increases max cutting progress per chop."
+            }
+        ],
         "items": [
             {
                 "id": 28,
@@ -21,7 +85,7 @@
                 "q_limit": 20.0,
                 "recipes": [
                     {
-                        "id": 29,
+                        "id": 79,
                         "rate_duration": 300,
                         "sources": [
                             {"item_id": 12, "q_required": 50.0}
@@ -44,7 +108,7 @@
                 "toplevel": true,
                 "recipes": [
                     {
-                        "id": 22,
+                        "id": 72,
                         "rate_amount": 5.0,
                         "instant": true,
                         "sources": [
@@ -62,6 +126,7 @@
                     [5, 20.0]
                 ],
                 "q_limit": 1.0,
+                "slot": "Held",
                 "recipes": [
                     {
                         "id": 56,
@@ -103,9 +168,10 @@
                     [5, 5.0]
                 ],
                 "q_limit": 1.0,
+                "slot": "Held",
                 "recipes": [
                     {
-                        "id": 36,
+                        "id": 76,
                         "instant": true,
                         "sources": [
                             {"item_id": 8, "q_required": 10.0},
@@ -122,7 +188,7 @@
                 "q_limit": 1.0,
                 "recipes": [
                     {
-                        "id": 38,
+                        "id": 78,
                         "sources": [
                             {"item_id": 8, "q_required": 100.0},
                             {"item_id": 35, "q_required": 1.0, "preserve": true}
@@ -135,7 +201,7 @@
                 "name": "P1 Marked Tree",
                 "description": "Plots are full of trees, but mark only one at a time for harvesting.",
                 "attribs": [
-                    [2, 100.0],
+                    [3, 100.0],
                     [60, 100.0]
                 ],
                 "storage_type": "l",
@@ -170,7 +236,7 @@
                 "description": "Cut from logs.",
                 "recipes": [
                     {
-                        "id": 23,
+                        "id": 73,
                         "sources": [
                             {"item_id": 7, "q_required": 1.0},
                             {"item_id": 11, "q_required": 1.0, "preserve": true}
@@ -194,7 +260,7 @@
                 ],
                 "recipes": [
                     {
-                        "id": 8,
+                        "id": 74,
                         "rate_amount": 10.0,
                         "rate_duration": 15,
                         "sources": [
@@ -202,14 +268,14 @@
                         ],
                         "attrib_reqs": [
                             {
-                                "attrib_id": 2,
+                                "attrib_id": 3,
                                 "value_range": [null, 0.1],
                                 "range_inclusive": [true, true]
                             }
                         ]
                     },
                     {
-                        "id": 31,
+                        "id": 75,
                         "rate_amount": 5.0,
                         "rate_duration": 7,
                         "sources": [
@@ -217,7 +283,7 @@
                         ]
                     },
                     {
-                        "id": 21,
+                        "id": 71,
                         "rate_amount": 10.0,
                         "rate_duration": 1200,
                         "sources": [
@@ -256,7 +322,7 @@
                 ]
             },
             {
-                "id": 9,
+                "id": 31,
                 "name": "Rock",
                 "description": "Landscape feature that can get in the way of a lumber operation.",
                 "storage_type": "l"
@@ -424,14 +490,14 @@
                         "position": [3, 2]
                     },
                     {
-                        "item_id": 9,
-                        "quantity": 1.0,
-                        "position": [14, 5]
-                    },
-                    {
                         "item_id": 15,
                         "quantity": 1.0,
                         "position": [15, 4]
+                    },
+                    {
+                        "item_id": 31,
+                        "quantity": 1.0,
+                        "position": [14, 5]
                     }
                 ],
                 "item_refs": [10, 30],
@@ -489,7 +555,7 @@
                 "id": 49,
                 "name": "Bridge Engineer",
                 "attribs": [
-                    [51, 1.0],
+                    [51, true],
                     [53, 1000.0]
                 ]
             },
@@ -506,8 +572,8 @@
                 "id": 48,
                 "name": "Lumberjack",
                 "attribs": [
-                    [3, 2.0],
                     [4, 2.0],
+                    [6, 2.0],
                     [53, 200.0]
                 ]
             },
@@ -516,8 +582,8 @@
                 "name": "Owner",
                 "description": "Player character who initially started the company.",
                 "attribs": [
-                    [3, 1.1],
                     [4, 1.1],
+                    [6, 1.1],
                     [54, 2.0]
                 ],
                 "abilities": [21, 23, 25, 52],
@@ -541,7 +607,7 @@
                 "name": "Truck",
                 "description": "A run-down workhorse with a little left to give. If it breaks down, you may have to buy another vehicle.\r\n\r\nCarries logs. Someone must drive (move/travel with) the truck.",
                 "attribs": [
-                    [6, 20.0],
+                    [9, 20.0],
                     [40, 3.0]
                 ],
                 "abilities": [24],
@@ -552,65 +618,6 @@
                 "items": [
                     {"item_id": 7, "quantity": 2.0}
                 ]
-            }
-        ],
-        "attribs": [
-            {
-                "id": 4,
-                "name": "Accuracy",
-                "description": "Increases likelihood of getting better rolls for chopping."
-            },
-            {
-                "id": 5,
-                "name": "Base Power",
-                "description": "Values are negative, to change a tree's HP. Similar to *Strength* but additive."
-            },
-            {"id": 51, "name": "Can Build Bridge", "is_binary": true},
-            {
-                "id": 61,
-                "name": "Chopping Mishap List",
-                "enum_list": [
-                    "Fewer resources gained",
-                    "Resources lost",
-                    "No progress",
-                    "Tool damaged",
-                    "Tool broken",
-                    "Tool destroyed",
-                    "Minor injury",
-                    "Severe injury"
-                ]
-            },
-            {"id": 57, "name": "Hired", "is_binary": true},
-            {
-                "id": 54,
-                "name": "Hiring Capability",
-                "description": "1 for standard rate, while higher numbers make it cost more to hire people."
-            },
-            {
-                "id": 2,
-                "name": "HP",
-                "description": "How much chopping still needs to be done to finish chopping down the tree. Once HP is 0, the tree can be cut into logs."
-            },
-            {"id": 60, "name": "Max HP"},
-            {
-                "id": 6,
-                "name": "Mileage Left",
-                "description": "What shape a vehicle is in."
-            },
-            {
-                "id": 53,
-                "name": "Price to Hire",
-                "description": "One-time fee (no upkeep required in this scenario)"
-            },
-            {
-                "id": 40,
-                "name": "Repair",
-                "description": "What shape a vehicle is in. Higher numbers mean more reliable."
-            },
-            {
-                "id": 3,
-                "name": "Strength",
-                "description": "Increases max cutting progress per chop."
             }
         ],
         "events": [
@@ -644,7 +651,7 @@
                     },
                     {
                         "infield": {"role": "at", "child_of_anchor": true, "attrib_id": 60},
-                        "outfield": {"role": "at", "child_of_anchor": true, "attrib_id": 2},
+                        "outfield": {"role": "at", "child_of_anchor": true, "attrib_id": 3},
                         "op_transform": "*",
                         "val_transform": 0.25,
                         "outcome_success": "failure_any"
@@ -699,7 +706,7 @@
                 "outcome_type": "coordinates",
                 "determinants": [
                     {
-                        "infield": {"role": "at", "child_of_anchor": true, "attrib_id": 2},
+                        "infield": {"role": "at", "child_of_anchor": true, "attrib_id": 3},
                         "op_application": ">=",
                         "val_required": 0.1,
                         "negate": true
@@ -727,7 +734,7 @@
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "at", "child_of_anchor": true, "attrib_id": 2},
+                        "outfield": {"role": "at", "child_of_anchor": true, "attrib_id": 3},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": 100.0
@@ -766,7 +773,7 @@
                 "effects": [
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"attrib_id": 6},
+                        "outfield": {"attrib_id": 9},
                         "op_application": "-",
                         "op_transform": "c",
                         "outcome_success": "failure_any",
@@ -793,11 +800,11 @@
                         "infield": {"child_of_anchor": true, "attrib_id": 5}
                     },
                     {
-                        "infield": {"attrib_id": 3},
+                        "infield": {"attrib_id": 6},
                         "op_application": "*"
                     },
                     {
-                        "infield": {"role": "at", "child_of_anchor": true, "attrib_id": 2},
+                        "infield": {"role": "at", "child_of_anchor": true, "attrib_id": 3},
                         "op_application": ">=",
                         "val_required": 0.01
                     }
@@ -805,7 +812,7 @@
                 "effects": [
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "at", "child_of_anchor": true, "attrib_id": 2},
+                        "outfield": {"role": "at", "child_of_anchor": true, "attrib_id": 3},
                         "op_application": "-",
                         "auto_apply": true
                     }
@@ -814,7 +821,7 @@
                     {
                         "child_id": 26,
                         "req": {
-                            "infield": {"role": "at", "child_of_anchor": true, "attrib_id": 2},
+                            "infield": {"role": "at", "child_of_anchor": true, "attrib_id": 3},
                             "op_application": "<"
                         }
                     }

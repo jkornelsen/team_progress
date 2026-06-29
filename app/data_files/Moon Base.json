@@ -2,7 +2,6 @@
     "overall settings": {
         "title": "Moon Base",
         "description": "Start with a small {#779|base} that supports helium-3 mining, with plans to add more rooms for living and working. Investigate {#779|Selenids} to determine their purpose and where they are coming from.\r\n\r\nCombat imagined by the initial setup is low-key, such as grabbing a nearby iron rod and swinging to dissuade or disable an enemy. It's also detailed, with ways to keep track of injuries to various body parts. *Be mindful of your suit—survival requires oxygen!*",
-        "slots": [],
         "win_reqs": [],
         "tag_introduce_order": 65,
         "tag_best_order": 60,
@@ -10,6 +9,29 @@
         "tag_complete": "03 Starter Kit / Not Tested"
     },
     "entities": {
+        "attribs": [
+            {
+                "id": 4,
+                "name": "Dexterity",
+                "description": "Affects accuracy. Hampered by space suits."
+            },
+            {
+                "id": 2,
+                "name": "Equipment Slots",
+                "description": "Equipment slots for characters.",
+                "enum_list": ["Held"]
+            },
+            {
+                "id": 25,
+                "name": "Hostility",
+                "description": "Whether a minor character sees a main character as an enemy."
+            },
+            {"id": 7, "name": "HP Arm Left", "description": "left arm's health"},
+            {"id": 8, "name": "HP Arm Right"},
+            {"id": 5, "name": "HP Head"},
+            {"id": 6, "name": "HP Legs", "description": "health of legs"},
+            {"id": 3, "name": "Strength", "description": "Affects damage."}
+        ],
         "items": [
             {"id": 9, "name": "Empty Helium-3 Container", "storage_type": "u"},
             {
@@ -23,7 +45,7 @@
                 "id": 11,
                 "name": "Metal Pole",
                 "description": "Can be used as a two-handed weapon like a bat.",
-                "storage_type": "u"
+                "slot": "Held"
             }
         ],
         "locations": [
@@ -51,8 +73,8 @@
                 "name": "Track",
                 "description": "Electric vehicle on a simple pressurized track system to protect against lunar dust.",
                 "destinations": [
-                    {"loc2_id": 13},
                     {"loc2_id": 12},
+                    {"loc2_id": 13},
                     {"loc2_id": 14}
                 ]
             }
@@ -65,15 +87,15 @@
                 "attribs": [
                     [3, 3.0],
                     [4, 1.0],
-                    [8, 10.0],
-                    [7, 1.0],
                     [5, 10.0],
-                    [6, 10.0]
+                    [6, 10.0],
+                    [7, 1.0],
+                    [8, 10.0]
                 ],
                 "toplevel": true,
                 "location_id": 13,
                 "items": [
-                    {"item_id": 11, "quantity": 1.0, "slot": "hands"}
+                    {"item_id": 11, "quantity": 1.0, "slot": "Held"}
                 ]
             },
             {
@@ -81,34 +103,17 @@
                 "name": "Selen",
                 "description": "Renegade robot that lives underground. Solar powered.",
                 "attribs": [
-                    [2, 3.0],
                     [3, 1.0],
                     [4, 3.0],
-                    [8, 10.0],
-                    [7, 10.0],
                     [5, 10.0],
-                    [6, 3.0]
+                    [6, 3.0],
+                    [7, 10.0],
+                    [8, 10.0],
+                    [25, 3.0]
                 ],
                 "toplevel": true,
                 "location_id": 16
             }
-        ],
-        "attribs": [
-            {
-                "id": 4,
-                "name": "Dexterity",
-                "description": "Affects accuracy. Hampered by space suits."
-            },
-            {
-                "id": 2,
-                "name": "Hostility",
-                "description": "Whether a minor character sees a main character as an enemy."
-            },
-            {"id": 7, "name": "HP Arm Left", "description": "left arm's health"},
-            {"id": 8, "name": "HP Arm Right"},
-            {"id": 5, "name": "HP Head"},
-            {"id": 6, "name": "HP Legs", "description": "health of legs"},
-            {"id": 3, "name": "Strength", "description": "Affects damage."}
         ],
         "events": [
             {
@@ -151,9 +156,9 @@
     },
     "general data": {
         "piles": [
-            {"item_id": 9, "quantity": 0.0},
-            {"item_id": 10, "quantity": 0.0},
-            {"item_id": 11, "quantity": 0.0}
+            {"item_id": 9},
+            {"item_id": 10},
+            {"item_id": 11}
         ]
     },
     "progress": []

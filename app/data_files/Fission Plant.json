@@ -2,7 +2,6 @@
     "overall settings": {
         "title": "Fission Plant",
         "description": "Produce enough energy to fill a high-capacity battery while managing {orange|waste}. Handle any {orange|critical problems} and then restore operations.",
-        "slots": [],
         "win_reqs": [
             {"item_id": 9, "quantity": 10000000.0}
         ],
@@ -12,6 +11,46 @@
         "tag_complete": "09 Complete"
     },
     "entities": {
+        "attribs": [
+            {
+                "id": 26,
+                "name": "Layoffs",
+                "description": "How many total workers were just let go."
+            },
+            {
+                "id": 20,
+                "name": "Mood",
+                "description": "Average across all workers. Scale of 1 (miserable) to 10 (highly motivated to work).\r\n\r\n- Injury lowers mood based on how many workers get injured.\r\n- Long hours and poor pay negatively affect mood.\r\n- If their mood is bad then they may consider leaving. Mood does not affect performance."
+            },
+            {
+                "id": 24,
+                "name": "Pay",
+                "description": "Roughly keep track of how pay compares to industry averages.",
+                "enum_list": ["Very High", "Above Average", "Standard", "Low", "Very Low"]
+            },
+            {
+                "id": 61,
+                "name": "Plant Problem Type — List",
+                "description": "selection list for the event",
+                "enum_list": [
+                    "Unusable Amenities",
+                    "Long Hours",
+                    "Low Wages",
+                    "Burnt Food",
+                    "Waste Bacteria Inert",
+                    "Radioactive Waste Leak",
+                    "Cooling System Leak",
+                    "Machinery Jam",
+                    "Electricity Down",
+                    "Fuel Spill",
+                    "Energy Not Gained",
+                    "Excess Energy",
+                    "Battery Power Loss",
+                    "Core Meltdown — Reactor Damage",
+                    "Core Meltdown — Radioactive Contamination"
+                ]
+            }
+        ],
         "items": [
             {"id": 50, "name": "Can Hire", "storage_type": "u"},
             {
@@ -33,7 +72,7 @@
                 "toplevel": true,
                 "recipes": [
                     {
-                        "id": 14,
+                        "id": 74,
                         "rate_amount": 2.0,
                         "rate_duration": 4,
                         "sources": [
@@ -56,7 +95,7 @@
                 "toplevel": true,
                 "recipes": [
                     {
-                        "id": 18,
+                        "id": 78,
                         "rate_amount": 5.0,
                         "instant": true,
                         "sources": [
@@ -88,7 +127,7 @@
                 "q_limit": 11.0,
                 "recipes": [
                     {
-                        "id": 53,
+                        "id": 93,
                         "rate_duration": 1800,
                         "sources": [
                             {"item_id": 11, "q_required": 25000.0},
@@ -114,7 +153,7 @@
                 "q_limit": 30.0,
                 "recipes": [
                     {
-                        "id": 32,
+                        "id": 84,
                         "rate_duration": 120,
                         "sources": [
                             {"item_id": 11, "q_required": 50.0},
@@ -132,7 +171,7 @@
                 "q_limit": 20.0,
                 "recipes": [
                     {
-                        "id": 41,
+                        "id": 85,
                         "rate_duration": 300,
                         "sources": [
                             {"item_id": 11, "q_required": 1500.0},
@@ -150,7 +189,7 @@
                 "q_limit": 12.0,
                 "recipes": [
                     {
-                        "id": 47,
+                        "id": 87,
                         "rate_duration": 1800,
                         "sources": [
                             {"item_id": 11, "q_required": 20000.0},
@@ -168,7 +207,7 @@
                 "q_limit": 20.0,
                 "recipes": [
                     {
-                        "id": 19,
+                        "id": 79,
                         "rate_duration": 300,
                         "sources": [
                             {"item_id": 11, "q_required": 100.0},
@@ -178,7 +217,7 @@
                 ]
             },
             {
-                "id": 2,
+                "id": 16,
                 "name": "Production Rate II",
                 "description": "Energy production rate × (4 per qty). This does not improve efficiency, so also increase the waste generated and resources required.\r\n\r\nProducing the first increase makes an uneven 1.25 — edit this item and set quantity to 1 for quadruple effect.",
                 "abilities": [17],
@@ -186,7 +225,7 @@
                 "q_limit": 10.0,
                 "recipes": [
                     {
-                        "id": 20,
+                        "id": 80,
                         "rate_duration": 400,
                         "sources": [
                             {"item_id": 3, "q_required": 1.0, "preserve": true},
@@ -205,11 +244,11 @@
                 "q_limit": 10.0,
                 "recipes": [
                     {
-                        "id": 49,
+                        "id": 89,
                         "rate_duration": 3000,
                         "sources": [
-                            {"item_id": 2, "q_required": 1.0, "preserve": true},
                             {"item_id": 11, "q_required": 20000.0},
+                            {"item_id": 16, "q_required": 1.0, "preserve": true},
                             {"item_id": 27, "q_required": 1.0, "preserve": true}
                         ]
                     }
@@ -224,7 +263,7 @@
                 "toplevel": true,
                 "recipes": [
                     {
-                        "id": 30,
+                        "id": 82,
                         "rate_amount": 0.0,
                         "rate_duration": 60,
                         "sources": [
@@ -242,7 +281,7 @@
                 "toplevel": true,
                 "recipes": [
                     {
-                        "id": 16,
+                        "id": 76,
                         "rate_duration": 8,
                         "sources": [
                             {"item_id": 7, "q_required": 3.0}
@@ -283,7 +322,7 @@
                 "toplevel": true,
                 "recipes": [
                     {
-                        "id": 17,
+                        "id": 77,
                         "rate_amount": 0.0,
                         "sources": [
                             {"item_id": 8, "q_required": 1.0},
@@ -300,7 +339,7 @@
                 "q_limit": 2.0,
                 "recipes": [
                     {
-                        "id": 59,
+                        "id": 91,
                         "rate_amount": 0.0,
                         "rate_duration": 60,
                         "sources": [
@@ -318,7 +357,7 @@
                 "q_limit": 10.0,
                 "recipes": [
                     {
-                        "id": 55,
+                        "id": 95,
                         "rate_duration": 1800,
                         "sources": [
                             {"item_id": 11, "q_required": 18000.0},
@@ -333,7 +372,7 @@
                 "description": "Workers increase research speed and lower repair costs. They do not directly improve production rates.\r\n\r\nWorkers are hired to a particular location and not moved after that.",
                 "attribs": [
                     [20, 7.0],
-                    [24, 2.0],
+                    [24, "Standard"],
                     [26, 0.0]
                 ],
                 "abilities": [23, 25, 45],
@@ -381,46 +420,6 @@
             }
         ],
         "characters": [],
-        "attribs": [
-            {
-                "id": 26,
-                "name": "Layoffs",
-                "description": "How many total workers were just let go."
-            },
-            {
-                "id": 20,
-                "name": "Mood",
-                "description": "Average across all workers. Scale of 1 (miserable) to 10 (highly motivated to work).\r\n\r\n- Injury lowers mood based on how many workers get injured.\r\n- Long hours and poor pay negatively affect mood.\r\n- If their mood is bad then they may consider leaving. Mood does not affect performance."
-            },
-            {
-                "id": 24,
-                "name": "Pay",
-                "description": "Roughly keep track of how pay compares to industry averages.",
-                "enum_list": ["Very High", "Above Average", "Standard", "Low", "Very Low"]
-            },
-            {
-                "id": 61,
-                "name": "Plant Problem Type — List",
-                "description": "selection list for the event",
-                "enum_list": [
-                    "Unusable Amenities",
-                    "Long Hours",
-                    "Low Wages",
-                    "Burnt Food",
-                    "Waste Bacteria Inert",
-                    "Radioactive Waste Leak",
-                    "Cooling System Leak",
-                    "Machinery Jam",
-                    "Electricity Down",
-                    "Fuel Spill",
-                    "Energy Not Gained",
-                    "Excess Energy",
-                    "Battery Power Loss",
-                    "Core Meltdown — Reactor Damage",
-                    "Core Meltdown — Radioactive Contamination"
-                ]
-            }
-        ],
         "events": [
             {
                 "id": 42,
@@ -488,7 +487,7 @@
                             "role": "blueprint",
                             "field_mode": "src_qty",
                             "item_id": 8,
-                            "recipe_id": 17,
+                            "recipe_id": 77,
                             "source_item_id": 8
                         },
                         "op_application": ":="
@@ -512,7 +511,7 @@
                         "infield": {"role": "universal", "field_mode": "qty", "item_id": 3}
                     },
                     {
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 2},
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 16},
                         "op_application": "*",
                         "op_transform": "*",
                         "val_transform": 4.0
@@ -531,7 +530,7 @@
                             "role": "blueprint",
                             "field_mode": "src_qty",
                             "item_id": 9,
-                            "recipe_id": 14,
+                            "recipe_id": 74,
                             "source_item_id": 4
                         },
                         "op_application": ":="
@@ -542,7 +541,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_amt",
                             "item_id": 9,
-                            "recipe_id": 14
+                            "recipe_id": 74
                         },
                         "op_application": ":=",
                         "op_transform": "*",
@@ -554,7 +553,7 @@
                             "role": "blueprint",
                             "field_mode": "byp_qty",
                             "item_id": 9,
-                            "recipe_id": 14,
+                            "recipe_id": 74,
                             "source_item_id": 5
                         },
                         "op_application": ":="
@@ -565,7 +564,7 @@
                             "role": "blueprint",
                             "field_mode": "byp_qty",
                             "item_id": 9,
-                            "recipe_id": 14,
+                            "recipe_id": 74,
                             "source_item_id": 7
                         },
                         "op_application": ":=",
@@ -578,7 +577,7 @@
                             "role": "blueprint",
                             "field_mode": "byp_qty",
                             "item_id": 9,
-                            "recipe_id": 14,
+                            "recipe_id": 74,
                             "source_item_id": 8
                         },
                         "op_application": ":=",
@@ -751,7 +750,7 @@
                         "val_transform": 50.0
                     },
                     {
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 2},
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 16},
                         "op_transform": "*",
                         "val_transform": 1000.0
                     },
@@ -798,7 +797,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_dur",
                             "item_id": 52,
-                            "recipe_id": 53
+                            "recipe_id": 93
                         },
                         "op_application": ":=",
                         "op_transform": "*",
@@ -810,7 +809,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_dur",
                             "item_id": 31,
-                            "recipe_id": 32
+                            "recipe_id": 84
                         },
                         "op_application": ":=",
                         "op_transform": "*",
@@ -822,7 +821,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_dur",
                             "item_id": 40,
-                            "recipe_id": 41
+                            "recipe_id": 85
                         },
                         "op_application": ":=",
                         "op_transform": "*",
@@ -834,7 +833,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_dur",
                             "item_id": 46,
-                            "recipe_id": 47
+                            "recipe_id": 87
                         },
                         "op_application": ":=",
                         "op_transform": "*",
@@ -846,7 +845,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_dur",
                             "item_id": 3,
-                            "recipe_id": 19
+                            "recipe_id": 79
                         },
                         "op_application": ":=",
                         "op_transform": "*",
@@ -857,8 +856,8 @@
                         "outfield": {
                             "role": "blueprint",
                             "field_mode": "rate_dur",
-                            "item_id": 2,
-                            "recipe_id": 20
+                            "item_id": 16,
+                            "recipe_id": 80
                         },
                         "op_application": ":=",
                         "op_transform": "*",
@@ -870,7 +869,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_dur",
                             "item_id": 48,
-                            "recipe_id": 49
+                            "recipe_id": 89
                         },
                         "op_application": ":=",
                         "op_transform": "*",
@@ -882,7 +881,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_dur",
                             "item_id": 54,
-                            "recipe_id": 55
+                            "recipe_id": 95
                         },
                         "op_application": ":=",
                         "op_transform": "*",
@@ -947,7 +946,7 @@
                             "role": "blueprint",
                             "field_mode": "rate_amt",
                             "item_id": 7,
-                            "recipe_id": 16
+                            "recipe_id": 76
                         },
                         "op_application": ":=",
                         "val_transform": 2.0
@@ -958,7 +957,7 @@
                             "role": "blueprint",
                             "field_mode": "src_qty",
                             "item_id": 7,
-                            "recipe_id": 16,
+                            "recipe_id": 76,
                             "source_item_id": 7
                         },
                         "op_application": ":=",
@@ -1155,9 +1154,9 @@
     },
     "general data": {
         "piles": [
-            {"item_id": 2, "quantity": 0.25},
             {"item_id": 3, "quantity": 1.0},
             {"item_id": 4, "quantity": 10.0},
+            {"item_id": 16, "quantity": 0.25},
             {"item_id": 31, "quantity": 2.0},
             {"item_id": 40, "quantity": 1.0},
             {"item_id": 52, "quantity": 2.0}
