@@ -27,7 +27,10 @@
         {% for a in all_attribs %}
         "{{ a.id }}": {
             "is_binary": {{ 'true' if a.is_binary else 'false' }},
-            "enums": {{ a.enum_entries | map(attribute='label') | list | tojson | safe if a.enum_entries else 'null' }}
+            "enums": {{ a.enum_entries | map(attribute='label') | list | tojson | safe
+                        if a.enum_entries else 'null' }},
+            "enum_ids": {{ a.enum_entries | map(attribute='id') | list | tojson | safe
+                        if a.enum_entries else 'null' }}
         }{{ "," if not loop.last }}
         {% endfor %}
     };

@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from sqlalchemy import event, inspect as sa_inspect
+from sqlalchemy import select, event as sa_event, inspect as sa_inspect
 from sqlalchemy.dialects.postgresql import ARRAY, NUMRANGE
 from .database import db
 
@@ -36,7 +36,7 @@ _enum_cache: dict[tuple, dict[str, int]] = {}
 # Model Utilities
 # ------------------------------------------------------------------------
 
-@event.listens_for(db.Model, 'init', propagate=True)
+@sa_event.listens_for(db.Model, 'init', propagate=True)
 def auto_init_defaults(target, args, kwargs):
     """
     Whenever a new Model instance is created, look for columns 
@@ -143,8 +143,7 @@ class DictHydrator:
         # This applies to entities and Recipe.
         if hasattr(cls, 'id') and fields.get('id') is None:
             if cls in list(ENTITIES.values()) + [Recipe]:
-                from .models import Overall
-                fields['id'] = Overall.generate_next_id(game_token)
+                fields['id'] = IdSequence.generate_next_id(game_token)
 
         return cls(game_token=game_token, **fields)
 
@@ -593,6 +592,22 @@ class Attrib(Entity):
             ))
         return attrib
 
+    def id_to_rank(self, entry_id):
+        """Return the 0-based order_index of the EnumEntry with the given id,
+        or None.
+        """
+        for entry in self.enum_entries:
+            if entry.id == int(entry_id):
+                return entry.order_index
+        return None
+
+    def rank_to_id(self, rank):
+        """Return the EnumEntry.id whose order_index equals rank, or None."""
+        for entry in self.enum_entries:
+            if entry.order_index == rank:
+                return entry.id
+        return None
+
     def format_value(self, val):
         """
         Converts a raw float value into a string based on this 
@@ -603,9 +618,10 @@ class Attrib(Entity):
         
         if self.enum_entries:
             try:
-                idx = int(val)
-                if 0 <= idx < len(self.enum_entries):
-                    return self.enum_entries[idx].label
+                entry_id = int(val)
+                for entry in self.enum_entries:
+                    if entry.id == entry_id:
+                        return entry.label
             except (ValueError, TypeError):
                 pass
             return "?"
@@ -1946,8 +1962,13 @@ class Progress(db.Model, DictHydrator):
 # Global Configuration
 # ------------------------------------------------------------------------
 
-class Overall(db.Model, DictHydrator):
-    __tablename__ = 'overall'
+class Scenario(db.Model, DictHydrator):
+    """
+    Stores scenario-wide metadata and win conditions for a loaded scenario.
+    The model uses a game token to identify the loaded scenario instance,
+    but does not create or manage game tokens itself.
+    """
+    __tablename__ = 'scenario'
     game_token = db.Column(db.String(50), primary_key=True)
     title = db.Column(db.String(255), nullable=False, default='New Scenario')
     description = db.Column(db.Text)
@@ -1957,9 +1978,6 @@ class Overall(db.Model, DictHydrator):
     tag_best_order = db.Column(db.Integer, default=50)
     tag_progress_type = db.Column(db.String(20), default='RPG')
     tag_complete = db.Column(db.String(50), default='02 Under Construction')
-
-    # Used to generate unique IDs per game token
-    next_entity_id = db.Column(db.Integer, default=HIGHEST_RESERVED_ID + 1)
 
     def to_dict(self):
         data = {
@@ -1978,33 +1996,20 @@ class Overall(db.Model, DictHydrator):
 
     @classmethod
     def from_dict(cls, data, game_token):
-        overall = super().from_dict(data, game_token)
+        scenario = super().from_dict(data, game_token)
         for order_index, wr_data in enumerate(data.get('win_reqs', [])):
-            overall.win_reqs.append(
+            scenario.win_reqs.append(
                 WinRequirement.from_dict(wr_data, game_token, order_index)
             )
-        return overall
-
-    @classmethod
-    def generate_next_id(cls, game_token):
-        """
-        Generate per-token IDs, useful across entities.
-        Increments the counter and returns the new ID.
-        """
-        # Lock the record for this token until we call commit().
-        overall = cls.query.filter_by(game_token=game_token).with_for_update().first()
-        assigned_id = overall.next_entity_id
-        overall.next_entity_id += 1
-        
-        return assigned_id
+        return scenario
 
     win_reqs = db.relationship(
         'WinRequirement',
-        back_populates='overall',
+        back_populates='scenario',
         foreign_keys="[WinRequirement.game_token]",
         cascade="all, delete-orphan",
         order_by="WinRequirement.order_index",
-        overlaps="overall,item,char,loc,attrib")
+        overlaps="scenario,item,char,loc,attrib")
 
 class WinRequirement(db.Model, DictHydrator):
     __tablename__ = 'win_requirements'
@@ -2034,32 +2039,32 @@ class WinRequirement(db.Model, DictHydrator):
         return super().from_dict(
             data, game_token, order_index=order_index)
 
-    overall = db.relationship(
-        'Overall',
+    scenario = db.relationship(
+        'Scenario',
         back_populates='win_reqs',
         foreign_keys=[game_token],
         overlaps="item,char,loc,attrib")
     item = db.relationship(
         'Item',
         foreign_keys=[game_token, item_id],
-        overlaps="overall,char,loc,attrib")
+        overlaps="scenario,char,loc,attrib")
     char = db.relationship(
         'Character',
         foreign_keys=[game_token, char_id],
-        overlaps="overall,item,loc,attrib")
+        overlaps="scenario,item,loc,attrib")
     loc = db.relationship(
         'Location',
         foreign_keys=[game_token, loc_id],
-        overlaps="overall,item,char,attrib")
+        overlaps="scenario,item,char,attrib")
     attrib = db.relationship(
         'Attrib',
         foreign_keys=[game_token, attrib_id],
-        overlaps="overall,item,char,loc")
+        overlaps="scenario,item,char,loc")
 
     __table_args__ = (
         db.ForeignKeyConstraint(
             ['game_token'],
-            ['overall.game_token'], 
+            ['scenario.game_token'], 
             ondelete='CASCADE'),
         db.ForeignKeyConstraint(
             ['game_token', 'item_id'],
@@ -2078,6 +2083,38 @@ class WinRequirement(db.Model, DictHydrator):
             ['attribs.game_token', 'attribs.id'], 
             ondelete='CASCADE'),
     )
+
+class IdSequence(db.Model):
+    """
+    Maintains the next available integer ID for a scenario.
+
+    Unlike database sequences or UUIDs, IDs are kept small and human-readable
+    because scenarios are imported from and exported to JSON intended for manual
+    editing. When a scenario is loaded, this value is initialized from the
+    highest ID found in the JSON. New objects created during editing obtain IDs
+    from this sequence.
+    """
+    __tablename__ = "id_sequence"
+    game_token = db.Column(db.String(50), primary_key=True)
+    next_id = db.Column(db.Integer, default=HIGHEST_RESERVED_ID + 1)
+
+    @classmethod
+    def generate_next_id(cls, game_token):
+        """
+        Generate per-token IDs, useful across entities.
+        Increments the counter and returns the new ID.
+        """
+        # Lock the record for this token until we call commit().
+        stmt = (
+            select(cls)
+            .filter_by(game_token=game_token)
+            .with_for_update()
+        )
+        row = db.session.execute(stmt).scalar_one_or_none()
+        assigned_id = row.next_entity_id
+        row.next_entity_id += 1
+        
+        return assigned_id
 
 # ------------------------------------------------------------------------
 # Session Tracking

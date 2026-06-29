@@ -39,7 +39,7 @@
 
 <div class="overview-header">
     <h1>
-        {{ overall.title }}
+        {{ scenario.title }}
         {% if all_requirements_met %}
             <span title="Goal Achieved!" class="text-success">✅</span>
         {% endif %}
@@ -53,7 +53,7 @@
     {% endif %}
 
     <div class="scenario-description">
-        {{ overall.description | htmlify }}
+        {{ scenario.description | htmlify }}
     </div>
 </div>
 

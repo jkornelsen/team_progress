@@ -4,7 +4,6 @@ from flask import Flask
 from sqlalchemy import text
 from app import create_app
 from app.database import db, start_postgres
-from app.models import Entity, Overall, GENERAL_ID
 
 logger = logging.getLogger(__name__)
 

@@ -12,7 +12,7 @@ from app.models import (
     Recipe, RecipeSource, RecipeByproduct, RecipeAttribReq,
     LocDest, LocZone, EntranceReq, ItemRef,
     Participant, OutcomeType, SuccessTier, EventFactor, EventField, EventLink,
-    Overall, WinRequirement)
+    Scenario, WinRequirement, IdSequence)
 from app.serialization import clone_entity
 from app.utils import (
     LinkLetters, RequestHelper, parse_coords,
@@ -35,28 +35,26 @@ def index():
         name: model.query.filter_by(game_token=g.game_token).order_by(name_stripped()).all()
         for name, model in ENTITIES.items()
     }
-    overall = db.session.get(Overall, g.game_token)
     
     return render_template(
         'configure/index.html',
-        overall=overall,
         **entities
     )
 
 # ------------------------------------------------------------------------
-# Overall Settings
+# Scenario Settings
 # ------------------------------------------------------------------------
 
-@configure_bp.route('/overall', methods=['GET', 'POST'])
-def edit_overall():
+@configure_bp.route('/scenario', methods=['GET', 'POST'])
+def edit_scenario():
     game_token = g.game_token
-    overall = db.session.get(Overall, game_token)
+    scenario = db.session.get(Scenario, game_token)
     slots_attrib = db.session.get(Attrib, (game_token, EQUIPMENT_SLOTS_ID))
 
     if request.method == 'POST':
         req = RequestHelper('form')
-        overall.title = req.get_str('title', overall.title)
-        overall.description = req.get_str('description')
+        scenario.title = req.get_str('title', scenario.title)
+        scenario.description = req.get_str('description')
         
         use_slots = req.get_bool('use_slots')
         if use_slots:
@@ -135,8 +133,8 @@ def edit_overall():
         for name, model in ENTITIES.items()
     }
     return render_template(
-        'configure/overall.html',
-        overall=overall,
+        'configure/scenario.html',
+        scenario=scenario,
         slots_attrib=slots_attrib,
         **entities
     )
@@ -165,7 +163,7 @@ def edit_item(id):
             return redirect_back('configure.index')
 
         if item.id is None:
-            item.id = Overall.generate_next_id(g.game_token)
+            item.id = IdSequence.generate_next_id(g.game_token)
             db.session.add(item)
         
         item.name = req.get_str('name', item.name)
@@ -240,7 +238,7 @@ def edit_item(id):
 
             recipe_id = recipe_row.get_int('id', None)
             if recipe_id is None:
-                recipe_id = Overall.generate_next_id(game_token)
+                recipe_id = IdSequence.generate_next_id(game_token)
 
             recipe = Recipe(
                 game_token=game_token,
@@ -309,7 +307,6 @@ def edit_item(id):
         return redirect_back('configure.index') 
 
     # GET: Prepare variables for the template
-    overall = db.session.get(Overall, g.game_token)
     gen_qty = 0
     if item.id is not None:
         gen_pile = Pile.query.filter_by(
@@ -353,7 +350,7 @@ def edit_location(id):
             return redirect_back('configure.index')
 
         if loc.id is None:
-            loc.id = Overall.generate_next_id(g.game_token)
+            loc.id = IdSequence.generate_next_id(g.game_token)
             db.session.add(loc)
 
         loc.name = req.get_str('name', loc.name)
@@ -563,7 +560,7 @@ def edit_character(id):
             return redirect_back('configure.index')
 
         if char.id is None:
-            char.id = Overall.generate_next_id(g.game_token)
+            char.id = IdSequence.generate_next_id(g.game_token)
             db.session.add(char)
 
         char.name = req.get_str('name', char.name)
@@ -652,7 +649,7 @@ def edit_attrib(id):
             return redirect_back('configure.index')
 
         if attrib.id is None:
-            attrib.id = Overall.generate_next_id(g.game_token)
+            attrib.id = IdSequence.generate_next_id(g.game_token)
             db.session.add(attrib)
 
         attrib.name = req.get_str('name', attrib.name)
@@ -705,7 +702,7 @@ def edit_event(id):
             return redirect_back('configure.index')
 
         if event.id is None:
-            event.id = Overall.generate_next_id(g.game_token)
+            event.id = IdSequence.generate_next_id(g.game_token)
             db.session.add(event)
 
         event.name = req.get_str('name', event.name)
@@ -1038,13 +1035,13 @@ def lookup(ent_type, id):
     mention_key = 'Mentioned in Descriptions'
     search_str = f'/{ent_type}/{id}'
     
-    # Check Overall Scenario description
-    ov = db.session.get(Overall, game_token)
+    # Check Scenario description
+    ov = db.session.get(Scenario, game_token)
     if ov.description and search_str in ov.description:
         results.setdefault(mention_key, []).append({
             'label': 'Scenario Settings',
             'name': ov.title,
-            'link': url_for('configure.edit_overall'),
+            'link': url_for('configure.edit_scenario'),
         })
 
     # Check all Entity descriptions

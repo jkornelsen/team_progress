@@ -3,7 +3,7 @@ import json
 import os
 import re
 from flask import g, current_app, session
-from sqlalchemy import func, inspect as sa_inspect
+from sqlalchemy import func, delete, inspect as sa_inspect
 from sqlalchemy.dialects.postgresql import Range
 from sqlalchemy.orm import identity
 from .models import (
@@ -11,7 +11,8 @@ from .models import (
     prime_enum_cache, clear_enum_cache,
     Entity, Item, Character, Location, Attrib, Event, 
     Pile, Recipe, RecipeSource, RecipeByproduct, 
-    RecipeAttribReq, Progress, Overall, WinRequirement)
+    RecipeAttribReq, Progress,
+    Scenario, WinRequirement, IdSequence)
 from .src.logic_user_interaction import clear_session_logs
 from .src.logic_discovery import run_discovery_scan
 from app.utils import name_stripped
@@ -47,13 +48,13 @@ DEFAULT_SCENARIO_FILE = "_Default.json"
 def init_game_session():
     """Bootstraps a specific game session."""
     game_token = g.game_token
-    overall = db.session.get(Overall, game_token)
-    if not overall:
+    scenario = db.session.get(Scenario, game_token)
+    if not scenario:
         logger.info(f"Initializing game session")
         if not load_scenario_from_path(DEFAULT_SCENARIO_FILE):
             logger.warning(f"Falling back to class default.")
-            overall = Overall(game_token=game_token)
-            db.session.add(overall)
+            scenario = Scenario(game_token=game_token)
+            db.session.add(scenario)
 
         # General Storage owner
         reserved_entity = Entity.query.filter_by(
@@ -99,20 +100,22 @@ def import_from_dict(data):
         for key in ['old_char_id', 'old_loc_id', 'default_slot']:
             session.pop(key, None)
         
-        # Overall Settings
-        ov_data = data.get(JsonKeys.OVERALL, {})
-        ov = Overall.from_dict(ov_data, game_token)
-        db.session.add(ov)
+        # The General Storage Entity
         db.session.add(Entity(
             id=GENERAL_ID, game_token=game_token, name="General Storage",
             entity_type="entity"))
+
+        # New IDs might be needed during import
+        sequence = IdSequence(game_token=game_token)
+        db.session.add(sequence)
+        db.session.flush()
 
         # Entities
         entities_data = data.get(JsonKeys.ENTITIES, {})
         entities_data = remap_general_id(entities_data)
         for key, model_cls in ENTITIES.items():
-            for entry in entities_data.get(key, []):
-                instance = model_cls.from_dict(entry, game_token)
+            for entity in entities_data.get(key, []):
+                instance = model_cls.from_dict(entity, game_token)
                 db.session.add(instance)
             if model_cls == Attrib:
                 db.session.flush()
@@ -121,15 +124,23 @@ def import_from_dict(data):
         for pile_data in general_data.get("piles", []):
             db.session.add(Pile.from_dict(pile_data, game_token, GENERAL_ID))
 
+        # Overall Scenario Settings
+        overall_data = data.get(JsonKeys.OVERALL, {})
+        scenario = Scenario.from_dict(overall_data, game_token)
+        db.session.add(scenario)
+
         # State
         for prog_data in data.get("progress", []):
             db.session.add(Progress.from_dict(prog_data, game_token))
 
         # Sync the next ID counter
         db.session.flush()
-        max_id = db.session.query(
-            func.max(Entity.id)).filter_by(game_token=game_token).scalar()
-        ov.next_entity_id = max(max_id, HIGHEST_RESERVED_ID) + 1
+        max_ent = db.session.query(
+            func.max(Entity.id)).filter_by(game_token=game_token).scalar() or 0
+        max_rec = db.session.query(
+            func.max(Recipe.id)).filter_by(game_token=game_token).scalar() or 0
+        sequence.next_entity_id = max(
+            max_ent, max_rec, HIGHEST_RESERVED_ID) + 1
         
         db.session.commit()
 
@@ -154,8 +165,8 @@ def remap_general_id(entities_data):
     max_id = GENERAL_ID
     
     for category in entities_data.values():
-        for entry in category:
-            current_id = entry.get('id', 0)
+        for entity in category:
+            current_id = entity.get('id', 0)
             if current_id == GENERAL_ID:
                 conflict_found = True
             if current_id > max_id:
@@ -209,24 +220,33 @@ def patch_from_dict(data):
           then use SQLAlchemy's merge() to update all fields.
     """
     game_token = g.game_token
-    overall = db.session.get(Overall, game_token)
+    sequence = db.session.get(IdSequence, game_token)
     
     # --- PHASE 0: DETERMINE NEXT ID ---
     # Find the absolute highest ID currently in use in the DB
-    max_db = db.session.query(
-        db.func.max(Entity.id)).filter_by(game_token=game_token).scalar() or 0
+    max_ent = db.session.query(
+        func.max(Entity.id)).filter_by(game_token=game_token).scalar() or 0
+    max_rec = db.session.query(
+        func.max(Recipe.id)).filter_by(game_token=game_token).scalar() or 0
+    max_db = max(max_ent, max_rec)
     
     # Find the highest ID mentioned in the incoming JSON
     json_ids = []
     entities_data = data.get(JsonKeys.ENTITIES, {})
     for key in ENTITIES:
-        for entry in entities_data.get(key, []):
-            if 'id' in entry: json_ids.append(entry['id'])
+        for entity in entities_data.get(key, []):
+            if 'id' in entity:
+                json_ids.append(entity['id'])
+            if key == 'items' and 'recipes' in entity:
+                for recipe in entity['recipes']:
+                    if 'id' in recipe:
+                        json_ids.append(recipe['id'])
+
     max_json = max(json_ids) if json_ids else 0
     logger.debug(f"Max DB ID: {max_db} | Max JSON ID: {max_json}")
     
     # Force the counter to be higher than BOTH
-    overall.next_entity_id = max(overall.next_entity_id, max_db, max_json) + 1
+    sequence.next_id = max(sequence.next_id, max_db, max_json) + 1
     db.session.flush()
 
     # --- PHASE 1: ID MAPPING ---
@@ -235,8 +255,8 @@ def patch_from_dict(data):
 
     for key, model_cls in ENTITIES.items():
         type_str = model_cls.__mapper_args__['polymorphic_identity']
-        for entry in entities_data.get(key, []):
-            old_id = entry.get('id')
+        for entity in entities_data.get(key, []):
+            old_id = entity.get('id')
             existing = Entity.query.filter_by(
                 game_token=game_token, id=old_id).order_by(
                 name_stripped()).first()
@@ -244,12 +264,12 @@ def patch_from_dict(data):
             # If type matches, update existing (ID stays same)
             if existing and existing.entity_type == type_str:
                 id_map[old_id] = old_id
-                entities_to_process.append((model_cls, entry, False))
+                entities_to_process.append((model_cls, entity, False))
             else:
                 # Collision or New: Generate a fresh ID (Guaranteed > max_db)
-                new_id = Overall.generate_next_id(game_token)
+                new_id = IdSequence.generate_next_id(game_token)
                 id_map[old_id] = new_id
-                entities_to_process.append((model_cls, entry, True))
+                entities_to_process.append((model_cls, entity, True))
 
     # --- PHASE 2: LINK RESOLUTION ---
     def resolve_links(node):
@@ -269,17 +289,17 @@ def patch_from_dict(data):
     resolve_links(entities_to_process)
 
     # --- PHASE 3: EXECUTION ---
-    for model_cls, entry, is_new in entities_to_process:
-        # Note: entry['id'] is already updated by resolve_links
+    for model_cls, entity, is_new in entities_to_process:
+        # Note: entity['id'] is already updated by resolve_links
         if is_new:
-            db.session.add(model_cls.from_dict(entry, game_token))
+            db.session.add(model_cls.from_dict(entity, game_token))
         else:
-            existing_obj = db.session.get(model_cls, (game_token, entry['id']))
+            existing_obj = db.session.get(model_cls, (game_token, entity['id']))
             # Wipe collections to prevent data stacking
             for attr in ['piles', 'recipes', 'attrib_values', 'routes_forward', 'item_refs']:
                 if hasattr(existing_obj, attr): setattr(existing_obj, attr, [])
             
-            db.session.merge(model_cls.from_dict(entry, game_token))
+            db.session.merge(model_cls.from_dict(entity, game_token))
 
     db.session.commit()
     return True
@@ -289,9 +309,10 @@ def clear_game_data(game_token=None):
     game_token = game_token or g.game_token
     logger.info(f"Clearing all data for token: {game_token}")
     
-    # Due to CASCADE constraints, these two lines wipe the entire relational tree
-    Overall.query.filter_by(game_token=game_token).delete()
-    Entity.query.filter_by(game_token=game_token).delete()
+    # Due to CASCADE constraints, these lines wipe the entire relational tree
+    db.session.execute(delete(Scenario).filter_by(game_token=game_token))
+    db.session.execute(delete(IdSequence).filter_by(game_token=game_token))
+    db.session.execute(delete(Entity).filter_by(game_token=game_token))
     clear_session_logs(game_token)
 
     db.session.commit()
@@ -323,11 +344,11 @@ def export_to_dict():
         "progress": []
     }
 
-    # Overall settings
+    # Overall Scenario Settings
     game_token = g.game_token
-    ov = db.session.get(Overall, game_token)
-    if ov:
-        output[JsonKeys.OVERALL] = ov.to_dict()
+    scenario = db.session.get(Scenario, game_token)
+    if scenario:
+        output[JsonKeys.OVERALL] = scenario.to_dict()
 
     # Entities
     for key, model_cls in ENTITIES.items():

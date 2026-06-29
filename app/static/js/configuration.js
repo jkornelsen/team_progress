@@ -137,9 +137,12 @@ const ConfigEditor = {
                 <input type="hidden" name="${fieldName}" value="${isChecked ? '1' : '0'}">
                 <input type="checkbox" ${isChecked ? 'checked' : ''} 
                        onchange="this.previousElementSibling.value = this.checked ? '1' : '0'">`;
-        } else if (attr && attr.enums && !forceNumeric) {
-            const opts = attr.enums.map((l, i) => 
-                `<option value="${i}" ${parseInt(val) === i ? 'selected' : ''}>${l}</option>`).join('');
+        } else if (attr && attr.enums && attr.enum_ids && !forceNumeric) {
+            const currentId = parseInt(val);
+            const opts = attr.enums.map((l, i) => {
+                const id = attr.enum_ids[i];
+                return `<option value="${id}" ${currentId === id ? 'selected' : ''}>${l}</option>`;
+            }).join('');
             container.innerHTML = `<select name="${fieldName}">${opts}</select>`;
         } else {
             container.innerHTML = `<input type="number" name="${fieldName}" value="${val}" step="any" style="width:10ch;">`;
@@ -157,9 +160,11 @@ const ConfigEditor = {
                 <input type="hidden" name="${fieldName}[min]" value="1">
                 <input type="hidden" name="${fieldName}[max]" value="1">
                 <label class="checkbox-label">Required: <input type="checkbox" checked disabled></label>`;
-        } else if (attr && attr.enums) {
-            const opts = (cur) => attr.enums.map((l, i) => 
-                `<option value="${i}" ${parseInt(cur) === i ? 'selected' : ''}>${l}</option>`).join('');
+        } else if (attr && attr.enums && attr.enum_ids) {
+            const opts = (cur) => attr.enums.map((l, i) => {
+                const id = attr.enum_ids[i];
+                return `<option value="${id}" ${parseInt(cur) === id ? 'selected' : ''}>${l}</option>`;
+            }).join('');
             container.innerHTML = `
                 <span class="label-like">Min:</span> <select name="${fieldName}[min]">${opts(min)}</select>
                 <span class="label-like">Max:</span> <select name="${fieldName}[max]">${opts(max)}</select>`;

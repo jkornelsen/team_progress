@@ -19,7 +19,7 @@
     window.linkForKey['p'] = "{{ url_for('session.browse_scenarios') }}";
     window.linkForKey['s'] = "{{ url_for('session.save_to_file') }}";
     window.linkForKey['u'] = "{{ url_for('session.upload') }}";
-    window.linkForKey['t'] = "{{ url_for('configure.edit_overall') }}";
+    window.linkForKey['t'] = "{{ url_for('configure.edit_scenario') }}";
 
     document.addEventListener('keydown', function(e) {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
@@ -60,14 +60,12 @@
             <h1>Game Editor</h1>
             
             <div class="scenario-settings-area spacious-top">
-                <button onclick="location.href='{{ url_for('configure.edit_overall') }}'" class="btn primary" style="width: fit-content;">
+                <button class="btn primary"
+                    style="width: fit-content;"
+                    title="Title, description, and win conditions."
+                    onclick="location.href='{{ url_for('configure.edit_scenario') }}'">
                 <span class="hotkey-indicator">t</span> Scenario Settings ⚙️
                 </button>
-                <!--
-                <p class="italic small" style="margin-top: 5px; color: #888;">
-                    Title, description, and win conditions.
-                </p>
-                -->
             </div>
         </div>
 

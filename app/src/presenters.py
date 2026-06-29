@@ -2,7 +2,7 @@ from flask import g, session
 from app.models import (
     db, GENERAL_ID, EQUIPMENT_SLOTS_ID, StorageType,
     Entity, Item, Character, Location, Attrib,
-    Pile, AttribVal, Progress, Overall, Recipe)
+    Pile, AttribVal, Progress, Recipe)
 from app.utils import (
     ContextIds, LinkLetters, capture_origin, 
     sort_by_name_stripped, name_stripped)
@@ -228,8 +228,6 @@ class ItemPlayPresenter:
         return scope
 
     def get_template_context(self):
-        overall = db.session.get(Overall, self.game_token)
-
         # Enrich recipes, collecting all entity IDs seen across all recipes
         base_scope = self._base_attrib_scope()
         enriched_recipes = []

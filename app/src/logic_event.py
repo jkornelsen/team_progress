@@ -31,8 +31,35 @@ def num_sides(event=None):
     sides = abs(base_max - base_min) + 1
     return sides, base_min, base_max
 
-def apply_operation(current_val, mod_val, op, output_range=None):
+def apply_operation(current_val, mod_val, op, output_range=None, attrib=None):
     """Applies the specific operation and returns the new value."""
+    if attrib and attrib.enum_entries:
+        max_rank = len(attrib.enum_entries) - 1
+        if op in (Operation.ADD, Operation.SUB):
+            cur_rank = attrib.id_to_rank(current_val)
+            if cur_rank is None:
+                cur_rank = 0
+            delta = int(mod_val) if op == Operation.ADD else -int(mod_val)
+            new_rank = max(0, min(max_rank, cur_rank + delta))
+            result_id = attrib.rank_to_id(new_rank)
+            return float(result_id) if result_id is not None else current_val
+        if op == Operation.GE:
+            cur_rank = attrib.id_to_rank(current_val)
+            mod_rank = attrib.id_to_rank(mod_val)
+            if cur_rank is None or mod_rank is None:
+                return False
+            return cur_rank >= mod_rank
+        if op == Operation.LT:
+            cur_rank = attrib.id_to_rank(current_val)
+            mod_rank = attrib.id_to_rank(mod_val)
+            if cur_rank is None or mod_rank is None:
+                return False
+            return cur_rank < mod_rank
+        if op == Operation.EQ:
+            return int(current_val) == int(mod_val)
+        if op == Operation.NE:
+            return int(current_val) != int(mod_val)
+
     if op == Operation.CONST or op == Operation.MEM_RECALL:
         return mod_val
 
@@ -344,7 +371,14 @@ def is_factor_met(factor, entity, subject_id=None,
         val = factor.val_transform
 
     # Evaluate the comparison: (FetchedVal Op RequiredVal)
-    is_satisfied = apply_operation(val, factor.val_required, factor.op_application)
+    attrib = None
+    if field.field_mode == Participant.ATTR and field.attrib_id:
+        attrib = db.session.get(Attrib, (game_token, field.attrib_id))
+        if attrib and not attrib.enum_entries:
+            attrib = None
+    is_satisfied = apply_operation(
+        val, factor.val_required, factor.op_application, attrib=attrib)
+
     return is_satisfied if not factor.negate else not is_satisfied
 
 def calculate_determinants(event, role_entities):
@@ -889,8 +923,12 @@ def do_effect_change(eff, roll_val, role_entities):
             attrib_id=field_def.attrib_id
         ).first()
         current = record.value if record else 0.0
-        new_val = impact if op == Operation.ASSIGN \
-            else apply_operation(current, impact, op)
+        attrib = db.session.get(Attrib, (game_token, field_def.attrib_id))
+        if attrib and attrib.enum_entries and op != Operation.ASSIGN:
+            new_val = apply_operation(current, impact, op, attrib=attrib)
+        else:
+            new_val = impact if op == Operation.ASSIGN \
+                else apply_operation(current, impact, op)
         
         if not record:
             db.session.add(AttribVal(

@@ -36,6 +36,19 @@ Rules:
 - output within a single Markdown code block
 ```
 
+## Prompt 2 -- Alternative To Include Suggestions
+
+```
+write one paragraph giving a technical/low-level description of the desired logic.
+
+then, write a second paragraph giving an overview of what changes need to be made.
+- refer to function names if important.
+
+finally, give a list of filenames that need to be changed or looked at.
+- output the list of files within a single markdown code block.
+- prefer completeness over minimality, but avoid noise.
+```
+
 #### Prompt 3
 
 Copy and paste goal from prompt 1.
@@ -49,7 +62,8 @@ You are helping modify an existing Flask + SQLAlchemy project.
 - preserve existing behavior unless explicitly changed
 - avoid unrelated refactors
 
-Goal:
+Goal and Implementation Suggestions:
+
 [enter goal]
 ```
 

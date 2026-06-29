@@ -10,7 +10,7 @@ from app.models import (
     db, Entity, Item, Character, Location, Attrib, Event,
     Pile, AttribVal, Operation, OutcomeType, SuccessTier, EventFactor,
     Recipe, RecipeAttribReq, LocDest, EventLink, EntityAbility, EventField,
-    Progress, Overall, WinRequirement, GameMessage,
+    Progress, Scenario, WinRequirement, GameMessage,
     GENERAL_ID, StorageType, Participant)
 from app.utils import (
     RequestHelper, ContextIds, format_num, parse_coords, LinkLetters,
@@ -66,8 +66,8 @@ def overview():
     }
 
     # Check Win Requirements
-    win_reqs, all_met = validate_requirements(game_token)
-    overall = db.session.get(Overall, game_token)
+    scenario = db.session.get(Scenario, game_token)
+    enriched_win_reqs, all_met = validate_requirements(scenario)
     
     # Recent Messages
     messages = GameMessage.query.filter_by(game_token=game_token)\
@@ -81,8 +81,8 @@ def overview():
         items=items,
         items_in_production=items_in_production,
         events=events,
-        overall=overall,
-        win_reqs=win_reqs,
+        scenario=scenario,
+        win_reqs=enriched_win_reqs,
         all_requirements_met=all_met,
         link_letters=LinkLetters(excluded='m'),
         messages=messages

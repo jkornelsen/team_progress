@@ -1,14 +1,16 @@
+from flask import g
 from sqlalchemy import select
 from app.models import (
     db, WinRequirement, Pile, Character, Item, AttribVal, GENERAL_ID)
 from app.utils import format_num, maskable_name
 
-def validate_requirements(game_token):
+def validate_requirements(scenario):
     """
     Evaluates all win requirements for a session.
     Returns: (list of enriched requirements, bool all_met)
     """
-    reqs = WinRequirement.query.filter_by(game_token=game_token).all()
+    game_token = g.game_token
+    reqs = scenario.win_reqs
     if not reqs:
         return [], False
 
@@ -52,9 +54,8 @@ def validate_requirements(game_token):
 
         # --- CASE 2: LOCATION GOALS (Char at Loc) ---
         elif r.char_id and r.loc_id and not r.item_id and not r.attrib_id:
-            char = db.session.get(Character, (game_token, r.char_id))
-            is_fulfilled = char.location_id == r.loc_id
-            desc = f"👤 {char.name} must be at {maskable_name(r.loc)}"
+            is_fulfilled = r.char.location_id == r.loc_id
+            desc = f"👤 {r.char.name} must be at {maskable_name(r.loc)}"
 
         # --- CASE 3: ATTRIBUTE GOALS ---
         elif r.attrib_id:
@@ -81,8 +82,9 @@ def validate_requirements(game_token):
                 have = "needs" if r.attrib_value > 0 else "cannot have"
                 desc = f"{subject_prefix} {have} {r.attrib.name}"
             elif r.attrib.enum_entries:
+                target_id = int(r.attrib_value)
                 is_fulfilled = any(
-                    val == r.attrib_value for val in current_vals)
+                    int(val) == target_id for val in current_vals)
                 state_name = r.attrib.format_value(r.attrib_value)
                 desc = f"{subject_prefix} needs {r.attrib.name} " \
                        f"'{state_name}'"

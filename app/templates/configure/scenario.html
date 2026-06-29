@@ -21,7 +21,10 @@
         {% for a in attribs %}
         "{{ a.id }}": {
             "is_binary": {{ 'true' if a.is_binary else 'false' }},
-            "enums": {{ a.enum_entries | map(attribute='label') | list | tojson | safe if a.enum_entries else 'null' }}
+            "enums": {{ a.enum_entries | map(attribute='label') | list | tojson | safe
+                        if a.enum_entries else 'null' }},
+            "enum_ids": {{ a.enum_entries | map(attribute='id') | list | tojson | safe
+                        if a.enum_entries else 'null' }}
         }{{ "," if not loop.last }}
         {% endfor %}
     };
@@ -32,7 +35,7 @@
    2. MAIN CONTENT
    ========================================================================= #}
 
-<div class="configure-overall">
+<div>
     <h1>Scenario Settings & Objectives</h1>
     
     <form method="POST">
@@ -41,11 +44,11 @@
             <h3>Scenario Identity</h3>
             <div class="form-group">
                 <label for="title">Scenario Title:</label>
-                <input type="text" id="title" name="title" value="{{ overall.title }}" required class="full-width themed-input">
+                <input type="text" id="title" name="title" value="{{ scenario.title }}" required class="full-width themed-input">
             </div>
             <div class="form-group spacious-top">
                 <label for="description">Introductory Description:</label>
-                <textarea id="description" name="description" rows="5" class="full-width themed-input">{{ overall.description }}</textarea>
+                <textarea id="description" name="description" rows="5" class="full-width themed-input">{{ scenario.description }}</textarea>
             </div>
         </section>
 
@@ -71,7 +74,7 @@
             <p class="label-like spacious-bottom">Define what needs to happen to win this scenario. All conditions must be met.</p>
             
             <div id="winreq-list">
-                {% for req in overall.win_reqs %}
+                {% for req in scenario.win_reqs %}
                     {{ winreq_card(loop.index0, req) }}
                 {% endfor %}
             </div>

@@ -11,7 +11,7 @@ from flask import (
 from http import HTTPStatus
 from sqlalchemy import func
 
-from app.models import db, JsonKeys, UserInteraction, Character, Overall
+from app.models import db, JsonKeys, UserInteraction, Character, Scenario
 from app.serialization import (
     init_game_session, load_scenario_from_path, DEFAULT_SCENARIO_FILE,
     import_from_dict, patch_from_dict,
@@ -51,20 +51,20 @@ def browse_scenarios():
             with open(path, 'r', encoding='utf-8') as f:
                 try:
                     data = json.load(f)
-                    overall = BaseFieldMap(data.get(JsonKeys.OVERALL, {}))
+                    overall_map = BaseFieldMap(data.get(JsonKeys.OVERALL, {}))
                     scenarios.append({
                         'filename': filename,
-                        'title': overall.get_str(
+                        'title': overall_map.get_str(
                             'title', filename),
-                        'description': overall.get_str(
+                        'description': overall_map.get_str(
                             'description', ''),
-                        'introduce': overall.get_int(
+                        'introduce': overall_map.get_int(
                             'tag_introduce_order', 50),
-                        'best': overall.get_int(
+                        'best': overall_map.get_int(
                             'tag_best_order', 50),
-                        'progress_type': overall.get_str(
+                        'progress_type': overall_map.get_str(
                             'tag_progress_type', 'Idle'),
-                        'completeness': overall.get_str(
+                        'completeness': overall_map.get_str(
                             'tag_complete', '02 Under Construction'),
                         'filesize': os.path.getsize(path)
                     })
@@ -84,7 +84,7 @@ def browse_scenarios():
         reverse=reverse)
     
     return render_template(
-        'configure/scenarios.html', 
+        'session/scenarios.html', 
         scenarios=scenarios, 
         sort_by=sort_by,
         link_letters=LinkLetters(excluded='om')
@@ -95,8 +95,8 @@ def save_to_file():
     """Exports the current game token state to a JSON file."""
     json_data = export_game_to_json()
     
-    overall = db.session.get(Overall, g.game_token)
-    title = (overall.title or '').strip() or 'scenario'
+    scenario = db.session.get(Scenario, g.game_token)
+    title = (scenario.title or '').strip() or 'scenario'
     filename = f"{title}.json"
 
     with tempfile.NamedTemporaryFile(
@@ -133,7 +133,7 @@ def upload():
                 ), HTTPStatus.INTERNAL_SERVER_ERROR
 
     return render_template(
-        'configure/upload.html', 
+        'session/upload.html', 
     )
 
 @session_bp.route('/clear-all', methods=['POST'])
@@ -219,19 +219,19 @@ def current_tokens():
     # Validate alternate token still exists in DB
     alt_token = session.get('alternate_token')
     if alt_token:
-        alt_overall = Overall.query.filter_by(game_token=alt_token).first()
-        if alt_overall is None:
+        alt_scenario = Scenario.query.filter_by(game_token=alt_token).first()
+        if alt_scenario is None:
             session.pop('alternate_token', None)
             alt_token = None
 
     # Fetch titles
-    current_overall = Overall.query.filter_by(
+    current_scenario = Scenario.query.filter_by(
         game_token=session['game_token']).first()
-    current_title = current_overall.title if current_overall else '(unknown)'
+    current_title = current_scenario.title if current_scenario else '(unknown)'
     alt_title = None
     if alt_token:
-        alt_overall = Overall.query.filter_by(game_token=alt_token).first()
-        alt_title = alt_overall.title if alt_overall else '(unknown)'
+        alt_scenario = Scenario.query.filter_by(game_token=alt_token).first()
+        alt_title = alt_scenario.title if alt_scenario else '(unknown)'
 
     invite_url = url_for(
         'session.join_game', game_token=session['game_token'], _external=True)
@@ -309,13 +309,13 @@ def session_users():
             UserInteraction.game_token,
             UserInteraction.route,
             UserInteraction.timestamp,
-            Overall.title.label('game_title'),
+            Scenario.title.label('game_title'),
             func.row_number().over(
                 partition_by=UserInteraction.username,
                 order_by=UserInteraction.timestamp.desc()
             ).label('rn')
         )
-        .join(Overall, UserInteraction.game_token == Overall.game_token)
+        .join(Scenario, UserInteraction.game_token == Scenario.game_token)
         .filter(UserInteraction.timestamp >= threshold)
         .subquery()
     )
