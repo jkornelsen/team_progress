@@ -4,7 +4,7 @@ from flask import (
     Blueprint, request, session, flash, redirect, url_for, render_template,
     g, jsonify)
 from http import HTTPStatus
-from sqlalchemy import select, or_
+from sqlalchemy import select, delete, or_
 from app.models import (
     GENERAL_ID, EQUIPMENT_SLOTS_ID, StorageType, ENTITIES, db,
     Entity, Item, Character, Location, Attrib, Event, 
@@ -81,7 +81,8 @@ def edit_scenario():
             db.session.delete(slots_attrib)
 
         # Save Win Conditions
-        WinRequirement.query.filter_by(game_token=game_token).delete()
+        db.session.execute(delete(WinRequirement).filter_by(
+            game_token=game_token))
         win_req_rows = req.get_list('winreqs')
         win_req_rows.sort(key=lambda r: r.get_int('order_index', 0))
         for idx, row in enumerate(win_req_rows):
@@ -174,8 +175,8 @@ def edit_item(id):
             val if val in StorageType.ALL_CODES else StorageType.UNIVERSAL)
 
         item.q_limit = req.get_float('q_limit')
-        ItemLimit.query.filter_by(
-            game_token=game_token, item_id=item.id).delete()
+        db.session.execute(delete(ItemLimit).filter_by(
+            game_token=game_token, item_id=item.id))
         for limit_row in req.get_list('limits_for'):
             owner_id = limit_row.get_int('owner_id')
             q_limit = limit_row.get_float('q_limit')
@@ -210,7 +211,8 @@ def edit_item(id):
                 db.session.delete(gen_pile)
 
         # Attribute Values
-        AttribVal.query.filter_by(game_token=game_token, subject_id=item.id).delete()
+        db.session.execute(delete(AttribVal).filter_by(
+            game_token=game_token, subject_id=item.id))
         for row in req.get_list('attribs'):
             attr_id = row.get_int('id')
             if attr_id:
@@ -220,8 +222,8 @@ def edit_item(id):
                 ))
 
         # Events
-        EntityAbility.query.filter_by(
-            game_token=game_token, entity_id=item.id).delete()
+        db.session.execute(delete(EntityAbility).filter_by(
+            game_token=game_token, entity_id=item.id))
         for row in req.get_list('abilities'):
             event_id = row.get_int('id')
             if event_id:
@@ -423,7 +425,8 @@ def edit_location(id):
                 db.session.delete(r_obj)
 
         # Items on Ground
-        Pile.query.filter_by(game_token=game_token, owner_id=loc.id).delete()
+        db.session.execute(delete(Pile).filter_by(
+            game_token=game_token, owner_id=loc.id))
         for row in req.get_list('items'):
             item_id = row.get_int('item_id')
             if item_id:
@@ -436,7 +439,8 @@ def edit_location(id):
                 ))
 
         # Item Refs
-        ItemRef.query.filter_by(game_token=game_token, loc_id=loc.id).delete()
+        db.session.execute(delete(ItemRef).filter_by(
+            game_token=game_token, loc_id=loc.id))
         for ref_id in request.form.getlist('item_refs[]'):
             if ref_id:
                 db.session.add(ItemRef(
@@ -446,7 +450,8 @@ def edit_location(id):
                 ))
 
         # Zones
-        LocZone.query.filter_by(game_token=game_token, loc_id=loc.id).delete()
+        db.session.execute(delete(LocZone).filter_by(
+            game_token=game_token, loc_id=loc.id))
         zone_rows = req.get_list('zones')
         zone_rows.sort(key=lambda row: row.get_int('order_index', 0))
         for idx, row in enumerate(zone_rows):
@@ -465,8 +470,8 @@ def edit_location(id):
                 ))
 
         # Entrance Requirements
-        EntranceReq.query.filter_by(
-            game_token=game_token, loc_id=loc.id).delete()
+        db.session.execute(delete(EntranceReq).filter_by(
+            game_token=game_token, loc_id=loc.id))
         for row in req.get_list('entrance_reqs'):
             entity_id = row.get_int('entity_id', None)
             attrib_id = row.get_int('attrib_id', None)
@@ -482,7 +487,8 @@ def edit_location(id):
                 db.session.add(new_req)
 
         # Local Events
-        EntityAbility.query.filter_by(game_token=game_token, entity_id=loc.id).delete()
+        db.session.execute(delete(EntityAbility).filter_by(
+            game_token=game_token, entity_id=loc.id))
         for row in req.get_list('events'):
             event_id = row.get_int('id')
             if event_id:
@@ -493,7 +499,8 @@ def edit_location(id):
                 ))
 
         # Attribute Values
-        AttribVal.query.filter_by(game_token=game_token, subject_id=loc.id).delete()
+        db.session.execute(delete(AttribVal).filter_by(
+            game_token=game_token, subject_id=loc.id))
         for row in req.get_list('attribs'):
             attr_id = row.get_int('id')
             if attr_id:
@@ -571,7 +578,8 @@ def edit_character(id):
         char.toplevel = 'toplevel' in request.form
 
         # Update Attrib values
-        AttribVal.query.filter_by(game_token=game_token, subject_id=char.id).delete()
+        db.session.execute(delete(AttribVal).filter_by(
+            game_token=game_token, subject_id=char.id))
         for attrib_row in req.get_list('attribs'):
             attr_id = attrib_row.get_int('id')
             if attr_id:
@@ -583,8 +591,9 @@ def edit_character(id):
                         attrib_id=attr_id,
                         value=val))
 
-        # Pile Handling
-        Pile.query.filter_by(game_token=game_token, owner_id=char.id).delete()
+        # Inventory
+        db.session.execute(delete(Pile).filter_by(
+            game_token=game_token, owner_id=char.id))
         for item_row in req.get_list('items'):
             item_id = item_row.get_int('item_id')
             if item_id:
@@ -597,7 +606,8 @@ def edit_character(id):
                 ))
 
         # Abilities
-        EntityAbility.query.filter_by(game_token=game_token, entity_id=char.id).delete()
+        db.session.execute(delete(EntityAbility).filter_by(
+            game_token=game_token, entity_id=char.id))
         for ability_row in req.get_list('abilities'):
             event_id = ability_row.get_int('id')
             if event_id:

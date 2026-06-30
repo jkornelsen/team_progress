@@ -139,7 +139,7 @@ def import_from_dict(data):
             func.max(Entity.id)).filter_by(game_token=game_token).scalar() or 0
         max_rec = db.session.query(
             func.max(Recipe.id)).filter_by(game_token=game_token).scalar() or 0
-        sequence.next_entity_id = max(
+        sequence.next_id = max(
             max_ent, max_rec, HIGHEST_RESERVED_ID) + 1
         
         db.session.commit()

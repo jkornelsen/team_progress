@@ -234,7 +234,7 @@
 {% macro inv_row(index, pile=None, all_items=[]) %}
     {% set selected_item_id = pile.item_id if pile else None %}
     {% set qty = pile.quantity if pile else 1 %}
-    {% set selected_slot = pile.slot_id if pile else '' %}
+    {% set selected_slot_id = pile.slot_id if pile else '' %}
 
     <div class="col-row inv-piles-row">
         <select name="items[{{ index }}][item_id]">
@@ -248,10 +248,10 @@
         <input type="number" name="items[{{ index }}][quantity]" 
                value="{{ qty }}" step="any" placeholder="Qty">
 
-        <select name="items[{{ index }}][slot]">
+        <select name="items[{{ index }}][slot_id]">
             <option value="">(Stored)</option>
             {% for slot in all_slots %}
-                <option value="{{ slot.id }}" {{ 'selected' if slot.id == selected_slot }}>
+                <option value="{{ slot.id }}" {{ 'selected' if slot.id == selected_slot_id }}>
                     {{ slot.label }}
                 </option>
             {% endfor %}

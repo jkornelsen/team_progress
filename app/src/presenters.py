@@ -320,9 +320,9 @@ class ItemPlayPresenter:
                 if ent:
                     attribreq_entities[eid] = ent
 
-        slots_attr = db.session.get(
+        slots_attrib = db.session.get(
             Attrib, (self.game_token, EQUIPMENT_SLOTS_ID))
-        available_slots = slots_attr.enum_entries if slots_attr else []
+        available_slots = slots_attrib.enum_entries if slots_attrib else []
 
         return {
             "item": self.item,

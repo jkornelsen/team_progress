@@ -172,20 +172,3 @@ def transfer_item(item_id, from_owner_id, to_owner_id, quantity,
         return True, f"Inventory full: only took {actual_moved:g}."
 
     return True, ''
-
-# ------------------------------------------------------------------------
-# Convenience Accessors
-# ------------------------------------------------------------------------
-
-def set_item_slot(char_id, item_id, slot_name):
-    """Equips an item into a specific slot."""
-    pile = Pile.query.filter_by(
-        game_token=g.game_token,
-        item_id=item_id,
-        owner_id=char_id
-    ).first()
-    
-    if pile:
-        pile.slot = slot_name
-        return True
-    return False

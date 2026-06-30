@@ -2111,8 +2111,8 @@ class IdSequence(db.Model):
             .with_for_update()
         )
         row = db.session.execute(stmt).scalar_one_or_none()
-        assigned_id = row.next_entity_id
-        row.next_entity_id += 1
+        assigned_id = row.next_id
+        row.next_id += 1
         
         return assigned_id
 
