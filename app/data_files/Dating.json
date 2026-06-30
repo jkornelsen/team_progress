@@ -3,7 +3,7 @@
         "title": "Dating",
         "description": "Your Indian mother has decided it's time. She's fine with you having a ❤️ love marriage, but if you don't find someone soon, she has in mind a match with a well-off family. The problem is that they're ugly! First, [talk things over with your Maa](/play/event/66?subject_id=56), then make a visit to either {violet|the church or the bar} to start meeting people.\r\n\r\nWork odd jobs to earn cash. The right clothes are important to impress people.\r\n\r\n*The initial setup aims for generally acceptable standards. If you make it explicit and want to share the file, then be considerate by including a warning.*",
         "win_reqs": [
-            {"attrib_id": 144, "attrib_value": 17.0}
+            {"attrib_id": 144, "attrib_value": "Engaged"}
         ],
         "tag_introduce_order": 35,
         "tag_best_order": 11,
@@ -537,9 +537,7 @@
                         ],
                         "attrib_reqs": [
                             {
-                                "attrib_id": 8,
-                                "value_range": [1.0, 1.0],
-                                "range_inclusive": [true, true]
+                                "attrib_id": 8
                             }
                         ]
                     }
@@ -1100,13 +1098,6 @@
                         "sources": [
                             {"item_id": 70, "q_required": 1.0},
                             {"item_id": 216, "q_required": 1.0, "preserve": true}
-                        ],
-                        "attrib_reqs": [
-                            {
-                                "attrib_id": 17,
-                                "value_range": [0.0, 3.0],
-                                "range_inclusive": [true, true]
-                            }
                         ]
                     }
                 ]
@@ -1778,7 +1769,7 @@
                     {
                         "infield": {"role": "universal", "item_id": 87, "attrib_id": 109},
                         "op_application": "==",
-                        "val_required": 0.0
+                        "val_required": false
                     },
                     {"op_application": "m:="},
                     {"op_application": ":=", "op_transform": "c", "val_transform": 0.0},
@@ -1854,7 +1845,7 @@
                     {
                         "infield": {"role": "at", "attrib_id": 85},
                         "op_application": ">=",
-                        "val_required": 0.0
+                        "val_required": "Beach"
                     },
                     {
                         "label": "Base Threshold",

@@ -87,6 +87,41 @@ def clear_enum_cache(game_token=None):
     else:
         _enum_cache.clear()
 
+def attrib_val_to_json(game_token, attrib_id, raw_val):
+    """Converts a DB float to a JSON-friendly string, bool, or float."""
+    if attrib_id is None or raw_val is None:
+        return raw_val
+        
+    attrib = db.session.get(Attrib, (game_token, attrib_id))
+    if not attrib:
+        return raw_val
+
+    if attrib.is_binary:
+        return bool(raw_val)
+    
+    if attrib.enum_entries:
+        return attrib.format_value(raw_val)
+        
+    return raw_val
+
+def attrib_val_from_json(game_token, attrib_id, json_val):
+    """Converts a JSON value (str/bool/num) back to a DB float."""
+    if attrib_id is None or json_val is None or json_val == "":
+        return json_val
+
+    if isinstance(json_val, str):
+        # It's an enum label, resolve it to an entry ID
+        val = resolve_enum_id(game_token, attrib_id, json_val)
+        return float(val) if val is not None else 0.0
+    
+    if isinstance(json_val, bool):
+        return 1.0 if json_val else 0.0
+        
+    try:
+        return float(json_val)
+    except (ValueError, TypeError):
+        return 0.0
+
 class DictHydrator:
     """Map JSON keys to DB columns."""
     LEGACY_KEYS = {
@@ -208,20 +243,14 @@ class Entity(db.Model, DictHydrator):
         return self.to_dict_sparse(data)
 
     @classmethod
-    def from_dict(cls, data, game_token):
+    def from_dict(cls, data, game_token, **overrides):
         """Standard base hydration for all entities."""
-        entity = super().from_dict(data, game_token)
+        entity = super().from_dict(data, game_token, **overrides)
         for a_data in data.get('attribs', []):
             if isinstance(a_data, list) and len(a_data) == 2:
                 attrib_id, raw_val = a_data[0], a_data[1]
-                final_val = raw_val
-
-                if isinstance(raw_val, str):
-                    final_val = resolve_enum_id(
-                        game_token, attrib_id, raw_val)
-                elif isinstance(raw_val, bool):
-                    final_val = 1.0 if raw_val else 0.0
-
+                final_val = attrib_val_from_json(
+                    game_token, attrib_id, raw_val)
                 if final_val is not None:
                     entity.attrib_values.append(AttribVal(
                         game_token=game_token,
@@ -325,18 +354,21 @@ class Item(Entity):
 
     @classmethod
     def from_dict(cls, data, game_token):
-        item = super().from_dict(data, game_token)
-        for l_data in data.get('limits_for', []):
-            item.limits_for.append(
-                ItemLimit(game_token=game_token, item_id=item.id, **l_data))
-        for order_index, r_data in enumerate(data.get('recipes', [])):
-            item.recipes.append(
-                Recipe.from_dict(r_data, game_token, order_index))
-        slot_label = data.get('slot')
+        updates = {
+            'limits_for': [
+                ItemLimit(game_token=game_token, **l_data)
+                for l_data in data.pop('limits_for', [])
+            ],
+            'recipes': [
+                Recipe.from_dict(r_data, game_token, order_index)
+                for order_index, r_data in enumerate(data.pop('recipes', []))
+            ],
+        }
+        slot_label = data.pop('slot', None)
         if slot_label:
-            item.slot_id = resolve_enum_id(
+            updates['slot_id'] = resolve_enum_id(
                 game_token, EQUIPMENT_SLOTS_ID, slot_label)
-        return item
+        return super().from_dict(data, game_token, **updates)
 
     in_piles = db.relationship(
         'Pile',
@@ -824,12 +856,13 @@ class Pile(db.Model, DictHydrator):
     @classmethod
     def from_dict(cls, data, game_token, owner_id):
         scrub_array(data, 'position', 2)
-        pile = super().from_dict(data, game_token, owner_id=owner_id)
-        slot_label = data.get('slot')
+        updates = {}
+        slot_label = data.pop('slot', None)
         if slot_label:
-            pile.slot_id = resolve_enum_id(
+            updates['slot_id'] = resolve_enum_id(
                 game_token, EQUIPMENT_SLOTS_ID, slot_label)
-        return pile
+        return super().from_dict(
+            data, game_token, owner_id=owner_id, **updates)
 
     @property
     def is_placed(self):
@@ -953,11 +986,7 @@ class AttribVal(db.Model):
 
     @property
     def serialized_value(self):
-        if self.attrib.is_binary:
-            return bool(self.value)
-        if self.attrib.enum_entries:
-            return self.attrib.format_value(self.value)
-        return self.value
+        return attrib_val_to_json(self.game_token, self.attrib_id, self.value)
 
     @property
     def display(self):
@@ -1018,13 +1047,19 @@ class EntranceReq(db.Model, DictHydrator):
         data = {
             "item_id": self.item_id,
             "attrib_id": self.attrib_id,
-            "val_required": self.val_required
+            "val_required": attrib_val_to_json(
+                self.game_token, self.attrib_id, self.val_required)
         }
         return self.to_dict_sparse(data)
 
     @classmethod
     def from_dict(cls, data, game_token, loc_id):
-        return super().from_dict(data, game_token, loc_id=loc_id)
+        updates = {}
+        attrib_id = data.get('attrib_id')
+        if attrib_id:
+            updates['val_required'] = attrib_val_from_json(
+                game_token, attrib_id, data.pop('val_required', 0.0))
+        return super().from_dict(data, game_token, loc_id=loc_id, **updates)
 
     location = db.relationship(
         'Location',
@@ -1440,6 +1475,8 @@ class EventFactor(db.Model, DictHydrator):
     val_required = db.Column(db.Float, default=1.0) # comparison RHS
 
     def to_dict(self):
+        attrib_id = (self.infield.attrib_id if self.infield else None) or \
+                    (self.outfield.attrib_id if self.outfield else None)
         data = {
             "label": self.label,
             "get_val_from": self.get_val_from,
@@ -1448,7 +1485,9 @@ class EventFactor(db.Model, DictHydrator):
             "op_application": self.op_application,
             "op_transform": self.op_transform,
             "val_transform": self.val_transform,
-            "val_required": self.val_required if self.is_comparison else None,
+            "val_required": attrib_val_to_json(
+                self.game_token, attrib_id, self.val_required
+                ) if self.is_comparison else None,
             "negate": self.negate,
             "outcome_success": self.outcome_success,
             "auto_apply": self.auto_apply
@@ -1457,15 +1496,22 @@ class EventFactor(db.Model, DictHydrator):
 
     @classmethod
     def from_dict(cls, data, game_token, event_id, **overrides):
-        factor = super().from_dict(
-            data, game_token, event_id=event_id, **overrides)
-        in_data = data.get('infield')
+        updates = {}
+        in_data = data.get('infield', {})
+        out_data = data.get('outfield', {})
+        attrib_id = in_data.get('attrib_id') or out_data.get('attrib_id')
+        if attrib_id:
+            if 'val_required' in data:
+                updates['val_required'] = attrib_val_from_json(
+                    game_token, attrib_id, data.pop('val_required'))
         if in_data:
-            factor.infield = EventField(game_token=game_token, **in_data)
-        out_data = data.get('outfield')
+            updates['infield'] = EventField(game_token=game_token, **in_data)
         if out_data:
-            factor.outfield = EventField(game_token=game_token, **out_data)
-        return factor
+            updates['outfield'] = EventField(game_token=game_token, **out_data)
+        
+        updates.update(overrides)
+        return super().from_dict(
+            data, game_token, event_id=event_id, **updates)
 
     @property
     def role(self):
@@ -1486,6 +1532,14 @@ class EventFactor(db.Model, DictHydrator):
         if not self.op_transform:
             return ""
         return Operation.Repr.get(self.op_transform, self.op_transform)
+
+    @property
+    def val_required_display(self):
+        field = self.infield or self.outfield
+        if not field:
+            return str(self.val_required)
+        return attrib_val_to_json(
+            self.game_token, field.attrib_id, self.val_required)
 
     # Relationships
     event = db.relationship(
@@ -1793,68 +1847,40 @@ class RecipeAttribReq(db.Model, DictHydrator):
     game_token = db.Column(db.String(50), primary_key=True)
     recipe_id = db.Column(db.Integer, primary_key=True)
     attrib_id = db.Column(db.Integer, primary_key=True)
-    min_val = db.Column(db.Float, nullable=False, default=float('-inf'))
-    max_val = db.Column(db.Float, nullable=False, default=float('inf'))
-    inclusive_min = db.Column(db.Boolean, default=True, nullable=False)
-    inclusive_max = db.Column(db.Boolean, default=True, nullable=False)
-
-    @classmethod
-    def from_dict(cls, data, game_token, recipe_id):
-        """Processes nested list data before delegating to DictHydrator."""
-        updates = {}
-        v_range = data.pop('value_range', None)
-        if v_range:
-            low = v_range[0] if v_range[0] is not None else float('-inf')
-            high = v_range[1] if v_range[1] is not None else float('inf')
-            if low > high:
-                low, high = high, low
-            updates['min_val'] = low
-            updates['max_val'] = high
-        inc = data.pop('inclusive', None)
-        if inc:
-            updates['inclusive_min'] = inc[0]
-            updates['inclusive_max'] = inc[1]
-        return super().from_dict(
-            data, game_token, recipe_id=recipe_id, **updates)
+    op_compare = db.Column(db.String(5), nullable=False, default=Operation.EQ)
+    val_required = db.Column(db.Float, nullable=False, default=1.0)
 
     def to_dict(self):
         data = {
             "attrib_id": self.attrib_id,
-            "value_range": [
-                None if self.min_val == float('-inf') else self.min_val,
-                None if self.max_val == float('inf') else self.max_val
-            ],
-            "range_inclusive": [self.inclusive_min, self.inclusive_max]
+            "op_compare": self.op_compare,
+            "val_required": attrib_val_to_json(
+                self.game_token, self.attrib_id, self.val_required)
         }
         return self.to_dict_sparse(data)
 
-    def in_range(self, val):
-        if self.inclusive_min:
-            if val < self.min_val: return False
-        else:
-            if val <= self.min_val: return False
-            
-        if self.inclusive_max:
-            if val > self.max_val: return False
-        else:
-            if val >= self.max_val: return False
-        return True
+    @classmethod
+    def from_dict(cls, data, game_token, recipe_id):
+        """Processes nested list data before delegating to DictHydrator."""
+        attrib_id = data.get('attrib_id')
+        updates = {
+            'val_required': attrib_val_from_json(
+                game_token, attrib_id, data.pop('val_required', None))
+        }
+        return super().from_dict(
+            data, game_token, recipe_id=recipe_id, **updates)
+
+    def is_satisfied(self, val):
+        """Checks if a specific value meets this requirement."""
+        from app.logic_event import apply_operation
+        return apply_operation(
+            val, self.val_required, self.op_compare, attrib=self.attrib)
 
     @property
-    def range_display(self):
-        if self.attrib.is_binary:
-            return '✓' if self.min_val > 0 else '✗'
-
-        low = "-∞" if self.min_val == float('-inf') else f"{self.min_val:g}"
-        high = "∞" if self.max_val == float('inf') else f"{self.max_val:g}"
-        
-        left_bracket = "[" if self.inclusive_min else "("
-        right_bracket = "]" if self.inclusive_max else ")"
-        
-        return f"{left_bracket}{low}, {high}{right_bracket}"
-
-    def is_bounded(self):
-        return self.min_val != float('-inf') or self.max_val != float('inf')
+    def display(self):
+        symbol = Operation.Repr.get(self.op_compare, self.op_compare)
+        val_str = self.attrib.format_value(self.val_required)
+        return f"{symbol} {val_str}"
 
     recipe = db.relationship(
         'Recipe',
@@ -2030,14 +2056,21 @@ class WinRequirement(db.Model, DictHydrator):
             "char_id": self.char_id,
             "loc_id": self.loc_id,
             "attrib_id": self.attrib_id,
-            "attrib_value": self.attrib_value
+            "attrib_value": attrib_val_to_json(
+                self.game_token, self.attrib_id, self.attrib_value)
         }
         return self.to_dict_sparse(data)
 
     @classmethod
     def from_dict(cls, data, game_token, order_index):
+        updates = {}
+        attrib_id = data.get('attrib_id')
+        if attrib_id:
+            attrib_val_raw = data.pop('attrib_value', None)
+            updates['attrib_value'] = attrib_val_from_json(
+                game_token, attrib_id, attrib_val_raw)
         return super().from_dict(
-            data, game_token, order_index=order_index)
+            data, game_token, order_index=order_index, **updates)
 
     scenario = db.relationship(
         'Scenario',

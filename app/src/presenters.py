@@ -111,7 +111,7 @@ class ItemPlayPresenter:
         for eid in scope_ids:
             av = lookup.get((eid, req.attrib_id))
             if av is not None:
-                if req.in_range(av.value):
+                if req.is_satisfied(av.value):
                     req_met = True
                     current_val = av.value
                     satisfying_entity = eid
@@ -131,7 +131,7 @@ class ItemPlayPresenter:
         
         return {
             'attrib': req.attrib,
-            'range_display': req.range_display,
+            'display': req.display,
             'current_val': current_val,
             'is_satisfied': req_met,
             'link_entity_id': satisfying_entity or entity_with_value

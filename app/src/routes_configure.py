@@ -282,19 +282,12 @@ def edit_item(id):
                     continue
                 attrib_id = attrib_row.get_int('attrib_id')
                 if attrib_id:
-                    raw_min = attrib_row.get_str('min')
-                    raw_max = attrib_row.get_str('max')
-                    min_val = float('-inf') if raw_min == '' \
-                        else attrib_row.get_float('min')
-                    max_val = float('inf') if raw_max == '' \
-                        else attrib_row.get_float('max')
-
                     recipe.attrib_reqs.append(RecipeAttribReq(
                         game_token=game_token,
                         recipe_id=recipe_id,
                         attrib_id=attrib_id,
-                        min_val=min_val,
-                        max_val=max_val
+                        op_compare=attrib_row.get_str('op_compare'),
+                        val_required=attrib_row.get_float('val_required')
                     ))
 
             item.recipes.append(recipe)
@@ -336,6 +329,7 @@ def edit_item(id):
             game_token=game_token).order_by(name_stripped()).all(),
         recipes=item.recipes if item else [],
         all_slots=all_slots,
+        Operation=Operation,
     )
 
 @configure_bp.route('/location/<int:id>', methods=['GET', 'POST'])

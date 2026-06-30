@@ -32,7 +32,10 @@ def num_sides(event=None):
     return sides, base_min, base_max
 
 def apply_operation(current_val, mod_val, op, output_range=None, attrib=None):
-    """Applies the specific operation and returns the new value."""
+    """
+    Applies the specific operation and returns the new value.
+    :param output_range: for example d20; used for soft capping
+    """
     if attrib and attrib.enum_entries:
         max_rank = len(attrib.enum_entries) - 1
         if op in (Operation.ADD, Operation.SUB):
@@ -398,6 +401,11 @@ def calculate_determinants(event, role_entities):
         source_display = "Constant"
         value_display_override = None
             
+        attrib = None
+        if infield and infield.field_mode == Participant.ATTR \
+                and infield.attrib_id:
+            attrib = db.session.get(Attrib, (game_token, infield.attrib_id))
+
         if det.op_transform == Operation.MEM_RECALL:
             source_display = "Memory"
             field_name = "Recall"
@@ -466,14 +474,16 @@ def calculate_determinants(event, role_entities):
                         child_name = maskable_name(pile.item)
                     source_display = f"{anchor_name}'s {child_name}"
 
-            breakdown_text = format_for_display(val)
+            breakdown_text = attrib.format_value(val) if attrib \
+                else format_for_display(val)
 
             # Inner Transform: (Val <op> Constant)
             if det.op_transform:
                 breakdown_text = get_inner_breakdown(
-                    val, det.val_transform, det.op_transform)
+                    attrib.format_value(val) if attrib else val,
+                    det.val_transform, det.op_transform)
                 val = apply_operation(
-                    val, det.val_transform, det.op_transform, sides)
+                    val, det.val_transform, det.op_transform, sides, attrib)
 
         # Check if this is a comparison or a calculation
         is_met = True
@@ -485,6 +495,11 @@ def calculate_determinants(event, role_entities):
         if det.negate:
             is_met = not is_met
 
+        def smart_format(v):
+            if attrib:
+                return attrib.format_value(v)
+            return format_for_display(v)
+
         # Assemble the enriched dictionary
         modifiers.append({
             'label': det.label or "",
@@ -493,8 +508,9 @@ def calculate_determinants(event, role_entities):
             'value': val,
             'value_display':
                 value_display_override if value_display_override is not None \
-                else format_for_display(val),
+                else smart_format(val),
             'val_required': det.val_required,
+            'val_required_display': smart_format(det.val_required),
             'negate': det.negate,
             'op_app': det.op_application,
             'op_app_display': det.op_app_display,

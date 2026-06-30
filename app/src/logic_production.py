@@ -194,12 +194,12 @@ def has_ingredients(
                 game_token=game_token,
                 subject_id=eid,
                 attrib_id=req.attrib_id).first()
-            if av and req.in_range(av.value):
+            if av and req.is_satisfied(av.value):
                 req_met = True
                 break
         if not req_met:
             return False, \
-                f"Requires {maskable_name(req.attrib)} {req.range_display}"
+                f"Requires {maskable_name(req.attrib)} {req.display}"
 
     return True, ""
 

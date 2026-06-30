@@ -103,23 +103,31 @@
                         "attrib_reqs": [
                             {
                                 "attrib_id": 4,
-                                "value_range": [3.0, 10.0],
-                                "range_inclusive": [true, true]
+                                "op_compare": ">=",
+                                "val_required": 3.0
+                            },
+                            {
+                                "attrib_id": 4,
+                                "op_compare": "<",
+                                "val_required": 11.0
                             },
                             {
                                 "attrib_id": 5,
-                                "value_range": [3.0, 10.0],
-                                "range_inclusive": [true, true]
+                                "op_compare": ">=",
+                                "val_required": 3.0
+                            },
+                            {
+                                "attrib_id": 5,
+                                "op_compare": "<",
+                                "val_required": 11.0
                             },
                             {
                                 "attrib_id": 6,
-                                "value_range": [0.0, 0.0],
-                                "range_inclusive": [true, true]
+                                "val_required": 0.0
                             },
                             {
                                 "attrib_id": 7,
-                                "value_range": [0.0, 0.0],
-                                "range_inclusive": [true, true]
+                                "val_required": 0.0
                             }
                         ]
                     }

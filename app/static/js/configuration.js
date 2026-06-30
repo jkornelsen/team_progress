@@ -149,32 +149,6 @@ const ConfigEditor = {
         }
     },
 
-    syncAttribRange: function(select) {
-        const { container, fieldName, attr } = this._getBasics(select);
-        if (!container) return;
-        const min = select.dataset.currentMin || "";
-        const max = select.dataset.currentMax || "";
-
-        if (attr && attr.is_binary) {
-            container.innerHTML = `
-                <input type="hidden" name="${fieldName}[min]" value="1">
-                <input type="hidden" name="${fieldName}[max]" value="1">
-                <label class="checkbox-label">Required: <input type="checkbox" checked disabled></label>`;
-        } else if (attr && attr.enums && attr.enum_ids) {
-            const opts = (cur) => attr.enums.map((l, i) => {
-                const id = attr.enum_ids[i];
-                return `<option value="${id}" ${parseInt(cur) === id ? 'selected' : ''}>${l}</option>`;
-            }).join('');
-            container.innerHTML = `
-                <span class="label-like">Min:</span> <select name="${fieldName}[min]">${opts(min)}</select>
-                <span class="label-like">Max:</span> <select name="${fieldName}[max]">${opts(max)}</select>`;
-        } else {
-            container.innerHTML = `
-                <span class="label-like">Min:</span> <input type="number" name="${fieldName}[min]" value="${min}" step="any" style="width:8ch;" placeholder="-∞">
-                <span class="label-like">Max:</span> <input type="number" name="${fieldName}[max]" value="${max}" step="any" style="width:8ch;" placeholder="∞">`;
-        }
-    },
-
     // --- 2. THE NUMERIC SYNCERS (Simple UI: Always Numbers) ---
 
     syncNumVal: function(select) {
@@ -182,16 +156,6 @@ const ConfigEditor = {
         if (!container) return;
         const val = select.dataset.currentVal || "0";
         container.innerHTML = `<input type="number" name="${fieldName}" value="${val}" step="any" style="width:10ch;">`;
-    },
-
-    syncNumRange: function(select) {
-        const { container, fieldName } = this._getBasics(select);
-        if (!container) return;
-        const min = select.dataset.currentMin || "";
-        const max = select.dataset.currentMax || "";
-        container.innerHTML = `
-            <span class="label-like">Min:</span> <input type="number" name="${fieldName}[min]" value="${min}" step="any" style="width:8ch;" placeholder="-∞">
-            <span class="label-like">Max:</span> <input type="number" name="${fieldName}[max]" value="${max}" step="any" style="width:8ch;" placeholder="∞">`;
     },
 
     // --- 3. INTERNAL HELPERS ---

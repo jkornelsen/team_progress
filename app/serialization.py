@@ -92,7 +92,6 @@ def import_from_dict(data):
     Load all data from JSON dictionary.
     Wipes existing session data and rebuilds using model hydration.
     """
-    print("import_from_dict() BEGIN")
     try:
         # Wipe current data
         game_token = g.game_token
@@ -152,7 +151,6 @@ def import_from_dict(data):
     finally:
         clear_enum_cache(game_token)
 
-    print("import_from_dict() END")
     return True
 
 def remap_general_id(entities_data):
