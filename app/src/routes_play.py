@@ -21,7 +21,7 @@ from .logic_event import (
     roll_for_outcome, roll_for_system_outcome, check_outcome_success,
     calculate_determinants, resolve_anchor_id, get_chain_results,
     preview_effects, resolve_effects, get_entity_value, is_factor_met,
-    do_effect_change, process_all_effects, format_for_display)
+    do_effect_change, process_all_effects, format_for_display, apply_operation)
 from .logic_progress import (
     tick_all_active, start_production, stop_production)
 from .logic_production import (
@@ -701,16 +701,15 @@ def play_attrib(attrib_id, subject_id):
         req = RequestHelper('form')
         op = req.get_str('operator')
         
-        if op == Operation.ASSIGN:
-            new_val = req.get_float('value') or req.get_float('operand')
-        else:
-            operand = req.get_float('operand')
-            if op == Operation.ADD:     new_val = val_record.value + operand
-            elif op == Operation.SUB:   new_val = val_record.value - operand
-            elif op == Operation.MULT:  new_val = val_record.value * operand
-            elif op == Operation.DIV:   new_val = val_record.value / operand \
-                                        if operand != 0 else val_record.value
+        operand = req.get_float('operand') if op != Operation.ASSIGN else None
+        value_for_assign = req.get_float('value') or req.get_float('operand')
 
+        if op == Operation.ASSIGN:
+            new_val = apply_operation(
+                val_record.value, value_for_assign, op, attrib=attribute)
+        else:
+            new_val = apply_operation(
+                val_record.value, operand, op, attrib=attribute)
         val_record.value = new_val
         db.session.commit()
 
@@ -726,7 +725,8 @@ def play_attrib(attrib_id, subject_id):
         if op == Operation.ASSIGN:
             val_str = attribute.format_value(new_val)
         else:
-            val_str = f"{round(abs(operand), 2):g} = {round(new_val, 2):g}"
+            val_str = f"{round(abs(operand), 2):g} = " \
+                      f"{attribute.format_value(new_val)}"
         add_message(
             f"{op_words['verb']} {subject.name} {attribute.name}"
             f" {op_words['prep']} {val_str}"

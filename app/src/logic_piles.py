@@ -30,7 +30,7 @@ def get_or_create_pile(item_id, owner_id, position=None, slot=None):
             item_id=item_id,
             owner_id=owner_id,
             position=position,
-            slot=slot,
+            slot_id=slot.id if slot else None,
             quantity=0.0
         )
         db.session.add(pile)

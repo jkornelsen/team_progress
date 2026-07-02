@@ -640,7 +640,7 @@ class Attrib(Entity):
                 return entry.id
         return None
 
-    def format_value(self, val):
+    def format_value(self, val, show_rank=False):
         """
         Converts a raw float value into a string based on this 
         attribute's definition.
@@ -653,6 +653,8 @@ class Attrib(Entity):
                 entry_id = int(val)
                 for entry in self.enum_entries:
                     if entry.id == entry_id:
+                        if show_rank:
+                            return f"{entry.label} ({entry.order_index})"
                         return entry.label
             except (ValueError, TypeError):
                 pass

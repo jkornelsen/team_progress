@@ -154,7 +154,7 @@
             {
                 "id": 5,
                 "name": "Modesty",
-                "description": "10 for fully modest, primarily based on wearing clothes in the right context. Wearing only underwear at home alone is not an issue, while neglecting to wear proper clothes in public could very well be.\r\n\r\nIf a person's clothes aren't listed but they have a reasonable modesty stat (or not shown), then that implies they're wearing normal clothes.\r\n\r\nBehaving lewdly or erotically can lower modesty even with clothes on."
+                "description": "Higher values place greater importance on physical privacy and discretion, while lower values are more comfortable with revealing clothing and open displays of sexuality.\r\n\r\n- **9 – 10:** Prefers conservative clothing, reserves nudity for highly private or intimate situations, and is hesitant to speak openly about sex.\r\n- **6 – 8:** Generally dresses and behaves conventionally for the situation. Comfortable with typical swimwear and changing in appropriate settings.\r\n- **3 – 5:** Fairly relaxed about physical exposure. Comfortable wearing more daring swimwear and not especially concerned about being seen in underwear.\r\n- **1 – 2:** Enjoys wearing highly revealing clothing, comfortable with settings such as skinny dipping, and rarely feels embarrassed by sexual topics."
             },
             {
                 "id": 144,
@@ -275,7 +275,7 @@
             {
                 "id": 132,
                 "name": "Their Attitude",
-                "description": "How the NPC typically interacts.\r\n\r\n- **Burned:** Cynical and guarded based on past experience.\r\n- **Dutiful:** Loyal to family; their own needs are secondary.\r\n- **Unstable:** Can easily turn from hot to cold.\r\n- **Wild:** Dislikes rules and wants to try new things spontaneously.\r\n- **Flirty:** Friendly or seductive with just about anyone.\r\n- **Crude:** Enjoys talking dirty, poor table manners.\r\n- **Aggressive:** Hot tempered and also quick to arousal.\r\n- **Domineering:** They expect to be in control.\r\n- **Fearful:** Quiet and hesitant to speak up, preferring to avoid problems.\r\n- **Distrustful:** Jealous and questioning.\r\n- **Secretive:** Tends to lie and cover up motivations.",
+                "description": "How the NPC typically interacts.\r\n\r\n- **Burned:** Cynical and guarded based on past experience.\r\n- **Dutiful:** Loyal to family; their own needs are secondary.\r\n- **Unstable:** Can easily turn from hot to cold.\r\n- **Wild:** Dislikes rules and wants to try new things spontaneously.\r\n- **Flirty:** Friendly or seductive with just about anyone.\r\n- **Crude:** Enjoys talking dirty, poor table manners.\r\n- **Aggressive:** Hot tempered and also quick to arousal.\r\n- **Domineering:** They expect to be in control.\r\n- **Fearful:** Quiet and hesitant to speak up, preferring to avoid problems.\r\n- **Distrustful:** Possessive and questioning.\r\n- **Secretive:** Tends to lie and cover up motivations.",
                 "enum_list": [
                     "Burned",
                     "Dutiful",
@@ -929,7 +929,7 @@
             {
                 "id": 91,
                 "name": "Job Listing 1",
-                "description": "Use the sequence of 3 events to \"read\" this listing: **Location, Hours,** and **Wages.** Then do the same for the other listing.\r\n\r\nAfter reading, go to the listing you plan to apply for and **Circle Job Listing.** If it doesn't work out, then you may circle the other one afterwards. *Note: the recipes are for information only.*",
+                "description": "Use the sequence of 3 events to \"read\" this listing: **Location, Hours,** and **Wages.** Then do the same for the other listing.\r\n\r\nAfter reading, go to the listing you plan to apply for and **Mark This Job Listing.** If it doesn't work out, then you may circle the other one afterwards. *Note: the recipes are for information only.*",
                 "attribs": [
                     [85, "Beach"],
                     [88, 0.0],
@@ -1546,7 +1546,7 @@
                 "attribs": [
                     [3, 5.0],
                     [4, 7.0],
-                    [5, 10.0],
+                    [5, 9.0],
                     [7, 1.0],
                     [10, 5.0],
                     [11, 1.0],
@@ -1571,7 +1571,7 @@
             {
                 "id": 59,
                 "name": "Claudia's Parents",
-                "description": "No surprise, her family cares about each other.",
+                "description": "No surprise, her family cares about each other. Hispanic family.",
                 "location_id": 40
             },
             {
@@ -1602,7 +1602,7 @@
                 "attribs": [
                     [3, 5.0],
                     [4, 4.0],
-                    [5, 10.0],
+                    [5, 7.0],
                     [8, true],
                     [10, 5.0],
                     [12, 5.0],
@@ -1625,6 +1625,12 @@
                     {"item_id": 32, "quantity": 1.0, "slot": "Feet"},
                     {"item_id": 203, "quantity": 1.0}
                 ]
+            },
+            {
+                "id": 254,
+                "name": "Flaxie",
+                "description": "Platinum blond. Acts flirty and gullible, although you'll have to get to know her to find out how intelligent she really is. She needs your help with her laptop or phone.",
+                "location_id": 84
             },
             {
                 "id": 212,
@@ -1659,7 +1665,7 @@
             {
                 "id": 142,
                 "name": "Sydney",
-                "description": "Athletic. The guy in the plastic white chair next to her is holding her hand. Does that mean they're seeing each other exclusively?",
+                "description": "Athletic, with Black heritage. The guy in the plastic white chair next to her is holding her hand. Does that mean they're seeing each other exclusively?",
                 "attribs": [
                     [4, 8.0],
                     [144, "Unaware"]
@@ -1670,7 +1676,7 @@
             {
                 "id": 213,
                 "name": "Teria's Father",
-                "description": "Owner of the cafeteria. Lives upstairs with his daughter in a small room. Generally, work is his life.",
+                "description": "Owner of the cafeteria. Lives upstairs with his daughter in a small room. Generally, work is his life. Originally from Japan.",
                 "location_id": 140
             },
             {
@@ -1690,7 +1696,7 @@
                 "attribs": [
                     [3, 9.0],
                     [4, 5.0],
-                    [5, 7.0],
+                    [5, 2.0],
                     [7, 1.0],
                     [10, 2.0],
                     [11, 1.0],
@@ -1933,7 +1939,7 @@
             {
                 "id": 181,
                 "name": "Chance Encounter",
-                "description": "Before rolling, go to a place you might run into someone, for example the **River Walk.** It could also be while you're working, although often, customers are random people you may never meet again.\r\n\r\n- On **Minor Success,** roll **Who** to see which person is there.\r\n- On **Major Success,** you can choose who shows up, or keep rolling **Who** until someone you want is selected.",
+                "description": "Before rolling, go to a place you might run into someone, for example the **River Walk.** It could also be while you're working, although often, customers are random people you may never meet again.\r\n\r\n- If there is a reason why running into someone is likely, then adjust the *Difficulty.*\r\n- On **Minor Success,** roll **Who** to see which person is there.\r\n- On **Major Success,** you can choose who shows up, or keep rolling **Who** until someone you want is selected.",
                 "numeric_range": [1, 20],
                 "chained": [
                     {
@@ -1968,7 +1974,7 @@
             },
             {
                 "id": 90,
-                "name": "Circle Job Listing",
+                "name": "Mark This Job Listing",
                 "description": "Use a bright colored marker to circle this job listing.",
                 "outcome_type": "determined",
                 "determinants": [
@@ -2263,7 +2269,7 @@
             {
                 "id": 63,
                 "name": "How an Advance is Received",
-                "description": "Does the person draw back or are they happy about the initiative taken. For example, attempt to hold their hand. The attempt could be physical or spoken.\r\n\r\nFor actions that are primarily about being physical and erotic rather than emotional, use **Steamy Action** instead.",
+                "description": "Does the person draw back or are they happy about the initiative taken. For example, attempt to hold their hand. The attempt could be physical or spoken.\r\n\r\nFor actions that are mostly about being physical and erotic rather than emotional, use **Steamy Action** instead.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {

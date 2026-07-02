@@ -34,39 +34,68 @@ def num_sides(event=None):
 def apply_operation(current_val, mod_val, op, output_range=None, attrib=None):
     """
     Applies the specific operation and returns the new value.
+    If attrib is an Enum, handles logic in Rank-space but returns IDs.
+    Otherwise, performs a direct numeric operation.
+    """
+    # 1. Non-Enum handling: Directly use the numeric operation helper
+    if not attrib or not attrib.enum_entries:
+        try:
+            current_val_num = float(current_val)
+        except (ValueError, TypeError):
+            current_val_num = 0.0
+        try:
+            mod_val_num = float(mod_val)
+        except (ValueError, TypeError):
+            mod_val_num = 0.0
+        return apply_numeric_op(
+            current_val_num, mod_val_num, op, output_range)
+
+    # 2. Enum-specific logic (operate in rank space)
+    max_rank = len(attrib.enum_entries) - 1
+
+    # Convert current_val (which is an ID from DB) to its rank
+    current_rank = attrib.id_to_rank(current_val)
+    if current_rank is None:
+        current_rank = 0
+
+    # Determine the numeric operand from mod_val.
+    # If mod_val is an Enum ID (e.g., from val_required for comparison), convert to rank.
+    # Otherwise, it's likely a direct number (e.g., val_transform: 7.0 for MOD).
+    mod_operand_num = None
+    mod_val_as_rank = attrib.id_to_rank(mod_val) # Tries to see if mod_val is an Enum ID
+    if mod_val_as_rank is not None:
+        mod_operand_num = float(mod_val_as_rank)
+    else:
+        # Fallback: Treat mod_val as a raw number if it's not a known enum ID
+        try:
+            mod_operand_num = float(mod_val)
+        except (ValueError, TypeError):
+            mod_operand_num = 0.0
+
+    # Perform the numeric operation in rank space
+    raw_result = apply_numeric_op(
+        float(current_rank), mod_operand_num, op, output_range)
+
+    # If the operation was a comparison, raw_result is a boolean, return it directly
+    if isinstance(raw_result, bool):
+        return raw_result
+
+    # Otherwise, raw_result is a numeric rank. Clamp and convert back to Enum ID.
+    final_rank = max(0, min(max_rank, int(round(raw_result))))
+    result_id = attrib.rank_to_id(final_rank)
+    return float(result_id) if result_id is not None else current_val
+
+def apply_numeric_op(current_val, mod_val, op, output_range=None):
+    """
+    Applies the specific operation to two numeric values and
+    returns the new value.
+    Assumes inputs are floats. Returns bool for comparisons, float for others.
     :param output_range: for example d20; used for soft capping
     """
-    if attrib and attrib.enum_entries:
-        max_rank = len(attrib.enum_entries) - 1
-        if op in (Operation.ADD, Operation.SUB):
-            cur_rank = attrib.id_to_rank(current_val)
-            if cur_rank is None:
-                cur_rank = 0
-            delta = int(mod_val) if op == Operation.ADD else -int(mod_val)
-            new_rank = max(0, min(max_rank, cur_rank + delta))
-            result_id = attrib.rank_to_id(new_rank)
-            return float(result_id) if result_id is not None else current_val
-        if op == Operation.GE:
-            cur_rank = attrib.id_to_rank(current_val)
-            mod_rank = attrib.id_to_rank(mod_val)
-            if cur_rank is None or mod_rank is None:
-                return False
-            return cur_rank >= mod_rank
-        if op == Operation.LT:
-            cur_rank = attrib.id_to_rank(current_val)
-            mod_rank = attrib.id_to_rank(mod_val)
-            if cur_rank is None or mod_rank is None:
-                return False
-            return cur_rank < mod_rank
-        if op == Operation.EQ:
-            return int(current_val) == int(mod_val)
-        if op == Operation.NE:
-            return int(current_val) != int(mod_val)
-
-    if op == Operation.CONST or op == Operation.MEM_RECALL:
+    if op in (Operation.CONST, Operation.MEM_RECALL, Operation.ASSIGN):
         return mod_val
 
-    # Transformation
+    # Functional Transformations
     if op == Operation.ABS:
         return abs(current_val)
     if op == Operation.MIN:
@@ -395,6 +424,7 @@ def calculate_determinants(event, role_entities):
 
     for det in event.determinants:
         val = 0.0
+        calc_value = None
         breakdown_text = ""
         infield = det.infield
         field_name = infield.get_field_name() if infield else "Value"
@@ -474,31 +504,58 @@ def calculate_determinants(event, role_entities):
                         child_name = maskable_name(pile.item)
                     source_display = f"{anchor_name}'s {child_name}"
 
-            breakdown_text = attrib.format_value(val) if attrib \
-                else format_for_display(val)
+            breakdown_text = attrib.format_value(val, show_rank=True) \
+                if attrib else format_for_display(val)
 
             # Inner Transform: (Val <op> Constant)
             if det.op_transform:
                 breakdown_text = get_inner_breakdown(
-                    attrib.format_value(val) if attrib else val,
+                    attrib.format_value(val, show_rank=True) if attrib
+                        else val,
                     det.val_transform, det.op_transform)
-                val = apply_operation(
-                    val, det.val_transform, det.op_transform, sides, attrib)
+
+                if attrib and attrib.enum_entries and det.op_transform not in (
+                        Operation.ADD, Operation.SUB):
+                    # ADD/SUB on an enum shift to a different entry (still
+                    # a valid id). Any other op (MULT, DIV, ...) doesn't
+                    # make sense on an id, so operate on the rank instead
+                    # and treat the result as a plain number from here on.
+                    rank = attrib.id_to_rank(val)
+                    val = apply_operation(
+                        float(rank) if rank is not None else 0.0,
+                        det.val_transform, det.op_transform, sides)
+                    attrib = None
+                else:
+                    val = apply_operation(
+                        val, det.val_transform, det.op_transform, sides, attrib)
+
+            # Numeric value used when this determinant is folded into the
+            # roll total. Enum attribs store an entry id in `val`, which is
+            # meaningless arithmetic (id 924); the total needs the rank
+            # (e.g. 3) instead.
+            if attrib and attrib.enum_entries:
+                rank = attrib.id_to_rank(val)
+                calc_value = float(rank) if rank is not None else 0.0
+            else:
+                calc_value = val
 
         # Check if this is a comparison or a calculation
         is_met = True
         if det.is_comparison:
             # Evaluate: (TransformedVal Op ValRequired)
             raw_result = apply_operation(
-                val, det.val_required, det.op_application, sides)
+                val, det.val_required, det.op_application, sides, attrib)
             is_met = bool(raw_result)
         if det.negate:
             is_met = not is_met
 
         def smart_format(v):
             if attrib:
-                return attrib.format_value(v)
+                return attrib.format_value(v, show_rank=True)
             return format_for_display(v)
+
+        if calc_value is None:
+            calc_value = val
 
         # Assemble the enriched dictionary
         modifiers.append({
@@ -506,6 +563,7 @@ def calculate_determinants(event, role_entities):
             'source_name': source_display,
             'field_name': field_name,
             'value': val,
+            'calc_value': calc_value,
             'value_display':
                 value_display_override if value_display_override is not None \
                 else smart_format(val),
@@ -582,6 +640,12 @@ def preview_effects(event, role_entities, roll_val=None):
         # Resolve current value using the local ledger
         lkey = _ledger_key(target_id, field_def)
         current_val = get_entity_value(target_id, field_def, subject_id, ledger)
+
+        attrib = None
+        if field_def.field_mode == Participant.ATTR and field_def.attrib_id:
+            attrib = db.session.get(Attrib, (game_token, field_def.attrib_id))
+            if attrib and not attrib.enum_entries:
+                attrib = None
 
         if field_def.field_mode in Participant.USES_LOC:
             is_resolved = True
@@ -687,7 +751,8 @@ def preview_effects(event, role_entities, roll_val=None):
                     ledger[lkey] = impact_value
                 else:
                     ledger[lkey] = apply_operation(
-                        current_val, impact_value, eff.op_application)
+                        current_val, impact_value, eff.op_application,
+                        attrib=attrib)
 
         # Output looks generally like:
         # target_name
@@ -697,8 +762,9 @@ def preview_effects(event, role_entities, roll_val=None):
             'label': eff.label,
             'target_name': target_name,
             'current_value': current_val,
-            'current_display': current_display or \
-                               format_for_display(current_val),
+            'current_display': current_display or (
+                attrib.format_value(current_val, show_rank=True) if attrib
+                else format_for_display(current_val)),
             'is_resolved': is_resolved,
             'source_name':  "Constant" if eff.op_transform == Operation.CONST \
                             else source_name,
@@ -747,17 +813,23 @@ def resolve_effects(event, role_entities, roll_val, tier=None):
         # otherwise fall back to the DB-sourced value from the preview.
         target_id = resolve_anchor_id(field_def.role, role_entities)
         lkey = _ledger_key(target_id, field_def)
+
+        attrib = None
+        if field_def.field_mode == Participant.ATTR and field_def.attrib_id:
+            attrib = db.session.get(Attrib, (game_token, field_def.attrib_id))
+            if attrib and not attrib.enum_entries:
+                attrib = None
+
         if lkey and lkey in ledger:
             current_val = ledger[lkey]
-            current_display = format_for_display(current_val)
+            current_display = attrib.format_value(
+                current_val, show_rank=True) if attrib \
+                else format_for_display(current_val)
         else:
             current_val = preview['current_value']
             current_display = preview['current_display']
-        if eff.op_application == Operation.ASSIGN:
-            final_val = impact
-        else:
-            final_val = apply_operation(
-                current_val, impact, eff.op_application)
+        final_val = apply_operation(
+            current_val, impact, eff.op_application, attrib=attrib)
         if lkey is not None:
             ledger[lkey] = final_val
  
@@ -778,7 +850,9 @@ def resolve_effects(event, role_entities, roll_val, tier=None):
             final_display = "Placed"
         else:
             impact_display = format_for_display(impact)
-            final_display = format_for_display(final_val)
+            final_display = attrib.format_value(
+                final_val, show_rank=True) if attrib \
+                else format_for_display(final_val)
  
         results.append({
             'effect_id': eff.id,
@@ -940,11 +1014,7 @@ def do_effect_change(eff, roll_val, role_entities):
         ).first()
         current = record.value if record else 0.0
         attrib = db.session.get(Attrib, (game_token, field_def.attrib_id))
-        if attrib and attrib.enum_entries and op != Operation.ASSIGN:
-            new_val = apply_operation(current, impact, op, attrib=attrib)
-        else:
-            new_val = impact if op == Operation.ASSIGN \
-                else apply_operation(current, impact, op)
+        new_val = apply_operation(current, impact, op, attrib=attrib)
         
         if not record:
             db.session.add(AttribVal(
@@ -1097,6 +1167,7 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
     
     result_val = 0
     choice_str = ''
+    attrib = None
     if event.outcome_type == OutcomeType.DETERMINED:
         # Determined events don't roll; they use the fixed_base as the start.
         result_val = event.fixed_base
@@ -1108,9 +1179,9 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
             attrib = db.session.get(
                 Attrib, (game_token, event.selection_attrib_id))
             if attrib and attrib.enum_entries:
-                result_index = random.randrange(len(attrib.enum_entries))
-                result_val = float(result_index)
-                choice_str = attrib.format_value(result_index)
+                selected_entry = random.choice(attrib.enum_entries)
+                result_val = float(selected_entry.id)
+                choice_str = selected_entry.label
         breakdown_parts = [f"Selection: <b>{choice_str}</b>"]
 
     elif event.outcome_type == OutcomeType.COORDS:
@@ -1172,8 +1243,8 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
             formatted_val = get_inner_breakdown(result_val, val, op)
             symbol = Operation.Repr[Operation.ASSIGN]
         else:
-            val = m['value']
-            formatted_val = format_for_display(val)
+            val = m['calc_value']
+            formatted_val = m['value_display']
             symbol = Operation.Repr[op]
 
         # If the new operator is higher precedence than the previous ones,
@@ -1186,7 +1257,7 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
         current_min_precedence = next_min_prec
 
         # Update Total
-        result_val = apply_operation(result_val, val, op, sides)
+        result_val = apply_operation(result_val, val, op, sides, attrib)
 
     # 3. Final Formatting
     if event.outcome_type not in (OutcomeType.SELECT, OutcomeType.COORDS):

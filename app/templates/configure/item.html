@@ -306,7 +306,7 @@
         <select name="recipes[RECIPE_INDEX][attrib_reqs][SUB_INDEX][op_compare]" style="width: 8ch;">
             {% for op_key in Operation.COMPARISON %}
                 <option value="{{ op_key }}" {{ 'selected'
-                if req.op_compare == Operation.EQ }}>
+                if op_key == Operation.EQ }}>
                     {{ Operation.Repr[op_key] }}
                 </option>
             {% endfor %}
