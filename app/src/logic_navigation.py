@@ -454,13 +454,13 @@ def get_available_destinations(char):
 
     reachable = []
     has_nonadjacent = False
-
     for link in all_possible_exits:
         door_here = link.door_at(loc_id)
         if is_adjacent(pos, door_here):
             reachable.append(link)
         else:
             has_nonadjacent = True
+    reachable.sort(key=lambda r: r.other_loc(loc_id).name.lower())
             
     return reachable, has_nonadjacent
 

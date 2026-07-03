@@ -646,7 +646,10 @@ class Attrib(Entity):
         attribute's definition.
         """
         if self.is_binary:
-            return "✓" if val > 0 else "✗"
+            label = "✓" if val > 0 else "✗"
+            if show_rank:
+                return f"{val:g} ({label})"
+            return label
         
         if self.enum_entries:
             try:

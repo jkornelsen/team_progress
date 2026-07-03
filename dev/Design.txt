@@ -26,6 +26,8 @@ Value: -4.500000000000018
 
 prompt before overwriting another character action in progress
 
+changing item to universal doesn't remove it from owned piles
+
 don't show duplicate destinations in play location
     same door positions (null in the example)
     maybe shouldn't allow in database
@@ -45,9 +47,8 @@ CONTEXT:  while updating tuple (0,46) in relation "characters"
 ---- scenario ----
 
 dating
-    flat downtown to rent
-    pay to rent how many ever days desired
-    decrement number of days left each day
+    their intoxication increases the chance of an advance succeeding
+        your value decreases the chance if too much higher than theirs
 
 lumber
     oak also on main lot -- maybe just "oak trees" rather than "plot 1 oak"

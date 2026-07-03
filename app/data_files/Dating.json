@@ -187,7 +187,7 @@
             {
                 "id": 156,
                 "name": "Relevant Skill",
-                "description": "General attribute to set based on the situation. For example, if dancing is relevant, then set this value to your **Dancing Skill.** If no skills apply to the situation then set to **5.**"
+                "description": "General attribute to set based on the situation. For example, how good you are at dancing. If no special skills apply to the situation then set to **5** (average)."
             },
             {
                 "id": 135,
@@ -440,6 +440,40 @@
                 ]
             },
             {
+                "id": 262,
+                "name": "Bed—Double (Receipt)",
+                "description": "When purchased, [configure the double bed](/configure/location/261) and add a route to **Flat—Bedroom.**",
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 263,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 81, "q_required": 70.0},
+                            {"item_id": 193, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 266,
+                "name": "Bed—Queen-Size (Receipt)",
+                "description": "When purchased, [configure the queen-size bed](/configure/location/264) and add a route to **Flat—Bedroom.**",
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 265,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 81, "q_required": 110.0},
+                            {"item_id": 193, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
                 "id": 29,
                 "name": "Bible",
                 "description": "Best bring one of these to church meetings, or else it may be hard to follow the discussion. Also, it helps you fit in.",
@@ -536,9 +570,7 @@
                             {"item_id": 70, "q_required": 3.0}
                         ],
                         "attrib_reqs": [
-                            {
-                                "attrib_id": 8
-                            }
+                            { "attrib_id": 8 }
                         ]
                     }
                 ]
@@ -669,6 +701,22 @@
                     [86, 0.0]
                 ],
                 "q_limit": 1.0
+            },
+            {
+                "id": 257,
+                "name": "Days Rented—Flat",
+                "description": "As long as this number stays above 0, you can live at the downtown flat. Pay for as many weeks at a time as you want.",
+                "storage_type": "u",
+                "recipes": [
+                    {
+                        "id": 258,
+                        "rate_amount": 7.0,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 81, "q_required": 28.0}
+                        ]
+                    }
+                ]
             },
             {"id": 83, "name": "Desktop Computer", "q_limit": 1.0},
             {
@@ -974,8 +1022,7 @@
                 "name": "Job Listings—New",
                 "description": "Purchase a newspaper from the store, or have it delivered every morning with a subscription, or buy local online news from a computer.\r\n\r\nTwo jobs are posted every weekday. If a posting is listed then it's guaranteed to be available for the day, though you'll still need to apply. Otherwise, there's a small chance of finding a job by asking around.\r\n\r\nYour Maa slides the newspaper under your bedroom door every morning so you don't have to come out in your underwear and get it.",
                 "storage_type": "u",
-                "q_limit": 2.0,
-                "toplevel": true
+                "q_limit": 2.0
             },
             {
                 "id": 87,
@@ -991,6 +1038,7 @@
                 "abilities": [95],
                 "storage_type": "u",
                 "q_limit": 1.0,
+                "toplevel": true,
                 "recipes": [
                     {
                         "id": 97,
@@ -1055,7 +1103,7 @@
             {
                 "id": 170,
                 "name": "Petrol",
-                "description": "Takes **1** Liter each way, **2** round trip.",
+                "description": "Takes **1** Liter each way, **2** round trip. When filling up, be sure that the vehicle is active and not a person.",
                 "q_limit": 10.0,
                 "recipes": [
                     {
@@ -1219,6 +1267,18 @@
                 "abilities": [101, 129]
             },
             {
+                "id": 261,
+                "name": "Bed—Double",
+                "description": "Built to hold two people although it's not the most comfortable.",
+                "item_refs": [71]
+            },
+            {
+                "id": 264,
+                "name": "Bed—Queen-Size",
+                "description": "Luxurious way for up to two people to pass the night and hopefully wake up feeling refreshed.",
+                "item_refs": [71]
+            },
+            {
                 "id": 211,
                 "name": "Bowling Alley",
                 "description": "Cost is 20 cash for a game, and that covers the whole group. Slippery shoes included.\r\n\r\nAlso, a full arcade that takes tokens, including air hockey.",
@@ -1293,7 +1353,8 @@
                 "destinations": [
                     {"loc2_id": 103},
                     {"loc2_id": 104},
-                    {"loc2_id": 106}
+                    {"loc2_id": 106},
+                    {"loc2_id": 256}
                 ]
             },
             {
@@ -1307,6 +1368,52 @@
                 "abilities": [101, 129],
                 "destinations": [
                     {"loc2_id": 103}
+                ]
+            },
+            {
+                "id": 256,
+                "name": "Flat to Rent",
+                "description": "A place of your own, with no parents included. The main room is a furnished sitting area and television with a kitchen at one end.",
+                "items": [
+                    {"item_id": 123, "quantity": 1.0},
+                    {"item_id": 235, "quantity": 5.0}
+                ],
+                "item_refs": [82, 257],
+                "destinations": [
+                    {"loc2_id": 259},
+                    {"loc2_id": 269}
+                ]
+            },
+            {
+                "id": 260,
+                "name": "Flat—Bathroom",
+                "description": "A bit small—wouldn't be great for a whole family.",
+                "items": [
+                    {"item_id": 37, "quantity": 1.0},
+                    {"item_id": 38, "quantity": 1.0}
+                ],
+                "destinations": [
+                    {"loc2_id": 268}
+                ]
+            },
+            {
+                "id": 259,
+                "name": "Flat—Bedroom",
+                "description": "You'll need to bring or buy a bed by configuring a location *Route.* Beds are available at the **Department Store.**",
+                "destinations": [
+                    {"loc2_id": 260}
+                ]
+            },
+            {
+                "id": 269,
+                "name": "Flat—Deck",
+                "description": "The flat is two floors up, and there is a deck with chairs and a hot tub. The deck can be open to let in the sun, or screened in for privacy."
+            },
+            {
+                "id": 268,
+                "name": "Flat—Shower",
+                "items": [
+                    {"item_id": 216, "quantity": 1.0}
                 ]
             },
             {
@@ -1410,6 +1517,11 @@
                 ]
             },
             {
+                "id": 234,
+                "name": "Sydney's House",
+                "description": "People heard arguing inside—perhaps her parents, or perhaps one parent with whoever they’re seeing."
+            },
+            {
                 "id": 140,
                 "name": "Teria's Place",
                 "description": "Cafeteria style restaurant — go through the line and ask for what to put on your plate. A variety of options: noodles, meat, salads.\r\n\r\nThe owner named the place after his daughter. To meet her, start setting her up by duplicating one of the other characters.\r\n\r\nAvailable jobs: server, cook, dish washer.",
@@ -1433,7 +1545,13 @@
                     {"item_id": 35, "quantity": 1.0}
                 ]
             },
-            {"id": 104, "name": "Urban Neighborhood"},
+            {
+                "id": 104,
+                "name": "Urban Neighborhood",
+                "destinations": [
+                    {"loc2_id": 234}
+                ]
+            },
             {
                 "id": 102,
                 "name": "Your Backyard",
@@ -1458,7 +1576,8 @@
                 "items": [
                     {"item_id": 29, "quantity": 1.0},
                     {"item_id": 36, "quantity": 1.0}
-                ]
+                ],
+                "item_refs": [82]
             },
             {
                 "id": 47,
@@ -1487,7 +1606,7 @@
             {
                 "id": 53,
                 "name": "Your Neighborhood",
-                "description": "Part way between downtown and the outskirts, this neighborhood is well positioned to get somewhere easily.\r\n\r\nOn the street is a bus stop with routes downtown. Deduct an hour whenever you use the bus (but not when you drive).",
+                "description": "On the street is a bus stop with routes downtown. Deduct an hour whenever you use the bus (but not when you drive).",
                 "item_refs": [70],
                 "destinations": [
                     {"loc2_id": 55}
@@ -1973,62 +2092,28 @@
                 "selection_attrib_id": 165
             },
             {
-                "id": 90,
-                "name": "Mark This Job Listing",
-                "description": "Use a bright colored marker to circle this job listing.",
-                "outcome_type": "determined",
+                "id": 195,
+                "name": "Conception",
+                "description": "Success means she **does** get pregnant, even if this is not what you want.\r\n\r\n- *No birth control:* **5/50** chance (10%)\r\n- *Birth control:* **2/50** chance\r\n- *Double birth control:* still a **1/50** chance by rolling *Natural Max*",
+                "numeric_range": [1, 50],
                 "determinants": [
                     {
-                        "infield": {"attrib_id": 88},
-                        "op_application": ">="
+                        "infield": {"attrib_id": 194},
+                        "op_application": "-",
+                        "op_transform": "*",
+                        "val_transform": 3.0
                     },
                     {
-                        "label": "For Display",
-                        "infield": {"attrib_id": 88}
-                    }
-                ],
-                "effects": [
-                    {
-                        "infield": {"attrib_id": 85},
-                        "outfield": {"role": "universal", "item_id": 87, "attrib_id": 85},
-                        "op_application": ":=",
-                        "auto_apply": true
+                        "infield": {"role": "target char", "attrib_id": 194},
+                        "op_application": "-",
+                        "op_transform": "*",
+                        "val_transform": 3.0
                     },
                     {
-                        "infield": {"attrib_id": 88},
-                        "outfield": {"role": "universal", "item_id": 87, "attrib_id": 88},
-                        "op_application": ":=",
-                        "auto_apply": true
-                    },
-                    {
-                        "infield": {"attrib_id": 89},
-                        "outfield": {"role": "universal", "item_id": 87, "attrib_id": 89},
-                        "op_application": ":=",
-                        "auto_apply": true
-                    },
-                    {
-                        "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "item_id": 87, "attrib_id": 109},
-                        "op_application": ":=",
+                        "label": "Base Threshold",
+                        "op_application": "-",
                         "op_transform": "c",
-                        "val_transform": 0.0,
-                        "auto_apply": true
-                    },
-                    {
-                        "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "item_id": 87, "attrib_id": 110},
-                        "op_application": ":=",
-                        "op_transform": "c",
-                        "val_transform": 0.0,
-                        "auto_apply": true
-                    },
-                    {
-                        "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 77},
-                        "op_application": ":=",
-                        "op_transform": "c",
-                        "val_transform": 0.0,
-                        "auto_apply": true
+                        "val_transform": 16.0
                     }
                 ]
             },
@@ -2237,32 +2322,6 @@
                         "op_transform": "c",
                         "val_transform": -8.0,
                         "outcome_success": "failure_major"
-                    }
-                ]
-            },
-            {
-                "id": 195,
-                "name": "Getting Pregnant",
-                "description": "Success means she **does** get pregnant, even if this is not what you want.\r\n\r\n- *No birth control:* **5/50** chance (10%)\r\n- *Birth control:* **2/50** chance\r\n- *Double birth control:* still a **1/50** chance by rolling *Natural Max*",
-                "numeric_range": [1, 50],
-                "determinants": [
-                    {
-                        "infield": {"attrib_id": 194},
-                        "op_application": "-",
-                        "op_transform": "*",
-                        "val_transform": 3.0
-                    },
-                    {
-                        "infield": {"role": "target char", "attrib_id": 194},
-                        "op_application": "-",
-                        "op_transform": "*",
-                        "val_transform": 3.0
-                    },
-                    {
-                        "label": "Base Threshold",
-                        "op_application": "-",
-                        "op_transform": "c",
-                        "val_transform": 16.0
                     }
                 ]
             },
@@ -2485,6 +2544,66 @@
                 ]
             },
             {
+                "id": 90,
+                "name": "Mark This Job Listing",
+                "description": "Use a bright colored marker to circle this job listing.",
+                "outcome_type": "determined",
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 88},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "For Display",
+                        "infield": {"attrib_id": 88}
+                    }
+                ],
+                "effects": [
+                    {
+                        "infield": {"attrib_id": 85},
+                        "outfield": {"role": "universal", "item_id": 87, "attrib_id": 85},
+                        "op_application": ":=",
+                        "auto_apply": true
+                    },
+                    {
+                        "infield": {"attrib_id": 88},
+                        "outfield": {"role": "universal", "item_id": 87, "attrib_id": 88},
+                        "op_application": ":=",
+                        "auto_apply": true
+                    },
+                    {
+                        "infield": {"attrib_id": 89},
+                        "outfield": {"role": "universal", "item_id": 87, "attrib_id": 89},
+                        "op_application": ":=",
+                        "auto_apply": true
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "item_id": 87, "attrib_id": 109},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 0.0,
+                        "auto_apply": true
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "item_id": 87, "attrib_id": 110},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 0.0,
+                        "auto_apply": true
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 77},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 0.0,
+                        "auto_apply": true
+                    }
+                ]
+            },
+            {
                 "id": 69,
                 "name": "Next Day",
                 "description": "Sets date/time and adjusts **Rested** status.\r\n\r\nAdd or remove any daily subscriptions here. Currently subscribed to the local newspaper.",
@@ -2595,6 +2714,12 @@
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": 0.0
+                    },
+                    {
+                        "get_val_from": "outfield",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 257},
+                        "op_application": "-",
+                        "op_transform": "min"
                     }
                 ]
             },
@@ -2777,7 +2902,7 @@
             {
                 "id": 157,
                 "name": "Steamy Action",
-                "description": "Immediate physical focus takes priority over emotional feelings once the mood is right. This could be a bedroom scene or any physically focused situation such as dancing or making out.\r\n\r\nClothing bonus may change based on what fits the new situation better. Adjust **Intensity of Act,** and for daring acts relative to current arousal, increase difficulty.\r\n\r\n*Minor Failure* incurs a small penalty, and *Major Failure* generally indicates that your attempted action gets rejected.",
+                "description": "Immediate physical focus takes priority over emotional feelings once the mood is right. This could be a bedroom scene or any physical situation such as dancing or making out.\r\n\r\nAdjust **Intensity of Act.** For daring acts relative to current arousal, increase difficulty.\r\n\r\n*Minor Failure* incurs a small penalty, and *Major Failure* indicates that your attempted action gets rejected.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
