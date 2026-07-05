@@ -33,9 +33,7 @@
 
 <div class="lookup-container">
     <header class="entity-header">
-        <span class="label-like text-uppercase">{{ entity.entity_type }} Usage</span>
-        <h1>Lookup: {{ entity.name }}</h1>
-        <p class="text-dim">Tracking all relational dependencies for ID: {{ entity.id }}</p>
+        <h1>Where Used: {{ entity.name }} ({{ entity.entity_type | capitalize }} {{ entity.id }})</h1>
         <div class="description-box label-like">{{ entity.description | htmlify }}</div>
     </header>
 
@@ -47,7 +45,7 @@
                 {% for item in items %}
                 <li>
                     <div class="col-row usage-row align-center">
-                        <span class="usage-label">{{ item.label }}</span>
+                        <span class="usage-label">{{ item.label | default('') }}</span>
                         <a href="{{ item.link }}" class="usage-name">{{ item.name }}</a>
                         {% if item.value is defined %}
                             <span class="label-like">{{ item.value }}</span>
@@ -75,7 +73,7 @@
 .usage-list li { padding: 10px; border-bottom: 1px solid #333; transition: background 0.2s; }
 .usage-list li:hover { background: #222; }
 .usage-label { color: var(--text-dim); font-size: 0.85em; margin-right: 10px; display: inline-block; min-width: 120px; }
-.usage-row { --grid-cols: 2fr 2fr 2fr; }
+.usage-row { --grid-cols: 2fr 3fr 2fr; }
 .usage-name { font-weight: bold; }
 .text-uppercase { text-transform: uppercase; letter-spacing: 1px; font-size: 0.75em; }
 </style>

@@ -67,8 +67,10 @@
                 <div class="flex-between align-center">
                     <label>Enumerated Labels:</label>
                     <button type="button" class="btn-sm" 
-                            onclick="ConfigEditor.addRow('enum-list', 'enum-row-template', (row) => { 
-                                ConfigEditor.renumberRows('enum-list', {displayClass: '.index-display'});
+                            onclick="
+                                ConfigEditor.addRow('enum-list', 'enum-row-template', (row) => { 
+                                ConfigEditor.renumberRows('enum-list', {
+                                displayClass: '.index-display', inputClass: '.index-input'});
                                 syncFormState(); 
                             })">
                         + Add Label
@@ -159,18 +161,25 @@ document.addEventListener('DOMContentLoaded', () => {
 <div class="col-row enum-entry-row">
     <input type="hidden" name="enum_entries[{{ index }}][id]" value="{{ entry.id if entry else '' }}">
     
+    <input type="hidden" name="enum_entries[{{ index }}][order_index]" class="index-input" value="{{ index }}">
+
     <span class="label-like index-display">{{ index }}</span>
     
     <input type="text" name="enum_entries[{{ index }}][label]" 
            value="{{ entry.label if entry else '' }}" 
            placeholder="Label Name" class="full-width">
     
-    <button type="button" class="btn-sm" title="Move Up"
-            onclick="ConfigEditor.moveRow(this, -1, 'enum-list', {displayClass: '.index-display'})">↑</button>
-    <button type="button" class="btn-sm" title="Move Down"
-            onclick="ConfigEditor.moveRow(this, 1, 'enum-list', {displayClass: '.index-display'})">↓</button>
+    <button type="button" class="btn-sm" title="Move Up" onclick="
+            ConfigEditor.moveRow(this, -1, 'enum-list', {
+            displayClass: '.index-display', inputClass: '.index-input'})">↑</button>
+    <button type="button" class="btn-sm" title="Move Down" onclick="
+            ConfigEditor.moveRow(this, 1, 'enum-list', {
+            displayClass: '.index-display', inputClass: '.index-input'})">↓</button>
     
-    <button type="button" class="btn-sm dangerous-button" title="Remove"
-            onclick="ConfigEditor.removeRow(this, 'enum-list'); syncFormState();">×</button>
+    <button type="button" class="btn-sm dangerous-button" title="Remove" onclick="
+            ConfigEditor.removeRow(this, 'enum-list');
+            ConfigEditor.renumberRows('enum-list', {
+            displayClass: '.index-display', inputClass: '.index-input'});
+            syncFormState();">×</button>
 </div>
 {% endmacro %}

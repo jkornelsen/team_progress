@@ -31,6 +31,7 @@
 
 <script>
     window.linkForKey['p'] = "#pickup-btn";
+    window.linkForKey['P'] = "#pickup-equip-btn";
     window.linkForKey['r'] = "#drop-btn";
     window.linkForKey['g'] = "#give-btn";
     {% if pile.slot_id %}
@@ -429,6 +430,10 @@
                                 <span class="target-name">{{ ctx_char.name }}</span>
                                 <input type="hidden" id="pickup-char-id" value="{{ ctx_char.id }}">
                                 <button id="pickup-btn" class="go-button">{{ hk.bracket('p') }}ick up</button>
+                                {% if item.slot_id %}
+                                    <input type="hidden" id="pickup-equip-slot" value="{{ item.slot_id }}">
+                                    <button id="pickup-equip-btn" class="go-button">{{ hk.bracket('P') }}ick up and equip</button>
+                                {% endif %}
                             {% else %}
                                 <i class="text-dim small">🚫 {{ reach_error or "Too far to reach" }}</i>
                             {% endif %}
@@ -448,7 +453,7 @@
                             {% set has_controls = true %}
                             <div class="action-box">
                                 <select id="give-char-id" class="mini-select">
-                                    {% for c in other_chars_here %}
+                                    {% for c in other_chars_here | sort(attribute='name') %}
                                         <option value="{{ c.id }}" {% if not c.is_reachable %}disabled{% endif %}>
                                             {{ c.name }} {{ '(Too far)' if not c.is_reachable else '' }}
                                         </option>
@@ -1195,6 +1200,28 @@ document.getElementById('pickup-btn')?.addEventListener('click', async () => {
         return;
     }
     window.location.href = "{{ url_for('play.play_location', id=owner.id) }}";
+});
+
+document.getElementById('pickup-equip-btn')?.addEventListener('click', async () => {
+    const charId = document.getElementById('pickup-char-id').value;
+    const slotId = document.getElementById('pickup-equip-slot').value;
+    const fd = new FormData();
+    fd.append('item_id', itemId);
+    fd.append('quantity', getActionQty());
+    {% if pile.position %}
+        fd.append('pos', "{{ pile.position | join(',') }}");
+    {% endif %}
+    fd.append('slot_id', slotId);
+
+    const url = `/char/${charId}/pickup`;
+    const data = await apiPost(url, fd, "Could not pick up.");
+    if (!data) return;
+
+    if (data.message) {
+        window.location.reload(); 
+        return;
+    }
+    window.location.href = `/play/char/${charId}`;
 });
 
 document.getElementById('give-btn')?.addEventListener('click', async () => {

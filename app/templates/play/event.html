@@ -743,8 +743,9 @@ if (rollBtn) {
                 // Show final display
                 const impactRes = row.querySelector('.impact-result');
                 const newValEl = row.querySelector('.new-val');
+                const isAssign = (eff.op_app === '{{ Operation.ASSIGN }}');
 
-                if (impactRes) impactRes.classList.toggle('hidden', !eff.final_display);
+                if (impactRes) impactRes.classList.toggle('hidden', !eff.final_display || isAssign);
                 if (eff.final_display && newValEl) {
                     newValEl.innerText = eff.final_display;
                 }

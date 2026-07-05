@@ -1,9 +1,9 @@
 import logging
-import json
 from flask import (
     Blueprint, request, session, flash, redirect, url_for, render_template,
     g, jsonify)
 from http import HTTPStatus
+import json
 from sqlalchemy import select, delete, or_
 from app.models import (
     GENERAL_ID, EQUIPMENT_SLOTS_ID, StorageType, ENTITIES, db,
@@ -665,7 +665,9 @@ def edit_attrib(id):
         existing_entries = {e.id: e for e in attrib.enum_entries}
         enum_entries = []
         if v_type == 'enum':
-            for idx, row in enumerate(req.get_list('enum_entries')):
+            rows = req.get_list('enum_entries')
+            rows.sort(key=lambda r: r.get_int('order_index', 0))
+            for idx, row in enumerate(rows):
                 eid = row.get_int('id')
                 label = row.get_str('label')
                 if not label: continue
@@ -916,7 +918,8 @@ def lookup(ent_type, id):
     game_token = g.game_token
     entity = db.get_or_404(Entity, (game_token, id))
     
-    results = {}  # dict of lists
+    type Usage = dict[str, str]
+    results: dict[str, list[Usage]] = {}
 
     def sort_results(r_list):
         r_list[:] = sort_by_name_stripped(r_list)
@@ -924,28 +927,28 @@ def lookup(ent_type, id):
     if ent_type == Item.TYPENAME:
         # Who has this item
         piles = Pile.query.filter_by(game_token=game_token, item_id=id).all()
-        key_name = 'Physical Presence'
+        key_name = 'Stored At'
         results[key_name] = []
         for p in piles:
             owner = db.session.get(Entity, (game_token, p.owner_id))
-            label = "General Storage" if owner.id == GENERAL_ID else f"Stored at ({owner.entity_type})"
+            label = "" if owner.id == GENERAL_ID \
+                else f"Stored at ({owner.entity_type})"
             results[key_name].append({
                 'label': label,
                 'name': owner.name,
-                'link': url_for(f'play.play_{owner.entity_type}', id=owner.id),
+                'link': url_for(f'play.play_item', id=id, owner_id=owner.id),
                 'value': f'Qty: {p.quantity}'
             })
         sort_results(results[key_name])
 
         # Recipe dependencies
         sources = RecipeSource.query.filter_by(game_token=game_token, item_id=id).all()
-        key_name = 'Used as Ingredient'
+        key_name = 'Required To Produce'
         results[key_name] = []
         for s in sources:
             recipe = db.session.get(Recipe, (game_token, s.recipe_id))
-            prod = db.session.get(Item, (game_token, recipe.item_id))
+            prod = db.session.get(Item, (game_token, recipe.product_id))
             results[key_name].append({
-                'label': 'Required to produce',
                 'name': prod.name,
                 'link': url_for('play.play_item', id=prod.id),
                 'value': f'Needs {s.q_required}'
@@ -986,7 +989,6 @@ def lookup(ent_type, id):
         results[key_name] = []
         for evt in events:
             results[key_name].append({
-                'label': f'Used in event',
                 'name': evt.name,
                 'link': url_for(f'play.play_event', id=evt.id)
             })
@@ -1004,7 +1006,6 @@ def lookup(ent_type, id):
             other_id = d.loc2_id if d.loc1_id == id else d.loc1_id
             other = db.session.get(Location, (game_token, other_id))
             results[key_name].append({
-                'label': 'Linked to',
                 'name': other.name,
                 'link': url_for('play.play_location', id=other.id)
             })

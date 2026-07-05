@@ -1877,7 +1877,7 @@ class RecipeAttribReq(db.Model, DictHydrator):
 
     def is_satisfied(self, val):
         """Checks if a specific value meets this requirement."""
-        from app.logic_event import apply_operation
+        from app.src.logic_event import apply_operation
         return apply_operation(
             val, self.val_required, self.op_compare, attrib=self.attrib)
 

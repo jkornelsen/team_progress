@@ -3,7 +3,7 @@
         "title": "Dating",
         "description": "Your Indian mother has decided it's time. She's fine with you having a ❤️ love marriage, but if you don't find someone soon, she has in mind a match with a well-off family. The problem is that they're ugly! First, [talk things over with your Maa](/play/event/66?subject_id=56), then make a visit to either {violet|the church or the bar} to start meeting people.\r\n\r\nWork odd jobs to earn cash. The right clothes are important to impress people.\r\n\r\n*The initial setup aims for generally acceptable standards. If you make it explicit and want to share the file, then be considerate by including a warning.*",
         "win_reqs": [
-            {"attrib_id": 144, "attrib_value": "Engaged"}
+            {"attrib_id": 144, "attrib_value": "Exclusive"}
         ],
         "tag_introduce_order": 35,
         "tag_best_order": 11,
@@ -159,29 +159,28 @@
             {
                 "id": 144,
                 "name": "Relationship Status",
-                "description": "This character's romantic status with you.\r\nArranged by how difficult it is to move to that level.\r\nGo to *Lookup* to see the full list.",
+                "description": "This character's romantic status with you.\r\nChoose the highest label that applies.\r\nGo to *Lookup* to see the full list.\r\n*Dating* means repeatedly making a choice to spend one-on-one time together, not necessarily going out on a date.",
                 "enum_list": [
                     "Unaware",
                     "Acquaintance",
-                    "Friend",
-                    "Love Interest",
-                    "Matched",
                     "Hooked Up",
-                    "Friends With Benefits",
                     "Ex-Girlfriend",
                     "Ex-Lover",
                     "Divorced",
-                    "Dating",
-                    "Courting",
-                    "Exclusive",
+                    "Friend",
+                    "Love Interest",
+                    "Matched",
+                    "Friends With Benefits",
                     "Cheating With",
-                    "Living Together",
                     "Separated",
+                    "Widowed",
+                    "Dating",
                     "Open Relationship",
+                    "Exclusive",
+                    "Living Together",
                     "Engaged",
-                    "Married",
                     "Polyamorous",
-                    "Widowed"
+                    "Married"
                 ]
             },
             {
@@ -480,6 +479,40 @@
                 "slot": "Held"
             },
             {
+                "id": 278,
+                "name": "Bottle of Vodka (Servings)",
+                "description": "Can't beat this value if you want to sit at home and feel sorry for yourself.",
+                "slot": "Held",
+                "recipes": [
+                    {
+                        "id": 277,
+                        "rate_amount": 3.0,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 81, "q_required": 15.0},
+                            {"item_id": 121, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 270,
+                "name": "Bottle of Wine (Servings)",
+                "description": "Good to have on hand for inviting guests or enjoying a meal with family.",
+                "slot": "Held",
+                "recipes": [
+                    {
+                        "id": 271,
+                        "rate_amount": 3.0,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 81, "q_required": 15.0},
+                            {"item_id": 121, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
                 "id": 147,
                 "name": "Buy from Bar",
                 "storage_type": "l",
@@ -722,13 +755,25 @@
             {
                 "id": 160,
                 "name": "Drink—Beer",
-                "description": "Not going to impress anyone, but sufficient for anyone looking to have a good time. Raises **Intoxication** by 1 point.",
+                "description": "Raises **Intoxication** by **+2.**\r\nNot going to impress anyone, but sufficient for anyone looking to have a good time.",
                 "slot": "Held",
                 "recipes": [
                     {
-                        "id": 161,
+                        "id": 281,
+                        "rate_amount": 0.0,
+                        "rate_duration": 8,
                         "sources": [
-                            {"item_id": 81, "q_required": 5.0},
+                            {"item_id": 160, "q_required": 1.0}
+                        ],
+                        "attrib_reqs": [
+                            {"attrib_id": 14, "op_compare": "<", "val_required": 10.0}
+                        ]
+                    },
+                    {
+                        "id": 161,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 81, "q_required": 4.0},
                             {"item_id": 147, "q_required": 1.0, "preserve": true}
                         ]
                     }
@@ -737,14 +782,94 @@
             {
                 "id": 148,
                 "name": "Drink—Margarita",
-                "description": "Raises **Intoxication** by 1 point, enough to feel good without causing any difficulty driving or interacting with people. To get truly drunk, buying harder liquor would be cheaper.\r\n\r\nFor both yourself and someone else, you'd need to buy two glasses.",
+                "description": "Raises **Intoxication** by **+4** — a fairly strong buzz, but not enough to make driving or interacting with people difficult.\r\n\r\nFor both yourself and someone else, you'd need to buy two glasses.",
                 "slot": "Held",
                 "recipes": [
                     {
+                        "id": 282,
+                        "rate_amount": 0.0,
+                        "rate_duration": 8,
+                        "sources": [
+                            {"item_id": 148, "q_required": 1.0}
+                        ],
+                        "attrib_reqs": [
+                            {"attrib_id": 14, "op_compare": "<", "val_required": 10.0}
+                        ]
+                    },
+                    {
                         "id": 149,
+                        "instant": true,
                         "sources": [
                             {"item_id": 81, "q_required": 10.0},
                             {"item_id": 147, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 275,
+                "name": "Drink—Vodka",
+                "description": "Raises **Intoxication** by **+4**. The cost-effective way to get drunk fast.",
+                "slot": "Held",
+                "recipes": [
+                    {
+                        "id": 283,
+                        "rate_amount": 0.0,
+                        "rate_duration": 8,
+                        "sources": [
+                            {"item_id": 275, "q_required": 1.0}
+                        ],
+                        "attrib_reqs": [
+                            {"attrib_id": 14, "op_compare": "<", "val_required": 10.0}
+                        ]
+                    },
+                    {
+                        "id": 274,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 81, "q_required": 7.0},
+                            {"item_id": 147, "q_required": 1.0, "preserve": true}
+                        ]
+                    },
+                    {
+                        "id": 284,
+                        "rate_duration": 5,
+                        "sources": [
+                            {"item_id": 278, "q_required": 1.0}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 273,
+                "name": "Drink—Wine",
+                "description": "Raises **Intoxication** by **+3.**\r\n\r\nSome experts claim there are health benefits for drinking red wine in moderation. Incidentally, dark chocolate is similar in this regard.",
+                "slot": "Held",
+                "recipes": [
+                    {
+                        "id": 280,
+                        "rate_amount": 0.0,
+                        "rate_duration": 8,
+                        "sources": [
+                            {"item_id": 273, "q_required": 1.0}
+                        ],
+                        "attrib_reqs": [
+                            {"attrib_id": 14, "op_compare": "<", "val_required": 10.0}
+                        ]
+                    },
+                    {
+                        "id": 272,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 81, "q_required": 6.0},
+                            {"item_id": 147, "q_required": 1.0, "preserve": true}
+                        ]
+                    },
+                    {
+                        "id": 276,
+                        "rate_duration": 5,
+                        "sources": [
+                            {"item_id": 270, "q_required": 1.0}
                         ]
                     }
                 ]
@@ -1238,7 +1363,7 @@
             {
                 "id": 77,
                 "name": "Work",
-                "description": "Apply for a job, then produce per hour until the limit is reached, earning cash.",
+                "description": "Apply for a job, then produce per hour until the limit is reached, earning cash.\r\nRoleplay what you do and who you meet during the work day.",
                 "storage_type": "u",
                 "toplevel": true,
                 "recipes": [
@@ -1607,10 +1732,7 @@
                 "id": 53,
                 "name": "Your Neighborhood",
                 "description": "On the street is a bus stop with routes downtown. Deduct an hour whenever you use the bus (but not when you drive).",
-                "item_refs": [70],
-                "destinations": [
-                    {"loc2_id": 55}
-                ]
+                "item_refs": [70]
             },
             {
                 "id": 215,
@@ -1884,7 +2006,7 @@
             {
                 "id": 107,
                 "name": "Apply For Job",
-                "description": "Visit the circled location to apply. (If you're at the wrong location then the outcome will go deeply negative, guaranteeing failure).\r\n\r\nAdjust your **Clothing Score** before rolling.",
+                "description": "Visit the circled location to apply. If you're at the wrong location then the outcome will go deeply negative, guaranteeing failure.\r\n\r\nAdjust your **Clothing Score** before rolling.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -1991,7 +2113,7 @@
             {
                 "id": 178,
                 "name": "Ask Out On Date",
-                "description": "The date must be a literal date, that is, decide together on a future day and place. \r\n\r\n- If they accept, then go to **Date** and set the location.\r\n- Default is tomorrow, so you can keep that or change it.",
+                "description": "This is for a literal date, that is, decide together on a future day, then go out somewhere. A second date or repeated planned hangouts are when it becomes \"Dating.\"\r\n\r\n- If they accept, then go to **Date** and set the location.\r\n- The default day is tomorrow, so you can keep that or change it.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -2924,6 +3046,11 @@
                         "val_transform": 2.0
                     },
                     {
+                        "infield": {"role": "target char", "attrib_id": 14},
+                        "op_transform": "/",
+                        "val_transform": 4.0
+                    },
+                    {
                         "infield": {"attrib_id": 154}
                     },
                     {
@@ -2948,7 +3075,7 @@
                         "label": "Standard Threshold",
                         "op_application": "-",
                         "op_transform": "c",
-                        "val_transform": 16.0
+                        "val_transform": 17.0
                     }
                 ],
                 "effects": [

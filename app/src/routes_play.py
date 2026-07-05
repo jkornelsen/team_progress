@@ -311,6 +311,8 @@ def pickup_item(id):
     item_id = req.get_int('item_id')
     qty = req.get_float('quantity')
     pos = parse_coords(req.get_str('pos'))
+    slot_id = req.get_str('slot_id')
+    game_token = g.game_token
     
     char = db.session.get(Character, (g.game_token, id))
     loc = char.location
@@ -330,6 +332,15 @@ def pickup_item(id):
     
     item = db.session.get(Item, (g.game_token, item_id))
     if success:
+        if slot_id:
+            pile = Pile.query.filter_by(
+                game_token=game_token, 
+                owner_id=id, 
+                item_id=item_id
+            ).first()
+            if pile:
+                pile.slot_id = slot_id
+
         db.session.commit()
         add_message(f"{char.name} picked up {qty:g} {item.name}")
         return jsonify({"message": msg}), HTTPStatus.OK

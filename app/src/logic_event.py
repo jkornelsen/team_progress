@@ -744,6 +744,16 @@ def preview_effects(event, role_entities, roll_val=None):
         impact_value, relies_on_roll = calculate_numeric_impact(
             eff, role_entities, roll_val, ledger)
 
+        if not impact_display:
+            if attrib and attrib.enum_entries \
+                    and eff.op_application == Operation.ASSIGN:
+                if impact_value is not None:
+                    impact_display = attrib.format_value(
+                        impact_value, show_rank=True)
+            if not impact_display:
+                impact_display = format_for_display(
+                    impact_value) if impact_value is not None else None
+
         # Update Ledger for subsequent rows
         if lkey:
             if not relies_on_roll or roll_val is not None:
@@ -849,7 +859,12 @@ def resolve_effects(event, role_entities, roll_val, tier=None):
             impact_display = format_for_display(impact)
             final_display = "Placed"
         else:
-            impact_display = format_for_display(impact)
+            if attrib and attrib.enum_entries \
+                    and eff.op_application == Operation.ASSIGN:
+                impact_display = attrib.format_value(
+                    impact, show_rank=True)
+            else:
+                impact_display = format_for_display(impact)
             final_display = attrib.format_value(
                 final_val, show_rank=True) if attrib \
                 else format_for_display(final_val)
