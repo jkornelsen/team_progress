@@ -140,7 +140,15 @@
                 "id": 158,
                 "name": "Intensity of Act",
                 "description": "For a positive response to a more intense physical act, your partner will probably need to be significantly aroused.",
-                "enum_list": ["No Pressure", "Gentle Touch", "Close Embrace", "Steamy", "Wild"]
+                "enum_list": [
+                    "No Pressure",
+                    "Light Touch",
+                    "Close Embrace",
+                    "Steamy",
+                    "Daring",
+                    "Passionate",
+                    "Wild"
+                ]
             },
             {
                 "id": 14,
@@ -347,7 +355,7 @@
                 "id": 183,
                 "name": "Who",
                 "description": "List for **Chance Encounter—Who.**",
-                "enum_list": ["Art", "Claudia", "Dreschsel", "Sydney", "Teria", "Zelest"]
+                "enum_list": ["Art", "Claudia", "Dreschel", "Sydney", "Teria", "Zelest"]
             }
         ],
         "items": [
@@ -931,6 +939,14 @@
                             {"item_id": 118, "q_required": 1.0},
                             {"item_id": 123, "q_required": 1.0, "preserve": true}
                         ]
+                    },
+                    {
+                        "id": 287,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 81, "q_required": 9.0},
+                            {"item_id": 147, "q_required": 1.0, "preserve": true}
+                        ]
                     }
                 ]
             },
@@ -1280,7 +1296,7 @@
                 "name": "Sleep",
                 "description": "Consider how much you've done today and how many hours would likely be left available for sleeping. If you've already worked 10 hours then there's probably not a lot of time for much else.",
                 "storage_type": "u",
-                "q_limit": 8.0,
+                "q_limit": 10.0,
                 "toplevel": true,
                 "recipes": [
                     {
@@ -1389,7 +1405,7 @@
                     [85, "Beach"],
                     [130, 5.0]
                 ],
-                "abilities": [101, 129]
+                "abilities": [101, 107, 129]
             },
             {
                 "id": 261,
@@ -1431,7 +1447,7 @@
             {
                 "id": 175,
                 "name": "Church Sanctuary",
-                "description": "Where Sunday morning services and mid-week meetings take place."
+                "description": "Where Sunday morning services and mid-week meetings take place.\r\nTo decide on the topic, consider recent events."
             },
             {
                 "id": 105,
@@ -1441,7 +1457,7 @@
                     [85, "Cinema"],
                     [130, 3.0]
                 ],
-                "abilities": [101, 129]
+                "abilities": [101, 107, 129]
             },
             {
                 "id": 40,
@@ -1462,7 +1478,7 @@
                     [85, "Department Store"],
                     [130, 2.0]
                 ],
-                "abilities": [101, 129],
+                "abilities": [101, 107, 129],
                 "items": [
                     {"item_id": 193, "quantity": 1.0}
                 ],
@@ -1490,23 +1506,9 @@
                     [85, "Electronics Store"],
                     [130, 3.0]
                 ],
-                "abilities": [101, 129],
+                "abilities": [101, 107, 129],
                 "destinations": [
                     {"loc2_id": 103}
-                ]
-            },
-            {
-                "id": 256,
-                "name": "Flat to Rent",
-                "description": "A place of your own, with no parents included. The main room is a furnished sitting area and television with a kitchen at one end.",
-                "items": [
-                    {"item_id": 123, "quantity": 1.0},
-                    {"item_id": 235, "quantity": 5.0}
-                ],
-                "item_refs": [82, 257],
-                "destinations": [
-                    {"loc2_id": 259},
-                    {"loc2_id": 269}
                 ]
             },
             {
@@ -1535,6 +1537,20 @@
                 "description": "The flat is two floors up, and there is a deck with chairs and a hot tub. The deck can be open to let in the sun, or screened in for privacy."
             },
             {
+                "id": 256,
+                "name": "Flat—Main Room",
+                "description": "Rent a place of your own, with no parents included. The main room is a furnished sitting area and television with a kitchen at one end.",
+                "items": [
+                    {"item_id": 123, "quantity": 1.0},
+                    {"item_id": 235, "quantity": 5.0}
+                ],
+                "item_refs": [82, 257],
+                "destinations": [
+                    {"loc2_id": 259},
+                    {"loc2_id": 269}
+                ]
+            },
+            {
                 "id": 268,
                 "name": "Flat—Shower",
                 "items": [
@@ -1549,7 +1565,7 @@
                     [85, "Friendly Community Church"],
                     [130, 4.0]
                 ],
-                "abilities": [101, 129],
+                "abilities": [101, 107, 129],
                 "destinations": [
                     {"loc2_id": 52},
                     {"loc2_id": 55},
@@ -1564,7 +1580,7 @@
                     [85, "Gym"],
                     [130, 4.0]
                 ],
-                "abilities": [101, 129],
+                "abilities": [101, 107, 129],
                 "destinations": [
                     {"loc2_id": 210}
                 ]
@@ -1577,7 +1593,7 @@
                     [85, "Happy Hour Pub"],
                     [130, 4.0]
                 ],
-                "abilities": [101, 129],
+                "abilities": [101, 107, 129],
                 "items": [
                     {"item_id": 147, "quantity": 1.0}
                 ],
@@ -1605,7 +1621,7 @@
                     [85, "Petrol Station"],
                     [130, 2.0]
                 ],
-                "abilities": [101, 129],
+                "abilities": [101, 107, 129],
                 "items": [
                     {"item_id": 172, "quantity": 1.0}
                 ]
@@ -1636,7 +1652,7 @@
                     [85, "Supermarket"],
                     [130, 2.0]
                 ],
-                "abilities": [101, 129],
+                "abilities": [101, 107, 129],
                 "items": [
                     {"item_id": 121, "quantity": 1.0}
                 ]
@@ -1654,7 +1670,7 @@
                     [85, "Teria's Place"],
                     [130, 2.0]
                 ],
-                "abilities": [101, 129],
+                "abilities": [101, 107, 129],
                 "items": [
                     {"item_id": 150, "quantity": 1.0}
                 ],
@@ -1832,14 +1848,14 @@
             },
             {
                 "id": 155,
-                "name": "Drechsel",
+                "name": "Dreschel",
                 "description": "Bartender. Has a knack for bottles, jars, and mixes.",
                 "location_id": 44
             },
             {
                 "id": 62,
                 "name": "(Enter a name)",
-                "description": "College has left little time for social life, until now. With a few months' holiday, this is the perfect time to reawaken that hidden charisma and those stifled interpersonal skills.\r\n\r\nThe default setup is male seeking female, configurable of course.\r\n\r\nAlso, you could change the win conditions, for example, having a baby with someone who you're in a committed relationship with. Best not to make the primary condition a certain **Feels** score, as that is a general metric rather than an objective status.",
+                "description": "College has left little time for social life, until now. With a few months' holiday, this is the perfect time to reawaken that hidden charisma and those stifled interpersonal skills.\r\n\r\nThe default setup is male seeking female, configurable of course.",
                 "attribs": [
                     [3, 5.0],
                     [4, 4.0],
@@ -1855,7 +1871,7 @@
                     [158, "No Pressure"],
                     [194, false]
                 ],
-                "abilities": [63, 64, 101, 107, 145, 146, 157, 178, 180, 181, 195, 198],
+                "abilities": [63, 64, 145, 146, 157, 178, 180, 181, 195, 198],
                 "toplevel": true,
                 "location_id": 47,
                 "travel_party": "Drive",
@@ -1902,6 +1918,12 @@
                 "items": [
                     {"item_id": 29, "quantity": 1.0, "slot": "Held"}
                 ]
+            },
+            {
+                "id": 286,
+                "name": "Prompt",
+                "description": "His parents call him Eddie. Excels at getting computers to work, and spends most of his time in the back room working on them. When it comes to relationships, he looks to you as the one with experience.",
+                "location_id": 84
             },
             {
                 "id": 142,
@@ -2041,7 +2063,7 @@
                         "val_transform": 3.0
                     },
                     {
-                        "infield": {"attrib_id": 108}
+                        "infield": {"role": "target char", "attrib_id": 108}
                     },
                     {
                         "label": "Standard Adjustment",
@@ -2592,6 +2614,55 @@
                 ]
             },
             {
+                "id": 146,
+                "name": "Hurt Feelings",
+                "description": "When you've done something significant that hurts someone who cares about you.\r\n\r\n- **On Major Failure:** They are likely throwing in the towel. **Feels about You** plummets, and **Relationship Status** may change.\r\n- **On Minor Failure:** They may still try to work things out, but there's serious damage to the relationship, and **Feels about You** takes a hit.\r\n- **On Minor Success:** They're still very hurt, and they don't understand, but they are willing to forgive you.\r\n- **On Major Success:** Your relationship is strong enough to weather the storm, and even improves slightly from the testing. It's still going to be important to talk about what happened.",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "label": "Base Threshold",
+                        "infield": {"role": "target char", "attrib_id": 144}
+                    },
+                    {
+                        "label": "Base Threshold — Status 'Dating'",
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "val_transform": 13.0
+                    },
+                    {
+                        "infield": {"role": "target char", "attrib_id": 7},
+                        "op_transform": "/",
+                        "val_transform": 20.0
+                    },
+                    {"op_application": ":=", "op_transform": "floor"}
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 7},
+                        "op_transform": "c",
+                        "val_transform": 2.0,
+                        "outcome_success": "success_major"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 7},
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "val_transform": 10.0,
+                        "outcome_success": "failure_any"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 7},
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "val_transform": 20.0,
+                        "outcome_success": "failure_major"
+                    }
+                ]
+            },
+            {
                 "id": 95,
                 "name": "Job Hours",
                 "outcome_type": "numeric",
@@ -2846,61 +2917,6 @@
                 ]
             },
             {
-                "id": 146,
-                "name": "Preserve Relationship",
-                "description": "Attempt to avoid losing the relationship.",
-                "numeric_range": [1, 20],
-                "determinants": [
-                    {
-                        "label": "Base Threshold",
-                        "infield": {"role": "target char", "attrib_id": 144},
-                        "op_application": "-"
-                    },
-                    {
-                        "infield": {"role": "target char", "attrib_id": 7},
-                        "val_transform": 2.0
-                    },
-                    {
-                        "label": "Base Threshold",
-                        "op_application": "-",
-                        "op_transform": "c",
-                        "val_transform": 5.0
-                    }
-                ],
-                "effects": [
-                    {
-                        "get_val_from": "outcome",
-                        "outfield": {"role": "target char", "attrib_id": 7},
-                        "op_transform": "c",
-                        "val_transform": 10.0,
-                        "outcome_success": "success_any"
-                    },
-                    {
-                        "get_val_from": "outcome",
-                        "outfield": {"role": "target char", "attrib_id": 7},
-                        "op_transform": "c",
-                        "val_transform": 10.0,
-                        "outcome_success": "success_major"
-                    },
-                    {
-                        "get_val_from": "outcome",
-                        "outfield": {"role": "target char", "attrib_id": 7},
-                        "op_application": "-",
-                        "op_transform": "c",
-                        "val_transform": 10.0,
-                        "outcome_success": "failure_any"
-                    },
-                    {
-                        "get_val_from": "outcome",
-                        "outfield": {"role": "target char", "attrib_id": 7},
-                        "op_application": "-",
-                        "op_transform": "c",
-                        "val_transform": 10.0,
-                        "outcome_success": "failure_major"
-                    }
-                ]
-            },
-            {
                 "id": 145,
                 "name": "Propose Next Level",
                 "description": "Attempt to advance the relationship, for example, marriage proposal. If successful, change the **Relationship Status** of that person.\r\n\r\nSome status changes, such as **Love Interest,** can be set unofficially and do not require a roll.\r\n\r\nOn failure, it would be best to wait before trying again. To try again without waiting, increase the difficulty by one class each time.",
@@ -3075,7 +3091,7 @@
                         "label": "Standard Threshold",
                         "op_application": "-",
                         "op_transform": "c",
-                        "val_transform": 17.0
+                        "val_transform": 11.0
                     }
                 ],
                 "effects": [

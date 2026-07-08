@@ -79,11 +79,11 @@
                     {% else %}
                         <div class="calculator flex-row align-center">
                             <select name="operator" id="op-select" class="flex-grow">
-                                <option value=":=">Set To (≔)</option>
-                                <option value="+">Increase (+)</option>
-                                <option value="-">Decrease (-)</option>
-                                <option value="*">Multiply (×)</option>
-                                <option value="/">Divide (÷)</option>
+                                <option value="+">+ Increase</option>
+                                <option value=":=">&rarr; Set To</option>
+                                <option value="-">- Decrease</option>
+                                <option value="*">× Multiply</option>
+                                <option value="/">÷ Divide</option>
                             </select>
                             <input name="operand" type="number" step="any" style="max-width: 120px;">
                             {{ hk.submit(3, link_letters,

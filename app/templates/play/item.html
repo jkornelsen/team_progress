@@ -1221,7 +1221,7 @@ document.getElementById('pickup-equip-btn')?.addEventListener('click', async () 
         window.location.reload(); 
         return;
     }
-    window.location.href = `/play/char/${charId}`;
+    window.location.href = "{{ url_for('play.play_location', id=owner.id) }}";
 });
 
 document.getElementById('give-btn')?.addEventListener('click', async () => {

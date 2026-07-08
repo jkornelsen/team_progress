@@ -151,7 +151,7 @@
             <section class="outer-border">
                 <h3>Local Events</h3>
                 <div class="col-list" style="--col-list-max-width: 250px;">
-                    {% for event in location.abilities %}
+                    {% for event in location.abilities | sort(attribute='name') %}
                         <div class="col-row" style="--grid-cols: 1fr auto;">
                             {% set event_url = url_for('play.play_event', id=event.id, subject_id=location.id) %}
                             
