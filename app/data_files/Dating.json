@@ -355,7 +355,7 @@
                 "id": 183,
                 "name": "Who",
                 "description": "List for **Chance Encounter—Who.**",
-                "enum_list": ["Art", "Claudia", "Dreschel", "Sydney", "Teria", "Zelest"]
+                "enum_list": ["Art", "Claudia", "Drechsel", "Sydney", "Teria", "Zelest"]
             }
         ],
         "items": [
@@ -399,7 +399,7 @@
             {
                 "id": 75,
                 "name": "Ate",
-                "description": "One meal a day is enough, typically in the evening. If you don't eat, you'll feel weak the next day.\r\n\r\nThe hours are averaged for meals over a whole day.",
+                "description": "If you don't eat dinner, you'll feel weak the next day.",
                 "storage_type": "u",
                 "q_limit": 1.0,
                 "toplevel": true,
@@ -408,7 +408,7 @@
                         "id": 116,
                         "rate_duration": 8,
                         "sources": [
-                            {"item_id": 70, "q_required": 3.0},
+                            {"item_id": 70, "q_required": 2.0},
                             {"item_id": 115, "q_required": 1.0}
                         ]
                     },
@@ -416,7 +416,7 @@
                         "id": 117,
                         "rate_duration": 8,
                         "sources": [
-                            {"item_id": 70, "q_required": 3.0},
+                            {"item_id": 70, "q_required": 2.0},
                             {"item_id": 114, "q_required": 1.0}
                         ]
                     },
@@ -424,7 +424,7 @@
                         "id": 153,
                         "rate_duration": 8,
                         "sources": [
-                            {"item_id": 70, "q_required": 3.0},
+                            {"item_id": 70, "q_required": 2.0},
                             {"item_id": 151, "q_required": 1.0}
                         ]
                     },
@@ -432,7 +432,7 @@
                         "id": 222,
                         "rate_duration": 8,
                         "sources": [
-                            {"item_id": 70, "q_required": 3.0},
+                            {"item_id": 70, "q_required": 2.0},
                             {"item_id": 220, "q_required": 1.0}
                         ]
                     },
@@ -440,7 +440,7 @@
                         "id": 240,
                         "rate_duration": 8,
                         "sources": [
-                            {"item_id": 70, "q_required": 3.0},
+                            {"item_id": 70, "q_required": 2.0},
                             {"item_id": 237, "q_required": 1.0}
                         ]
                     }
@@ -927,6 +927,21 @@
                 ]
             },
             {
+                "id": 293,
+                "name": "Flowers",
+                "description": "Standard but good gift.",
+                "recipes": [
+                    {
+                        "id": 294,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 81, "q_required": 17.0},
+                            {"item_id": 121, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
                 "id": 115,
                 "name": "Food—Burger and Fries",
                 "description": "The homemade version is healthier than it sounds, a grilled hamburger loaded with onions, tomatoes, mushrooms, peppers, and spinach, wrapped in lettuce instead of a bun, with steamed broccoli on the side.\r\n\r\nThe version found at fast food restaurants however is high in sugar and low in nutrients, likely adding to your waistline and generally not feeling your best.",
@@ -1116,6 +1131,32 @@
                 ]
             },
             {
+                "id": 292,
+                "name": "Ibuprofen",
+                "description": "Take two for normal headaches, such as after drinking too much alcohol. 200mg per pill, and 8 pills per bottle. If one dose isn't enough, wait about 5 hours and take another.",
+                "q_limit": 8.0,
+                "slot": "Held",
+                "recipes": [
+                    {
+                        "id": 290,
+                        "rate_amount": 8.0,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 81, "q_required": 6.0},
+                            {"item_id": 121, "q_required": 1.0, "preserve": true}
+                        ]
+                    },
+                    {
+                        "id": 291,
+                        "rate_amount": 0.0,
+                        "rate_duration": 5,
+                        "sources": [
+                            {"item_id": 292, "q_required": 2.0}
+                        ]
+                    }
+                ]
+            },
+            {
                 "id": 91,
                 "name": "Job Listing 1",
                 "description": "Use the sequence of 3 events to \"read\" this listing: **Location, Hours,** and **Wages.** Then do the same for the other listing.\r\n\r\nAfter reading, go to the listing you plan to apply for and **Mark This Job Listing.** If it doesn't work out, then you may circle the other one afterwards. *Note: the recipes are for information only.*",
@@ -1214,7 +1255,7 @@
                         "id": 229,
                         "instant": true,
                         "sources": [
-                            {"item_id": 81, "q_required": 15.0},
+                            {"item_id": 81, "q_required": 14.0},
                             {"item_id": 121, "q_required": 1.0, "preserve": true}
                         ]
                     }
@@ -1244,7 +1285,7 @@
             {
                 "id": 170,
                 "name": "Petrol",
-                "description": "Takes **1** Liter each way, **2** round trip. When filling up, be sure that the vehicle is active and not a person.",
+                "description": "Takes **1** Liter each way, **2** round trip. When filling up, be sure that the vehicle is active and not a person (so that fuel goes in the gas tank).",
                 "q_limit": 10.0,
                 "recipes": [
                     {
@@ -1347,7 +1388,7 @@
                         "id": 225,
                         "instant": true,
                         "sources": [
-                            {"item_id": 81, "q_required": 15.0},
+                            {"item_id": 81, "q_required": 14.0},
                             {"item_id": 121, "q_required": 1.0, "preserve": true}
                         ]
                     }
@@ -1435,7 +1476,8 @@
                     {"loc2_id": 105},
                     {"loc2_id": 140},
                     {"loc2_id": 210},
-                    {"loc2_id": 211}
+                    {"loc2_id": 211},
+                    {"loc2_id": 288}
                 ]
             },
             {"id": 231, "name": "Changing Rooms"},
@@ -1600,6 +1642,11 @@
                 "destinations": [
                     {"loc2_id": 55}
                 ]
+            },
+            {
+                "id": 288,
+                "name": "Medical Research Complex",
+                "description": "Associated with a local college. Includes urgent care."
             },
             {
                 "id": 43,
@@ -1848,14 +1895,14 @@
             },
             {
                 "id": 155,
-                "name": "Dreschel",
+                "name": "Drechsel",
                 "description": "Bartender. Has a knack for bottles, jars, and mixes.",
                 "location_id": 44
             },
             {
                 "id": 62,
                 "name": "(Enter a name)",
-                "description": "College has left little time for social life, until now. With a few months' holiday, this is the perfect time to reawaken that hidden charisma and those stifled interpersonal skills.\r\n\r\nThe default setup is male seeking female, configurable of course.",
+                "description": "College has left little time for social life, until now. With a few months' holiday, this is the perfect time to reawaken that hidden charisma and those stifled interpersonal skills.\r\n\r\nThe default setup is male seeking female, configurable of course.\r\n\r\nConvenience lookup links: [Relationship Status](/configure/lookup/attrib/144), [Feels About You](/configure/lookup/attrib/7). Also, mark *Show in Overview* for your top character relationship or two.",
                 "attribs": [
                     [3, 5.0],
                     [4, 4.0],

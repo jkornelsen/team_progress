@@ -931,6 +931,12 @@ def play_event(id):
         ent = link.child
         all_related[ent.id] = ent
 
+    # Attribute selection
+    if event.selection_attrib_id:
+        attrib = db.session.get(
+            Attrib, (game_token, event.selection_attrib_id))
+        all_related[attrib.id] = attrib
+
     related = sort_by_name_stripped(list(all_related.values()))
 
     return render_template(
