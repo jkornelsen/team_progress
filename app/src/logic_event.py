@@ -1205,11 +1205,11 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
         breakdown_parts = [coord_str]
 
     else:
-        die_roll = random.randint(base_min, base_max)
+        die_roll = random.randint(1, sides)
         adjustment = f"{base_min - 1}" if base_min != 1 else ""
         if adjustment and base_min >= 0:
             adjustment = f"+{adjustment}"
-        result_val = float(die_roll)
+        result_val = float(die_roll + (base_min - 1))
         breakdown_parts = [f"d{sides}(🎲{die_roll}){adjustment}"]
 
     # 2. Resolve and Apply every Determinant individually
@@ -1289,10 +1289,10 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
         major_success_min = (
             base_max - math.floor(sides * 0.15)) + math.floor(shift * 0.40)
 
-        if die_roll == base_max:
+        if die_roll == sides:
             res = "Natural Max!"
             tier = SuccessTier.SUCCESS_NAT_MAX
-        elif die_roll == base_min:
+        elif die_roll == 1:
             res = "Natural Min!"
             tier = SuccessTier.FAILURE_NAT_MIN
         elif result_val >= major_success_min:

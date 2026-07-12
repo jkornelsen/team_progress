@@ -1,9 +1,10 @@
-import logging
 from flask import (
     Blueprint, request, session, flash, redirect, url_for, render_template,
     g, jsonify)
 from http import HTTPStatus
 import json
+import logging
+import re
 from sqlalchemy import select, delete, or_
 from app.models import (
     GENERAL_ID, EQUIPMENT_SLOTS_ID, StorageType, ENTITIES, db,
@@ -1038,11 +1039,11 @@ def lookup(ent_type, id):
     # --- GLOBAL DESCRIPTION SCAN (For Markdown Links) ---
     # This handles things like [Red Bar Rate](/play/event/46)
     mention_key = 'Mentioned in Descriptions'
-    search_str = f'/{ent_type}/{id}'
+    pattern = f"/{ent_type}/{id}\\b|\\b{re.escape(entity.name)}\\b"
     
     # Check Scenario description
     ov = db.session.get(Scenario, game_token)
-    if ov.description and search_str in ov.description:
+    if ov.description and re.search(pattern, ov.description):
         results.setdefault(mention_key, []).append({
             'label': 'Scenario Settings',
             'name': ov.title,
@@ -1054,7 +1055,7 @@ def lookup(ent_type, id):
     for ent in all_ents:
         if ent.id == id and ent.entity_type == ent_type:
             continue # Don't list self
-        if ent.description and search_str in ent.description:
+        if ent.description and re.search(pattern, ent.description):
             if ent.entity_type == Attrib.TYPENAME:
                 link = url_for(f'configure.edit_attrib', id=ent.id)
             else:

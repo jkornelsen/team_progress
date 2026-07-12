@@ -60,7 +60,14 @@
             {
                 "id": 108,
                 "name": "Clothing Score",
-                "description": "Set up to 10 based on how well and appropriately dressed for the current situation."
+                "description": "Set based on how well and appropriately dressed for the current situation.",
+                "enum_list": [
+                    "Completely Inappropriate",
+                    "Scruffy",
+                    "Lacking An Item",
+                    "Good",
+                    "Ideal New Clothes"
+                ]
             },
             {
                 "id": 15,
@@ -119,7 +126,7 @@
             {
                 "id": 4,
                 "name": "Fitness",
-                "description": "Scale from professional athletes down to overweight gamers who never leave the basement.\r\n\r\nTraining requires consistent exercise, at least 3 times per week. Increase fitness after the 3rd workout, then every 2 additional workouts as long as you keep up that schedule."
+                "description": "Scale from professional athletes down to overweight gamers who never leave the basement.\r\n\r\nTraining requires consistent exercise. Increase fitness after the 3rd workout in a single week, then every 2 additional workouts for consecutive weeks.\r\n\r\nValues of 8 or more require at least one workout per week to maintain, and two for 10. Not exercising for a whole month reduces the value further."
             },
             {
                 "id": 154,
@@ -152,7 +159,7 @@
             },
             {
                 "id": 14,
-                "name": "Intoxicated",
+                "name": "Intoxication",
                 "description": "Even a little (1-2) could be relaxing. A moderate amount (5) is unsafe to drive under, while a lot (7-10) could mean acting wildly or even passing out.\r\n\r\nWears off after sleeping or waiting awhile."
             },
             {"id": 110, "name": "Job—Accepted", "is_binary": true},
@@ -763,7 +770,7 @@
             {
                 "id": 160,
                 "name": "Drink—Beer",
-                "description": "Raises **Intoxication** by **+2.**\r\nNot going to impress anyone, but sufficient for anyone looking to have a good time.",
+                "description": "Raise **Intoxication** by **+2** after drinking.\r\nNot going to impress anyone, but sufficient for anyone looking to have a good time.",
                 "slot": "Held",
                 "recipes": [
                     {
@@ -790,7 +797,7 @@
             {
                 "id": 148,
                 "name": "Drink—Margarita",
-                "description": "Raises **Intoxication** by **+4** — a fairly strong buzz, but not enough to make driving or interacting with people difficult.\r\n\r\nFor both yourself and someone else, you'd need to buy two glasses.",
+                "description": "Raise **Intoxication** by **+4** — a fairly strong buzz, but not enough to make driving or interacting with people difficult.\r\n\r\nFor both yourself and someone else, you'd need to buy two glasses.",
                 "slot": "Held",
                 "recipes": [
                     {
@@ -817,7 +824,7 @@
             {
                 "id": 275,
                 "name": "Drink—Vodka",
-                "description": "Raises **Intoxication** by **+4**. The cost-effective way to get drunk fast.",
+                "description": "Raise **Intoxication** by **+4** after drinking. The most cost-effective way to get drunk fast.",
                 "slot": "Held",
                 "recipes": [
                     {
@@ -851,7 +858,7 @@
             {
                 "id": 273,
                 "name": "Drink—Wine",
-                "description": "Raises **Intoxication** by **+3.**\r\n\r\nSome experts claim there are health benefits for drinking red wine in moderation. Incidentally, dark chocolate is similar in this regard.",
+                "description": "Raise **Intoxication** by **+3** after drinking.\r\n\r\nSome experts claim there are health benefits for drinking red wine in moderation. Incidentally, dark chocolate is similar in this regard.",
                 "slot": "Held",
                 "recipes": [
                     {
@@ -1050,7 +1057,7 @@
                         "id": 219,
                         "instant": true,
                         "sources": [
-                            {"item_id": 81, "q_required": 5.0},
+                            {"item_id": 81, "q_required": 6.0},
                             {"item_id": 121, "q_required": 1.0, "preserve": true}
                         ]
                     }
@@ -1081,7 +1088,7 @@
                         "id": 236,
                         "instant": true,
                         "sources": [
-                            {"item_id": 81, "q_required": 5.0},
+                            {"item_id": 81, "q_required": 8.0},
                             {"item_id": 121, "q_required": 1.0, "preserve": true}
                         ]
                     }
@@ -1159,7 +1166,7 @@
             {
                 "id": 91,
                 "name": "Job Listing 1",
-                "description": "Use the sequence of 3 events to \"read\" this listing: **Location, Hours,** and **Wages.** Then do the same for the other listing.\r\n\r\nAfter reading, go to the listing you plan to apply for and **Mark This Job Listing.** If it doesn't work out, then you may circle the other one afterwards. *Note: the recipes are for information only.*",
+                "description": "Use the sequence of 3 events to \"read\" this listing: **Location, Hours,** and **Wages.** Then do the same for the other listing.\r\n\r\nAfter reading, go to the listing you plan to apply for and **Mark This Job Listing.** If it doesn't work out, then you may circle the other one afterwards. *Note: the recipe is for information only.*",
                 "attribs": [
                     [85, "Beach"],
                     [88, 0.0],
@@ -1209,7 +1216,7 @@
             {
                 "id": 87,
                 "name": "Job—Circled",
-                "description": "Circle a job listing, then visit the location to apply.\r\n\r\nTypically, you'd work one job per day, but there could be time for two short jobs. Getting dirty in the first job makes this harder. You may need to change clothes or shower in between, and consider how far away the locations are.\r\n\r\nIf the job is from asking directly at the site instead of a listing, then roll for hours and wages here.",
+                "description": "Circle a job listing, then visit the location to apply.\r\n\r\nTypically, you'd work one job per day, but there could be time for two short jobs. Getting dirty in the first job makes this harder. You may need to change clothes or shower in between, and consider how far away the locations are.\r\n\r\nIf the job is from asking directly at the site instead of a listing, then roll for hours and wages here, and configure **Work** to match.",
                 "attribs": [
                     [85, "Beach"],
                     [88, 0.0],
@@ -1264,6 +1271,12 @@
             {"id": 214, "name": "Legs—Khaki Shorts", "slot": "Legs"},
             {"id": 201, "name": "Legs—Skirt", "slot": "Legs"},
             {
+                "id": 296,
+                "name": "Legs—Sweatpants",
+                "description": "Very comfortable for around the house. Not particularly attractive, although the casual tone may bring a sense of intimacy.",
+                "slot": "Legs"
+            },
+            {
                 "id": 36,
                 "name": "Legs—Swim Trunks",
                 "description": "Not necessarily immodest if a guy wears these at a public place to swim. Could be attractive if he's fit.",
@@ -1285,7 +1298,7 @@
             {
                 "id": 170,
                 "name": "Petrol",
-                "description": "Takes **1** Liter each way, **2** round trip. When filling up, be sure that the vehicle is active and not a person (so that fuel goes in the gas tank).",
+                "description": "Takes **1** Liter to reach your final destination, or **2** for a round trip between the outskirts and downtown. When filling up, be sure that the vehicle is the active character (so that fuel goes in the gas tank instead of someone's hands).",
                 "q_limit": 10.0,
                 "recipes": [
                     {
@@ -1335,7 +1348,7 @@
             {
                 "id": 71,
                 "name": "Sleep",
-                "description": "Consider how much you've done today and how many hours would likely be left available for sleeping. If you've already worked 10 hours then there's probably not a lot of time for much else.",
+                "description": "Consider how much you've done today and how many hours would likely be left available for sleeping. If you've already worked 10 hours then there's probably not a lot of time for much else.\r\n\r\nThis is really more about how long you lie in bed than how many hours you're literally asleep, unless you absolutely cannot sleep and are only tossing and turning.",
                 "storage_type": "u",
                 "q_limit": 10.0,
                 "toplevel": true,
@@ -1354,7 +1367,17 @@
                 "name": "Torso—Button Shirt",
                 "description": "Decent looking shirt.",
                 "q_limit": 1.0,
-                "slot": "Torso"
+                "slot": "Torso",
+                "recipes": [
+                    {
+                        "id": 298,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 81, "q_required": 20.0},
+                            {"item_id": 193, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
             },
             {
                 "id": 233,
@@ -1377,6 +1400,12 @@
                         ]
                     }
                 ]
+            },
+            {
+                "id": 297,
+                "name": "Torso—Sweatshirt",
+                "description": "Very comfortable for around the house.",
+                "slot": "Torso"
             },
             {
                 "id": 224,
@@ -1441,7 +1470,7 @@
             {
                 "id": 49,
                 "name": "Beach",
-                "description": "Might be a good place to bring a date, or happen to run into someone you're interested in. Strangers might not appreciate advances here though, even if they're hot.\r\n\r\nThere's swimming, sand volleyball, or jogging on the beach for exercise.\r\n\r\nJobs include rentals, lifeguard, and surfing instructor.",
+                "description": "Might be a good place to bring a date, or happen to run into someone you're interested in. Strangers might not appreciate advances here though, even if they're hot.\r\n\r\nThere's swimming, sand volleyball, or jogging on the beach for exercise.\r\n\r\nJobs include rentals, lifeguard, surfing instructor, and picking up trash.",
                 "attribs": [
                     [85, "Beach"],
                     [130, 5.0]
@@ -1646,7 +1675,7 @@
             {
                 "id": 288,
                 "name": "Medical Research Complex",
-                "description": "Associated with a local college. Includes urgent care."
+                "description": "Associated with a local college. Includes urgent care, where the fees can get expensive."
             },
             {
                 "id": 43,
@@ -1807,7 +1836,7 @@
             {
                 "id": 45,
                 "name": "Your Single Bed",
-                "description": "The mattress isn't worn out, comfortable enough unless the day has been too stressful to sleep. Held by slats in a wooden frame.\r\n\r\nWhile you *could* fit another person in, it'd be better to buy a bigger bed.",
+                "description": "The mattress isn't worn out, comfortable enough unless the day has been too stressful to sleep. Held by slats in a wooden frame.\r\n\r\nWhile you *could* fit another person in, it'd be better t' buy a bigger bed.",
                 "item_refs": [71],
                 "destinations": [
                     {"loc2_id": 50}
@@ -1902,7 +1931,7 @@
             {
                 "id": 62,
                 "name": "(Enter a name)",
-                "description": "College has left little time for social life, until now. With a few months' holiday, this is the perfect time to reawaken that hidden charisma and those stifled interpersonal skills.\r\n\r\nThe default setup is male seeking female, configurable of course.\r\n\r\nConvenience lookup links: [Relationship Status](/configure/lookup/attrib/144), [Feels About You](/configure/lookup/attrib/7). Also, mark *Show in Overview* for your top character relationship or two.",
+                "description": "Training has left little time for social life, until now. With a few months' holiday, this is the perfect time to reawaken that hidden charisma and those stifled interpersonal skills.\r\n\r\nThe default setup is male seeking female, configurable of course.\r\n\r\nConvenience lookup links: [Relationship Status](/configure/lookup/attrib/144), [Feels About You](/configure/lookup/attrib/7). Also, mark *Show in Overview* for your top character relationship or two.",
                 "attribs": [
                     [3, 5.0],
                     [4, 4.0],
@@ -2115,7 +2144,7 @@
                     {
                         "label": "Standard Adjustment",
                         "op_transform": "c",
-                        "val_transform": 3.0
+                        "val_transform": 10.0
                     }
                 ],
                 "effects": [
@@ -2155,7 +2184,7 @@
             {
                 "id": 101,
                 "name": "Ask Available Jobs",
-                "description": "Can ask at each location once a day. If you've already read a job listing for this location today, then there's no need to ask.",
+                "description": "Call or visit each location up to once a day. If you've already read a job listing for this location today, then there's no need to ask.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -2167,7 +2196,7 @@
                         "label": "Base Threshold",
                         "op_application": "-",
                         "op_transform": "c",
-                        "val_transform": 6.0
+                        "val_transform": 4.0
                     }
                 ],
                 "effects": [
@@ -2210,7 +2239,7 @@
                         "label": "Standard Threshold",
                         "op_application": "-",
                         "op_transform": "c",
-                        "val_transform": 24.0
+                        "val_transform": 18.0
                     }
                 ],
                 "effects": [
@@ -2372,14 +2401,14 @@
                     {
                         "infield": {"role": "target char", "attrib_id": 7},
                         "op_transform": "/",
-                        "val_transform": 5.0
+                        "val_transform": 4.0
                     },
                     {"op_application": ":=", "op_transform": "floor"},
                     {
                         "label": "Standard Threshold",
                         "op_application": "-",
                         "op_transform": "c",
-                        "val_transform": 23.0
+                        "val_transform": 17.0
                     }
                 ],
                 "effects": [
@@ -2478,7 +2507,7 @@
                         "label": "Base Threshold (Avg 5 per)",
                         "op_application": "-",
                         "op_transform": "c",
-                        "val_transform": 15.0
+                        "val_transform": 9.0
                     }
                 ],
                 "effects": [
@@ -2550,7 +2579,7 @@
                         "label": "Standard Threshold",
                         "op_application": "-",
                         "op_transform": "c",
-                        "val_transform": 25.0
+                        "val_transform": 19.0
                     }
                 ],
                 "effects": [
@@ -2713,7 +2742,7 @@
                 "id": 95,
                 "name": "Job Hours",
                 "outcome_type": "numeric",
-                "numeric_range": [2, 10],
+                "numeric_range": [3, 10],
                 "determinants": [
                     {
                         "label": "(works for 1 or 2)",
@@ -2767,7 +2796,7 @@
                 "id": 96,
                 "name": "Job Pay",
                 "outcome_type": "numeric",
-                "numeric_range": [1, 6],
+                "numeric_range": [1, 7],
                 "determinants": [
                     {
                         "infield": {"attrib_id": 88},
@@ -3093,7 +3122,7 @@
                     {
                         "infield": {"role": "target char", "attrib_id": 11},
                         "op_transform": "/",
-                        "val_transform": 3.0
+                        "val_transform": 3.5
                     },
                     {
                         "infield": {"attrib_id": 108}
@@ -3138,7 +3167,7 @@
                         "label": "Standard Threshold",
                         "op_application": "-",
                         "op_transform": "c",
-                        "val_transform": 11.0
+                        "val_transform": 6.0
                     }
                 ],
                 "effects": [
