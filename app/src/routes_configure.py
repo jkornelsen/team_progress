@@ -171,9 +171,28 @@ def edit_item(id):
         item.name = req.get_str('name', item.name)
         item.description = req.get_str('description')
         
-        val = req.get_str('storage_type')
-        item.storage_type = (
-            val if val in StorageType.ALL_CODES else StorageType.UNIVERSAL)
+        old_storage_type = item.storage_type
+        new_storage_type = req.get_str('storage_type', StorageType.UNIVERSAL)
+        if old_storage_type != new_storage_type:
+            if new_storage_type == StorageType.UNIVERSAL:
+                # Remove all character and location-owned piles
+                db.session.execute(
+                    delete(Pile).filter(
+                        Pile.game_token == game_token,
+                        Pile.item_id == item.id,
+                        Pile.owner_id != GENERAL_ID
+                    )
+                )
+            elif old_storage_type == StorageType.UNIVERSAL:
+                # Remove the global pile
+                db.session.execute(
+                    delete(Pile).filter(
+                        Pile.game_token == game_token,
+                        Pile.item_id == item.id,
+                        Pile.owner_id == GENERAL_ID
+                    )
+                )
+        item.storage_type = new_storage_type
 
         item.q_limit = req.get_float('q_limit')
         db.session.execute(delete(ItemLimit).filter_by(

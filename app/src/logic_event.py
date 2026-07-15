@@ -153,18 +153,26 @@ def get_inner_breakdown(val, mod_val, op):
     """Formats the inner transformation for display."""
     v = format_for_display(val)
     m = format_for_display(mod_val)
+    try:
+        m_num = float(mod_val)
+    except (ValueError, TypeError):
+        m_num = None
+
     formats = {
         Operation.CONST:      m,
-        Operation.ADD:        f"{v}+{m}",
-        Operation.SUB:        f"{v}-{m}",
-        Operation.MULT:       f"{v}×{m}",
-        Operation.DIV:        f"{v}÷{m}",
+        Operation.ADD:        v if m_num == 0 else f"{v}+{m}",
+        Operation.SUB:        v if m_num == 0 else f"{v}-{m}",
+        Operation.MULT:       v if m_num == 1 else f"{v}×{m}",
+        Operation.DIV:        v if m_num == 1 else f"{v}÷{m}",
         Operation.MOD:        f"{v} mod {m}",
-        Operation.VAL_TO_POW: f"{v}<sup>{m}</sup>",
+        Operation.VAL_TO_POW: v if m_num == 1 else f"{v}<sup>{m}</sup>",
         Operation.POW_OF_VAL: f"{m}<sup>{v}</sup>",
-        Operation.ROUND:      f"Round({v}, {m})",
-        Operation.FLOOR:      f"Floor({v}, {m})",
-        Operation.CEIL:       f"Ceiling({v}, {m})",
+        Operation.ROUND:      f"Round({v})" if m_num == 1 \
+                                  else f"Round({v}, {m})",
+        Operation.FLOOR:      f"Floor({v})" if m_num == 1 \
+                                  else f"Floor({v}, {m})",
+        Operation.CEIL:       f"Ceiling({v})" if m_num == 1 \
+                                  else f"Ceiling({v}, {m})",
         Operation.MIN:        f"Min({v}, {m})",
         Operation.MAX:        f"Max({v}, {m})",
         Operation.SOFTCAP:    f"SoftCap({v}, {m})",
@@ -755,14 +763,14 @@ def preview_effects(event, role_entities, roll_val=None):
                     impact_value) if impact_value is not None else None
 
         # Update Ledger for subsequent rows
-        if lkey:
-            if not relies_on_roll or roll_val is not None:
-                if eff.op_application == Operation.ASSIGN:
-                    ledger[lkey] = impact_value
-                else:
-                    ledger[lkey] = apply_operation(
-                        current_val, impact_value, eff.op_application,
-                        attrib=attrib)
+        if lkey and eff.outcome_success == SuccessTier.ALWAYS and (
+                not relies_on_roll or roll_val is not None):
+            if eff.op_application == Operation.ASSIGN:
+                ledger[lkey] = impact_value
+            else:
+                ledger[lkey] = apply_operation(
+                    current_val, impact_value, eff.op_application,
+                    attrib=attrib)
 
         # Output looks generally like:
         # target_name

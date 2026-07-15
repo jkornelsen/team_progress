@@ -6,9 +6,9 @@
             {"attrib_id": 144, "attrib_value": "Exclusive"}
         ],
         "tag_introduce_order": 35,
-        "tag_best_order": 11,
+        "tag_best_order": 7,
         "tag_progress_type": "RPG",
-        "tag_complete": "08 Fully Playable"
+        "tag_complete": "09 Complete"
     },
     "entities": {
         "attribs": [
@@ -131,7 +131,7 @@
             {
                 "id": 154,
                 "name": "Gift Bonus",
-                "description": "Provides temporary boosts to certain rolls."
+                "description": "Provides temporary boosts to certain rolls. Could also indicate a service performed. +2 is typical, up to about +5 for a diamond ring."
             },
             {
                 "id": 130,
@@ -404,6 +404,15 @@
                 ]
             },
             {
+                "id": 304,
+                "name": "Ask",
+                "description": "Temporarily set the **Relationship Status** you're asking for.\r\n\r\n*Unfortunately, setting this status triggers the win condition because the check is very broad. So, reset to \"Unaware\" after running the event.*",
+                "attribs": [
+                    [144, "Exclusive"]
+                ],
+                "storage_type": "u"
+            },
+            {
                 "id": 75,
                 "name": "Ate",
                 "description": "If you don't eat dinner, you'll feel weak the next day.",
@@ -528,6 +537,12 @@
                 ]
             },
             {
+                "id": 299,
+                "name": "Buy at River Walk",
+                "storage_type": "l",
+                "q_limit": 1.0
+            },
+            {
                 "id": 147,
                 "name": "Buy from Bar",
                 "storage_type": "l",
@@ -535,7 +550,7 @@
             },
             {
                 "id": 193,
-                "name": "Buy From Department Store",
+                "name": "Buy from Department Store",
                 "storage_type": "l",
                 "q_limit": 1.0
             },
@@ -742,7 +757,7 @@
             {
                 "id": 179,
                 "name": "Date",
-                "description": "To plan dates with different people at the same time, you'd need to save and duplicate this item. But there are several ways that could get you into trouble.\r\n\r\nIt's up to you to choose the location thoughtfully — there's no event that selects randomly for you.",
+                "description": "It's up to you to choose the location thoughtfully — there's no event that selects randomly for you.",
                 "attribs": [
                     [15, "Sunday"],
                     [85, "Beach"],
@@ -1064,6 +1079,31 @@
                 ]
             },
             {
+                "id": 300,
+                "name": "Food—Sandwiches",
+                "description": "Elegant although not very filling. Doesn't count as a full meal.",
+                "slot": "Held",
+                "recipes": [
+                    {
+                        "id": 301,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 81, "q_required": 10.0},
+                            {"item_id": 299, "q_required": 1.0, "preserve": true}
+                        ]
+                    },
+                    {
+                        "id": 302,
+                        "rate_amount": 0.0,
+                        "rate_duration": 8,
+                        "sources": [
+                            {"item_id": 70, "q_required": 1.0},
+                            {"item_id": 300, "q_required": 1.0}
+                        ]
+                    }
+                ]
+            },
+            {
                 "id": 237,
                 "name": "Food—Stir Fry",
                 "description": "Vegetables provide a nutritious base. Adding chicken chunks makes it more substantial.\r\n\r\nThe standard dish goes on a large pile of noodles with soy and chili sauce. You could make it healthier by limiting the noodles and eating larger portions of the vegetables and meat.",
@@ -1109,7 +1149,7 @@
             {
                 "id": 35,
                 "name": "Full Body—Revealing Leather Dress",
-                "description": "The bottom of the skirt rests just above the knees.",
+                "description": "Low cut. The bottom of the skirt rests just above the knees.",
                 "q_limit": 1.0,
                 "slot": "Full Body"
             },
@@ -1385,6 +1425,7 @@
                 "q_limit": 1.0,
                 "slot": "Torso"
             },
+            {"id": 255, "name": "Torso—Cutoff T-Shirt", "slot": "Torso"},
             {
                 "id": 191,
                 "name": "Torso—Polo Shirt",
@@ -1718,7 +1759,10 @@
                 "attribs": [
                     [130, 3.0]
                 ],
-                "abilities": [129]
+                "abilities": [129],
+                "items": [
+                    {"item_id": 299, "quantity": 1.0}
+                ]
             },
             {
                 "id": 48,
@@ -1741,7 +1785,7 @@
             {
                 "id": 140,
                 "name": "Teria's Place",
-                "description": "Cafeteria style restaurant — go through the line and ask for what to put on your plate. A variety of options: noodles, meat, salads.\r\n\r\nThe owner named the place after his daughter. To meet her, start setting her up by duplicating one of the other characters.\r\n\r\nAvailable jobs: server, cook, dish washer.",
+                "description": "Cafeteria style restaurant — go through the line and ask for what to put on your plate. A variety of options: noodles, meat, salads.\r\n\r\nThe owner named the place after his daughter. To meet her, start setting her up by duplicating one of the other characters (such as Claudia).\r\n\r\nAvailable jobs: server, cook, dish washer.",
                 "attribs": [
                     [85, "Teria's Place"],
                     [130, 2.0]
@@ -1941,7 +1985,7 @@
                     [12, 5.0],
                     [14, 0.0],
                     [17, "Normal"],
-                    [108, 10.0],
+                    [108, "Good"],
                     [154, 0.0],
                     [156, 5.0],
                     [158, "No Pressure"],
@@ -1962,8 +2006,34 @@
             {
                 "id": 254,
                 "name": "Flaxie",
-                "description": "Platinum blond. Acts flirty and gullible, although you'll have to get to know her to find out how intelligent she really is. She needs your help with her laptop or phone.",
-                "location_id": 84
+                "description": "Platinum blond. Acts flirty and gullible, although you'll have to get to know her to find out how intelligent she really is (and finish configuring, based on another character such as Claudia). She needs your help with her laptop or phone.",
+                "attribs": [
+                    [144, "Unaware"]
+                ],
+                "location_id": 84,
+                "items": [
+                    {"item_id": 31, "quantity": 1.0, "slot": "Legs"},
+                    {"item_id": 163, "quantity": 1.0, "slot": "Accessories"},
+                    {"item_id": 206, "quantity": 1.0, "slot": "Feet"},
+                    {"item_id": 255, "quantity": 1.0, "slot": "Torso"}
+                ]
+            },
+            {
+                "id": 303,
+                "name": "Gelle",
+                "description": "Working as a paralegal at a law firm, undecided whether to make a career of it. Track star in high school. Very thin and possibly anorexic.",
+                "attribs": [
+                    [4, 9.0],
+                    [144, "Unaware"]
+                ],
+                "location_id": 41,
+                "items": [
+                    {"item_id": 163, "quantity": 1.0, "slot": "Accessories"},
+                    {"item_id": 224, "quantity": 1.0, "slot": "Torso"},
+                    {"item_id": 226, "quantity": 1.0, "slot": "Feet"},
+                    {"item_id": 228, "quantity": 1.0, "slot": "Legs"},
+                    {"item_id": 230, "quantity": 1.0, "slot": "Chest (Women)"}
+                ]
             },
             {
                 "id": 212,
@@ -2488,7 +2558,7 @@
             {
                 "id": 64,
                 "name": "First Impression",
-                "description": "Based on appearance and greeting, people may like you, dislike you, or (maybe worse if you want to be noticed) have no opinion about you.\r\n\r\nSet **Clothing Score** and **Similar Personality** before rolling.",
+                "description": "Based on appearance and greeting, people may like you, dislike you, or (maybe worse if you want to be noticed) have no opinion about you.\r\n\r\nSet **Clothing Score** and **Similar Personality** before rolling.\r\nAlso, roll to set their Goal and Attitude.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -2572,7 +2642,7 @@
                     {
                         "infield": {"role": "target char", "attrib_id": 7},
                         "op_transform": "/",
-                        "val_transform": 5.0
+                        "val_transform": 6.0
                     },
                     {"op_application": ":=", "op_transform": "floor"},
                     {
@@ -2995,20 +3065,21 @@
             {
                 "id": 145,
                 "name": "Propose Next Level",
-                "description": "Attempt to advance the relationship, for example, marriage proposal. If successful, change the **Relationship Status** of that person.\r\n\r\nSome status changes, such as **Love Interest,** can be set unofficially and do not require a roll.\r\n\r\nOn failure, it would be best to wait before trying again. To try again without waiting, increase the difficulty by one class each time.",
+                "description": "Attempt to advance the relationship, for example, marriage proposal. If successful, go to that person and change their **Relationship Status.**\r\n\r\n- Many status changes, such as **Love Interest,** can be set unofficially and do not require a roll.\r\n- Before rolling, find **Ask** in the list of links and set **Relationship Status** to the level you're hoping to achieve.\r\n- A **Gift Bonus** such as a fancy dinner helps, as long as it's not too cheap.\r\n- On failure, it would be best to wait before trying again. To try again without waiting, increase the difficulty by one class each time.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
-                        "label": "Base Threshold",
-                        "infield": {"role": "target char", "attrib_id": 144},
+                        "label": "Proposed Status",
+                        "infield": {"role": "universal", "item_id": 304, "attrib_id": 144},
                         "op_application": "-"
                     },
                     {
                         "infield": {"role": "target char", "attrib_id": 7},
-                        "val_transform": 2.0
+                        "op_transform": "/",
+                        "val_transform": 3.0
                     },
                     {
-                        "infield": {"attrib_id": 135}
+                        "infield": {"role": "target char", "attrib_id": 135}
                     },
                     {
                         "infield": {"attrib_id": 3},
@@ -3016,10 +3087,14 @@
                         "val_transform": 2.0
                     },
                     {
+                        "infield": {"attrib_id": 154}
+                    },
+                    {"op_application": ":=", "op_transform": "floor"},
+                    {
                         "label": "Base Threshold",
                         "op_application": "-",
                         "op_transform": "c",
-                        "val_transform": 10.0
+                        "val_transform": 2.0
                     }
                 ],
                 "effects": [
@@ -3102,7 +3177,12 @@
                     {"op_application": ":=", "op_transform": "abs"},
                     {"op_transform": "mr"},
                     {"op_application": "m:="},
-                    {"op_application": ":=", "op_transform": "c", "val_transform": 12.0},
+                    {
+                        "label": "Standard Threshold",
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 13.0
+                    },
                     {"op_application": "-", "op_transform": "mr"}
                 ],
                 "effects": [
@@ -3151,10 +3231,10 @@
                         "val_transform": 10.0
                     },
                     {
-                        "infield": {"attrib_id": 5},
+                        "infield": {"role": "target char", "attrib_id": 5},
                         "op_application": "-",
                         "op_transform": "/",
-                        "val_transform": 9.0
+                        "val_transform": 8.0
                     },
                     {
                         "infield": {"attrib_id": 158},

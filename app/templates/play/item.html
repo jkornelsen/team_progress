@@ -1252,7 +1252,7 @@ document.getElementById('equip-btn')?.addEventListener('click', async () => {
     const data = await apiPost(url, fd, "Could not equip.");
     if (!data) return;
 
-    window.location.reload(); 
+    window.location.href = "{{ url_for('play.play_character', id=owner.id) }}";
 });
 
 document.getElementById('unequip-btn')?.addEventListener('click', async () => {
@@ -1263,7 +1263,7 @@ document.getElementById('unequip-btn')?.addEventListener('click', async () => {
     const data = await apiPost(url, fd, "Could not unequip.");
     if (!data) return;
 
-    window.location.reload();
+    window.location.href = "{{ url_for('play.play_character', id=owner.id) }}";
 });
 </script>
 {% endblock %}
