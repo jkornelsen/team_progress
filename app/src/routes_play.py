@@ -31,7 +31,7 @@ from .logic_navigation import (
     move_group, get_available_destinations, arrive_at_destination,
     is_in_grid, blocked_by_local_item, find_nearest_available_pos, is_adjacent)
 from .logic_objectives import validate_requirements
-from .logic_user_interaction import add_message
+from .logic_user_interaction import add_message, get_chronicle
 from .presenters import ItemPlayPresenter
 
 logger = logging.getLogger(__name__)
@@ -55,10 +55,8 @@ def overview():
     events = Event.query.filter_by(
         game_token=game_token, toplevel=True).order_by(name_stripped()).all()
     
-    # Tick All Production
+    # Items currently being produced
     tick_all_active()
-
-    # Fetch IDs of items currently being produced by the General Host
     items_in_production = {
         p.product_id for p in Progress.query.filter_by(
             game_token=game_token
@@ -70,9 +68,7 @@ def overview():
     enriched_win_reqs, all_met = validate_requirements(scenario)
     
     # Recent Messages
-    messages = GameMessage.query.filter_by(game_token=game_token)\
-                .order_by(GameMessage.timestamp.desc()).limit(30).all()
-    messages.reverse()
+    messages = get_chronicle()
 
     return render_template(
         'play/overview.html',
@@ -393,7 +389,7 @@ def equip_item(id):
     # Store the most recently used slot in the session for UI convenience
     session['default_slot_id'] = slot_id
     
-    # 1. Fetch character and item to ensure they exist (for the log message)
+    # Fetch character and item to ensure they exist (for the log message)
     char = db.session.get(Character, (game_token, id))
     item = db.session.get(Item, (game_token, item_id))
     
@@ -401,23 +397,31 @@ def equip_item(id):
         return jsonify(
             {'message': 'Character or Item not found.'}), HTTPStatus.NOT_FOUND
 
-    # 2. Find the specific pile in the character's inventory
+    # Find the specific pile in the character's inventory
     pile = Pile.query.filter_by(
         game_token=game_token, 
         owner_id=id, 
         item_id=item_id
     ).first()
-
     if not pile:
         return jsonify({
             'message': f"No {item.name} found in {char.name}'s inventory."
         }), HTTPStatus.BAD_REQUEST
 
-    # 3. Update the slot
+    # Find if any other item is currently in the target slot for this character
+    existing_occupant = Pile.query.filter_by(
+        game_token=game_token,
+        owner_id=id,
+        slot_id=slot_id
+    ).first()
+    if existing_occupant and existing_occupant.id != pile.id:
+        existing_occupant.slot_id = None
+
+    # Update the slot
     pile.slot_id = slot_id
     db.session.commit()
 
-    # 4. Log
+    # Log
     add_message(f"{char.name} equipped {item.name} to {pile.slot_label}")
     return '', HTTPStatus.NO_CONTENT
 

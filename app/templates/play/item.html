@@ -22,6 +22,8 @@
             {% set text = "e" ~ hk.bracket('d') ~ "it " ~ owner.SHORT %}
             {{ hk.fixed_text(target_url, text, 'd') }}
         {% endif %}
+        <span class="separator">|</span>
+        <a href="{{ url_for('configure.lookup', ent_type='item', id=item.id) }}">lookup</a>
     </nav>
 {% endblock %}
 
@@ -201,7 +203,7 @@
                                     {% if not req.is_satisfied %}
                                         <span class="curr-val">
                                         {% if req.current_val is none %}
-                                            (None nearby)
+                                            (Needed)
                                         {% elif req.attrib.is_binary %}
                                             (Currently {{ '✓' if req.current_val > 0 else '✗' }})
                                         {% else %}

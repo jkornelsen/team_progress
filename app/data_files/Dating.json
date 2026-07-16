@@ -5,7 +5,7 @@
         "win_reqs": [
             {"attrib_id": 144, "attrib_value": "Exclusive"}
         ],
-        "tag_introduce_order": 35,
+        "tag_introduce_order": 40,
         "tag_best_order": 7,
         "tag_progress_type": "RPG",
         "tag_complete": "09 Complete"
@@ -406,9 +406,9 @@
             {
                 "id": 304,
                 "name": "Ask",
-                "description": "Temporarily set the **Relationship Status** you're asking for.\r\n\r\n*Unfortunately, setting this status triggers the win condition because the check is very broad. So, reset to \"Unaware\" after running the event.*",
+                "description": "Temporarily set what you're asking for in an event.\r\nAfter running the event, reset to *Unaware* so that the win condition doesn't get triggered incorrectly.",
                 "attribs": [
-                    [144, "Exclusive"]
+                    [144, "Unaware"]
                 ],
                 "storage_type": "u"
             },

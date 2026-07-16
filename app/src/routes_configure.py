@@ -979,12 +979,12 @@ def lookup(ent_type, id):
         # Who uses this attribute
         stmt = select(AttribVal).filter_by(game_token=game_token, attrib_id=id)
         attrib_vals = db.session.execute(stmt).scalars().all()
-        key_name = 'Applied to Entities'
+        key_name = 'Stat of Entities'
         results[key_name] = []
         for av in attrib_vals:
             subject = db.session.get(Entity, (game_token, av.subject_id))
             results[key_name].append({
-                'label': f'Stat on {subject.entity_type}',
+                'label': subject.entity_type.capitalize(),
                 'name': subject.name,
                 'link': url_for(f'play.play_{subject.entity_type}', id=subject.id),
                 'value': f'{av.display}'

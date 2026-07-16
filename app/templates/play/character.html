@@ -160,11 +160,13 @@
                                             {{ pile.item.name }}
                                         {% endcall %}
 
-                                        {% if pile.item_id in producing_ids %}
+                                        <div>
+                                            {% if pile.item_id in producing_ids %}
                                             <span title="Character Production In Progress" class="spin">🔄</span>
-                                        {% endif %}
-                                        
-                                        <span>{{ pile.quantity | formatNum }}</span>
+                                            {% endif %}
+                                            
+                                            <span>{{ pile.quantity | formatNum }}</span>
+                                        </div>
                                     </div>
                                 {% endfor %}
                             </div>

@@ -42,15 +42,22 @@ def add_message(text):
         )
         db.session.add(msg)
     
-    # 3. Occasional pruning: keep only last 100 messages for this token
-    # (Simplified: in a high-traffic app, move to a background task)
     db.session.flush()
 
-def get_chronicle(game_token, limit=50):
-    """Fetches the most recent messages for the UI."""
-    return GameMessage.query.filter_by(game_token=game_token)\
-        .order_by(desc(GameMessage.timestamp))\
-        .limit(limit).all()
+def get_chronicle(limit=50):
+    """Fetches the most recent messages."""
+    game_token = g.game_token
+
+    messages = db.session.execute(
+        db.select(GameMessage)
+        .filter_by(game_token=game_token)
+        .order_by(GameMessage.timestamp.desc())
+        .limit(limit)
+    ).scalars().all()
+
+    # Query gets newest messages; reverse for display order
+    messages.reverse()
+    return messages
 
 # ------------------------------------------------------------------------
 # 2. Presence Tracking
