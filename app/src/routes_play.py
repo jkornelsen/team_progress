@@ -4,12 +4,13 @@ from flask import (
     Blueprint, render_template, request, redirect, jsonify,
     g, session, current_app)
 from http import HTTPStatus
-from sqlalchemy import or_
+from sqlalchemy import select, or_, and_
 from sqlalchemy.orm import joinedload
 from app.models import (
     db, Entity, Item, Character, Location, Attrib, Event,
     Pile, AttribVal, Operation, OutcomeType, SuccessTier, EventFactor,
-    Recipe, RecipeAttribReq, LocDest, EventLink, EntityAbility, EventField,
+    Recipe, RecipeAttribReq,
+    DestExit, LocDest, EventLink, EntityAbility, EventField,
     Progress, Scenario, WinRequirement, GameMessage,
     GENERAL_ID, StorageType, Participant)
 from app.utils import (
@@ -170,11 +171,23 @@ def play_location(id):
             ).all()
 
     # 3. Fetch Exits In Grid
-    destinations = LocDest.query.filter(
-        LocDest.game_token == game_token,
-        ((LocDest.loc1_id == id) | 
-         ((LocDest.loc2_id == id) & (LocDest.bidirectional == True)))
-    ).all()
+    stmt = (
+        select(LocDest)
+        .where(
+            LocDest.game_token == game_token,
+            or_(
+                and_(
+                    LocDest.loc1_id == id, 
+                    LocDest.direction.in_([DestExit.BOTH, DestExit.LOC1])
+                ),
+                and_(
+                    LocDest.loc2_id == id, 
+                    LocDest.direction.in_([DestExit.BOTH, DestExit.LOC2])
+                )
+            )
+        )
+    )
+    destinations = db.session.scalars(stmt).all()
     destinations.sort(key=lambda r: r.other_loc(id).name.lower())
 
     grid_exits = []

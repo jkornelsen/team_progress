@@ -42,6 +42,9 @@ CONTEXT:  while updating tuple (0,46) in relation "characters"
 [SQL: UPDATE characters SET position=%(position)s::INTEGER[] WHERE characters.game_token = %(characters_game_token)s AND characters.id = %(characters_id)s]
 [parameters: {'position': [9, 4], 'characters_game_token': '128a971e-9667-4496-9d0d-8ce491b31780', 'characters_id': 8}]
 
+constants in effects show `"get_val_from": "outcome",`
+    should probably be blank for default
+
 ---- scenario ----
 
 lumber
@@ -82,27 +85,9 @@ tethered one
     deception check for danglars
         chance of avoiding getting trapped and requiring rescue
         still must hear convo (branched) about atlanth's revenge plan
-    dynamite
-        countdown timer -- recommended to leave open in separate window
-        crush gives to lyria
-        would kill anyone in window loc
-        the plan is to blow open the doors but vull blocks and blast goes down
     masked dest from window loc after blown -- vull's cavern
-        crush and dulcie can visit outside
-        galebane and suhkh follow them -- their cell floor is blown out too
-        they fall but the prisoner doesn't -- he was cowering in a corner
-        evelyn dies (falling wheelchair) and suhkh leaves
-    narrator convo requiring all 6 chars
-        party plus galebane and vull
-    vull kept at bay by water
-    dulcie sees evelyn fallen to her death and demands retribution
-        galebane has a panic attack at being trapped underground
-        crush twists the wheelchair metal to bind galebane's body
-        galebane has 1 "Rotten Soul" carried item required to craft Needle
-    dulcie gets injured during the vull battle
-        tethered one suggests they let her die but of course they don't
-        ask treemates for help
-        harvest potion ingredients from forest
+    crush asks treemates for help
+        they ask for his help to take down an animated tree
 
 infestation
     combat events at different levels

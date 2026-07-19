@@ -6,6 +6,7 @@
             {"char_id": 4, "attrib_id": 7, "attrib_value": false},
             {"item_id": 107, "quantity": 1.0, "char_id": 3},
             {"item_id": 125, "quantity": 1.0, "char_id": 52},
+            {"char_id": 3, "attrib_id": 7, "attrib_value": false},
             {"item_id": 18, "quantity": 1.0}
         ],
         "tag_introduce_order": 35,
@@ -38,7 +39,8 @@
                 "description": "Equipment slots for characters.",
                 "enum_list": ["Main Hand", "Off Hand", "Body", "Head", "Feet", "Back"]
             },
-            {"id": 22, "name": "HP"},
+            {"id": 22, "name": "HP Current"},
+            {"id": 225, "name": "HP Max"},
             {"id": 116, "name": "Is Atlanth", "is_binary": true},
             {"id": 128, "name": "Is Crush", "is_binary": true},
             {"id": 109, "name": "Is Danglars", "is_binary": true},
@@ -48,6 +50,7 @@
             {"id": 208, "name": "Is Snow Cave", "is_binary": true},
             {"id": 95, "name": "Is Tethered One", "is_binary": true},
             {"id": 158, "name": "Is Thaddeus", "is_binary": true},
+            {"id": 223, "name": "Lame", "is_binary": true},
             {
                 "id": 12,
                 "name": "Perception",
@@ -76,9 +79,16 @@
                 ]
             },
             {
+                "id": 230,
+                "name": "Blast Point",
+                "description": "Partially submerged weak point in the rocky floor.",
+                "storage_type": "l",
+                "q_limit": 1.0
+            },
+            {
                 "id": 166,
                 "name": "Chain Mail",
-                "description": "Requires high strength to wear and still be able to move freely.",
+                "description": "Requires high strength to wear and still be able to move freely. Increase HP of wearer by 10.",
                 "slot": "Body",
                 "recipes": [
                     {
@@ -103,7 +113,7 @@
                 "recipes": [
                     {
                         "id": 179,
-                        "rate_duration": 7,
+                        "rate_duration": 6,
                         "sources": [
                             {"item_id": 40, "q_required": 2.0}
                         ]
@@ -123,7 +133,7 @@
                             {"item_id": 117, "q_required": 1.0, "preserve": true}
                         ],
                         "attrib_reqs": [
-                            { "attrib_id": 116 }
+                            {"attrib_id": 116}
                         ]
                     }
                 ]
@@ -141,7 +151,7 @@
                             {"item_id": 117, "q_required": 2.0, "preserve": true}
                         ],
                         "attrib_reqs": [
-                            { "attrib_id": 116 }
+                            {"attrib_id": 116}
                         ]
                     }
                 ]
@@ -159,7 +169,7 @@
                             {"item_id": 120, "q_required": 1.0, "preserve": true}
                         ],
                         "attrib_reqs": [
-                            { "attrib_id": 116 }
+                            {"attrib_id": 116}
                         ]
                     }
                 ]
@@ -177,7 +187,7 @@
                             {"item_id": 122, "q_required": 1.0, "preserve": true}
                         ],
                         "attrib_reqs": [
-                            { "attrib_id": 116 }
+                            {"attrib_id": 116}
                         ]
                     }
                 ]
@@ -195,7 +205,7 @@
                             {"item_id": 156, "q_required": 1.0, "preserve": true}
                         ],
                         "attrib_reqs": [
-                            { "attrib_id": 128 }
+                            {"attrib_id": 128}
                         ]
                     }
                 ]
@@ -213,7 +223,7 @@
                             {"item_id": 156, "q_required": 2.0, "preserve": true}
                         ],
                         "attrib_reqs": [
-                            { "attrib_id": 128 }
+                            {"attrib_id": 128}
                         ]
                     }
                 ]
@@ -231,7 +241,7 @@
                             {"item_id": 129, "q_required": 1.0, "preserve": true}
                         ],
                         "attrib_reqs": [
-                            { "attrib_id": 128 }
+                            {"attrib_id": 128}
                         ]
                     }
                 ]
@@ -249,7 +259,7 @@
                             {"item_id": 131, "q_required": 1.0, "preserve": true}
                         ],
                         "attrib_reqs": [
-                            { "attrib_id": 128 }
+                            {"attrib_id": 128}
                         ]
                     }
                 ]
@@ -267,7 +277,7 @@
                             {"item_id": 133, "q_required": 1.0, "preserve": true}
                         ],
                         "attrib_reqs": [
-                            { "attrib_id": 128 }
+                            {"attrib_id": 128}
                         ]
                     }
                 ]
@@ -285,7 +295,7 @@
                             {"item_id": 135, "q_required": 1.0, "preserve": true}
                         ],
                         "attrib_reqs": [
-                            { "attrib_id": 128 }
+                            {"attrib_id": 128}
                         ]
                     }
                 ]
@@ -303,7 +313,7 @@
                             {"item_id": 126, "q_required": 1.0, "preserve": true}
                         ],
                         "attrib_reqs": [
-                            { "attrib_id": 128 }
+                            {"attrib_id": 128}
                         ]
                     }
                 ]
@@ -321,7 +331,7 @@
                             {"item_id": 126, "q_required": 2.0, "preserve": true}
                         ],
                         "attrib_reqs": [
-                            { "attrib_id": 128 }
+                            {"attrib_id": 128}
                         ]
                     }
                 ]
@@ -339,7 +349,7 @@
                             {"item_id": 110, "q_required": 1.0, "preserve": true}
                         ],
                         "attrib_reqs": [
-                            { "attrib_id": 109 }
+                            {"attrib_id": 109}
                         ]
                     }
                 ]
@@ -357,7 +367,7 @@
                             {"item_id": 110, "q_required": 2.0, "preserve": true}
                         ],
                         "attrib_reqs": [
-                            { "attrib_id": 109 }
+                            {"attrib_id": 109}
                         ]
                     }
                 ]
@@ -375,7 +385,7 @@
                             {"item_id": 112, "q_required": 1.0, "preserve": true}
                         ],
                         "attrib_reqs": [
-                            { "attrib_id": 109 }
+                            {"attrib_id": 109}
                         ]
                     }
                 ]
@@ -484,7 +494,7 @@
                             {"item_id": 141, "q_required": 1.0, "preserve": true}
                         ],
                         "attrib_reqs": [
-                            { "attrib_id": 140 }
+                            {"attrib_id": 140}
                         ]
                     }
                 ]
@@ -502,7 +512,79 @@
                             {"item_id": 141, "q_required": 2.0, "preserve": true}
                         ],
                         "attrib_reqs": [
-                            { "attrib_id": 140 }
+                            {"attrib_id": 140}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 218,
+                "name": "Convo Dulcie 2a",
+                "description": "Dulcie is worried. *\"Have you seen Lyria?\"*\r\n\r\nCrush looks up from his mining work. *\"She said she was going to find Danglars. Something sounded wrong.\"*\r\n\r\n*\"She should have been back by now.\"*\r\n\r\n*\"I'll go find her.\"*\r\n\r\n----\r\n**{lemonchiffon|The rescue:}**\r\n\r\n1. Bring Crush to Pike Village, where he finds tracks leading to the Snow Cave. Equip the **Steel Axe** to bash down the door.\r\n2. Run **Weapon To-Hit** (event) with the blunt side against the legs of **Danglars,** leaving him lame.\r\n3. Send Lyria back to the Tethered One to **Start Convo Te3.**",
+                "storage_type": "u",
+                "q_limit": 2.0,
+                "recipes": [
+                    {
+                        "id": 217,
+                        "sources": [
+                            {"item_id": 218, "q_required": 1.0, "preserve": true}
+                        ],
+                        "attrib_reqs": [
+                            {"attrib_id": 140}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 235,
+                "name": "Convo Dulcie 3a",
+                "description": "Landing on solid rock, but with water continuing to pour in from above, Dulcie looks around and sees a huge cavern lit by fire. Lyria, Crush, and the Tethered One have fallen with her.\r\n\r\nTheir cell was not the only one broken open. **Galebane,** who with **Suhkh** had been tormenting a prisoner named Lorcan, are also here.\r\n\r\n**Evelyn** could not survive the fall in a wheelchair. Her body now lies dead on the ground, sending Suhkh screeching out of it. The demon, now untethered, claws at nothing in a vain attempt at avoiding being dragged back to the underworld. With one last screech that gets drowned out by the water, her shadow is gone.\r\n\r\nSet the location of Suhkh to *Nowhere.*",
+                "storage_type": "u",
+                "q_limit": 2.0,
+                "recipes": [
+                    {
+                        "id": 234,
+                        "sources": [
+                            {"item_id": 235, "q_required": 1.0, "preserve": true}
+                        ],
+                        "attrib_reqs": [
+                            {"attrib_id": 140}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 238,
+                "name": "Convo Dulcie 3b",
+                "description": "The Tethered One points to the rock. *\"We are in the presence of a god.\"*\r\n\r\nDulcie looks, and where she thought there was only rock, a huge form rests. But Vull, involved in shaping not only Blackvein Hold but the Worldbridge itself, does not move or speak. He has long lain inactive, and now, the blast through the rock he had upheld has left him stunned.\r\n\r\nThe Tethered One stands up cautiously. *\"It is he who is the cause of my long imprisonment, else I would have escaped long ago. But for now, he is unresponsive. We should use this opportunity before he recovers.\"*\r\n\r\nDulcie speaks. *\"First of all, this {LemonChiffon|Aetherian}, Galebane, has done a great evil. Behold, the body of Evelyn, who was no threat to him.\"*\r\n\r\nGalebane is wild with fear at being trapped underground. At her words, Galebane lunges at Dulcie. He stabs her side, causing a grave wound. *\"For these words, you will die.\"* A second time, he raises his weapon against her.",
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 237,
+                        "sources": [
+                            {"item_id": 235, "q_required": 2.0, "preserve": true}
+                        ],
+                        "attrib_reqs": [
+                            {"attrib_id": 140}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 240,
+                "name": "Convo Dulcie 3c",
+                "description": "Before the blow can land, Crush seizes the wheelchair and twists the metal around Galebane, binding him.\r\n\r\nCrush rushes over to Dulcie. *\"She will not overcome this wound without help. The weapon from Galebane contained sickness.\"*\r\n\r\nThe Tethered One looks at the rising water. *\"There is no time. I need your help to forge a weapon.\"*\r\n\r\nCrush is adamant. *\"I'm taking her now. Here are the bars you need.\"* Then he hoists Dulcie over his strong shoulders and climbs towards the surface, navigating the irregular stone steps with ease.\r\n\r\nLyria understands the importance of the weapon for their quest. *\"I'll stay to help while Crush takes care of Dulcie.\"*\r\n\r\nUse the Tethered One to forge **Needle** and **Shadow Silk,** then do **Start Convo Ly1.**",
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 239,
+                        "sources": [
+                            {"item_id": 238, "q_required": 1.0, "preserve": true}
+                        ],
+                        "attrib_reqs": [
+                            {"attrib_id": 140}
                         ]
                     }
                 ]
@@ -520,7 +602,7 @@
                             {"item_id": 16, "q_required": 1.0, "preserve": true}
                         ],
                         "attrib_reqs": [
-                            { "attrib_id": 14 }
+                            {"attrib_id": 14}
                         ]
                     }
                 ]
@@ -538,7 +620,61 @@
                             {"item_id": 16, "q_required": 2.0, "preserve": true}
                         ],
                         "attrib_reqs": [
-                            { "attrib_id": 14 }
+                            {"attrib_id": 14}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 251,
+                "name": "Convo Lyria 1a",
+                "description": "Lyria watches, mesmerized in horror, as the Tethered One presses his hand to Galebane, and the life force drains from the man's face until the body is only an empty shell.\r\n\r\nThen, the Tethered One lifts Vull's mighty hammer and forges Needle and the shadow silk. It takes what seem like ages, as the water continues to rise, and Vull shows signs of stirring.",
+                "storage_type": "u",
+                "q_limit": 2.0,
+                "recipes": [
+                    {
+                        "id": 250,
+                        "sources": [
+                            {"item_id": 251, "q_required": 1.0, "preserve": true}
+                        ],
+                        "attrib_reqs": [
+                            {"attrib_id": 15}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 253,
+                "name": "Convo Lyria 1b",
+                "description": "Finally, the crafts are complete, but a deluge swirls through the cavern. They race up the rocky steps, wet, and the Tethered One slips, dropping Needle into the swirling water.\r\n\r\nLyria dives in after the weapon. *\"Take care when handling it!\"* comes a warning from the Tethered One.\r\n\r\nShe reaches the floor, completely dark except for hissing lava in the distance, and grasps the hilt, careful not to touch the blade. As she rises, the cry of Galebane's soul fills her mind, a horrible combination of the evil things he'd done in life and agony at being unnaturally tethered to the weapon.\r\n\r\nClimbing back onto the rocky stairs from the wild waters is not easy, but she manages it. Lyria is shaking as she hands the weapon back to the Tethered One. *\"Do not make me do that again.\"*",
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 252,
+                        "sources": [
+                            {"item_id": 251, "q_required": 2.0, "preserve": true}
+                        ],
+                        "attrib_reqs": [
+                            {"attrib_id": 15}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 255,
+                "name": "Convo Lyria 1c",
+                "description": "Climbing higher, Lyria and the Tethered One leave the water behind. Yet the steps continue, on and on, until they lose any grasp of how many there might be, or how high.\r\n\r\nFinally, they emerge in daylight, blinking to adjust their eyes.\r\n\r\nNext, Crush brings Dulcie to the Jungle and speaks with the Chief.",
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 254,
+                        "sources": [
+                            {"item_id": 253, "q_required": 1.0, "preserve": true}
+                        ],
+                        "attrib_reqs": [
+                            {"attrib_id": 15}
                         ]
                     }
                 ]
@@ -556,7 +692,7 @@
                             {"item_id": 97, "q_required": 1.0, "preserve": true}
                         ],
                         "attrib_reqs": [
-                            { "attrib_id": 95 }
+                            {"attrib_id": 95}
                         ]
                     }
                 ]
@@ -574,7 +710,7 @@
                             {"item_id": 97, "q_required": 2.0, "preserve": true}
                         ],
                         "attrib_reqs": [
-                            { "attrib_id": 95 }
+                            {"attrib_id": 95}
                         ]
                     }
                 ]
@@ -592,7 +728,7 @@
                             {"item_id": 99, "q_required": 1.0, "preserve": true}
                         ],
                         "attrib_reqs": [
-                            { "attrib_id": 95 }
+                            {"attrib_id": 95}
                         ]
                     }
                 ]
@@ -610,7 +746,7 @@
                             {"item_id": 146, "q_required": 1.0, "preserve": true}
                         ],
                         "attrib_reqs": [
-                            { "attrib_id": 95 }
+                            {"attrib_id": 95}
                         ]
                     }
                 ]
@@ -628,7 +764,25 @@
                             {"item_id": 146, "q_required": 2.0, "preserve": true}
                         ],
                         "attrib_reqs": [
-                            { "attrib_id": 95 }
+                            {"attrib_id": 95}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 227,
+                "name": "Convo Tethered 3a",
+                "description": "Lyria swims up to the cell window. *\"Danglars, the one who helped find the map, betrayed me, through a plot of the Tiderender.\"*\r\n\r\nThe Tethered One frowns. *\"Making an enemy of a god is not to be undertaken lightly, but sometimes it must be done. I'm sorry you have to be tangled up in this.\"*\r\n\r\n*\"Well, maybe I wouldn't have agreed had I known from the start, but there's no turning back. You mentioned escaping by flooding the prison?\"*\r\n\r\n----\r\n**{lemonchiffon|They come up with the following plan:}**\r\n\r\n1. Crush gives Lyria a stick of dynamite.\r\n2. Crush and Dulcie enter the front prison gate as guests and go into Cell D2.\r\n3. Lyria must place the dynamite underwater outside of the window and detonate it.",
+                "storage_type": "u",
+                "q_limit": 2.0,
+                "recipes": [
+                    {
+                        "id": 226,
+                        "sources": [
+                            {"item_id": 146, "q_required": 1.0, "preserve": true}
+                        ],
+                        "attrib_reqs": [
+                            {"attrib_id": 95}
                         ]
                     }
                 ]
@@ -646,7 +800,7 @@
                             {"item_id": 159, "q_required": 1.0, "preserve": true}
                         ],
                         "attrib_reqs": [
-                            { "attrib_id": 158 }
+                            {"attrib_id": 158}
                         ]
                     }
                 ]
@@ -664,7 +818,7 @@
                             {"item_id": 159, "q_required": 2.0, "preserve": true}
                         ],
                         "attrib_reqs": [
-                            { "attrib_id": 158 }
+                            {"attrib_id": 158}
                         ]
                     }
                 ]
@@ -682,7 +836,7 @@
                             {"item_id": 162, "q_required": 1.0, "preserve": true}
                         ],
                         "attrib_reqs": [
-                            { "attrib_id": 158 }
+                            {"attrib_id": 158}
                         ]
                     }
                 ]
@@ -699,6 +853,40 @@
                         ]
                     }
                 ]
+            },
+            {
+                "id": 229,
+                "name": "Dynamite",
+                "description": "Move everyone away from the cell window and light the fuse.\r\nAfter the timer finishes, run **Detonated** (event) and follow the instructions.",
+                "abilities": [233],
+                "q_limit": 1.0,
+                "slot": "Main Hand",
+                "recipes": [
+                    {
+                        "id": 231,
+                        "rate_amount": 0.0,
+                        "rate_duration": 10,
+                        "sources": [
+                            {"item_id": 229, "q_required": 1.0}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 232,
+                "name": "Dynamite Detonated",
+                "storage_type": "u",
+                "q_limit": 1.0
+            },
+            {
+                "id": 224,
+                "name": "Fishing Hook",
+                "description": "Piercing damage.",
+                "attribs": [
+                    [28, 1.0],
+                    [29, 3.0]
+                ],
+                "slot": "Main Hand"
             },
             {
                 "id": 37,
@@ -723,11 +911,7 @@
                 "q_limit": 1.0
             },
             {"id": 178, "name": "Forge", "storage_type": "l", "q_limit": 1.0},
-            {
-                "id": 68,
-                "name": "Harmony Pick",
-                "slot": "Main Hand"
-            },
+            {"id": 68, "name": "Harmony Pick", "slot": "Main Hand"},
             {
                 "id": 183,
                 "name": "Iron Dagger",
@@ -761,12 +945,31 @@
                 "description": "Lyria opens a hastily scribbled note. *\"My darling Lyria, someone you care about could be in danger.\"*\r\n\r\nEyes widening, she continues reading. *\"My sources tell me how you tricked the sea god. Fiercely angry, he's plotting revenge against Sutherdepth.\"*\r\n\r\n*\"Find me in Pike Village as soon as possible so we can prevent that from happening.\"*\r\n\r\nThe note is signed, *\"Yours, Danglars.\"*",
                 "q_limit": 1.0
             },
+            {"id": 248, "name": "Loom", "storage_type": "l", "q_limit": 1.0},
+            {
+                "id": 241,
+                "name": "Molten Anvil",
+                "storage_type": "l",
+                "q_limit": 1.0
+            },
             {
                 "id": 77,
                 "name": "Needle",
-                "description": "Sharp fragile blade made of **Spectrum Bars**. Stitch an earthly soul to the steel.",
+                "description": "Hypodermically sharp thin blade that phases in and out of this plane. Stitch an earthly soul to the steel.",
                 "q_limit": 1.0,
-                "slot": "Main Hand"
+                "slot": "Main Hand",
+                "recipes": [
+                    {
+                        "id": 243,
+                        "rate_duration": 60,
+                        "sources": [
+                            {"item_id": 70, "q_required": 20.0},
+                            {"item_id": 241, "q_required": 1.0, "preserve": true},
+                            {"item_id": 242, "q_required": 1.0},
+                            {"item_id": 244, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
             },
             {
                 "id": 36,
@@ -797,9 +1000,42 @@
                 "slot": "Back"
             },
             {
+                "id": 242,
+                "name": "Rotten Soul",
+                "description": "The life force of Galebane. Without it, the body is dead.",
+                "q_limit": 1.0
+            },
+            {
+                "id": 246,
+                "name": "Shadow Cloak",
+                "description": "Phases to hide the wearer from detection.",
+                "q_limit": 1.0,
+                "slot": "Back",
+                "recipes": [
+                    {
+                        "id": 247,
+                        "sources": [
+                            {"item_id": 80, "q_required": 5.0},
+                            {"item_id": 248, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
                 "id": 80,
                 "name": "Shadow Silk",
-                "description": "Made from **Spectrum Bars**"
+                "description": "Clothing material made from metal **Spectrum Bars.**",
+                "recipes": [
+                    {
+                        "id": 245,
+                        "rate_duration": 7,
+                        "sources": [
+                            {"item_id": 70, "q_required": 2.0},
+                            {"item_id": 241, "q_required": 1.0, "preserve": true},
+                            {"item_id": 244, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
             },
             {
                 "id": 70,
@@ -808,6 +1044,7 @@
                 "recipes": [
                     {
                         "id": 172,
+                        "rate_duration": 5,
                         "sources": [
                             {"item_id": 69, "q_required": 2.0},
                             {"item_id": 167, "q_required": 1.0, "preserve": true}
@@ -819,8 +1056,7 @@
                 "id": 167,
                 "name": "Spectrum Forge",
                 "description": "No one knows who built it, but this forge was uncovered in a deep chamber below the spectrum ore source. It runs on geothermal heat and requires no fuel.\r\n\r\nThis is the only place to smelt spectrum ore, but the bars can be used elsewhere.",
-                "storage_type": "l",
-                "loc_hosted": true
+                "storage_type": "l"
             },
             {
                 "id": 69,
@@ -842,6 +1078,7 @@
             {
                 "id": 198,
                 "name": "Steel Axe",
+                "description": "Ideal for chopping wood.\r\n\r\nAs a weapon, normally does slashing damage, but the back can be used for blunt damage instead.",
                 "attribs": [
                     [28, 0.0],
                     [29, 3.0]
@@ -893,7 +1130,7 @@
                         "id": 196,
                         "rate_duration": 15,
                         "attrib_reqs": [
-                            { "attrib_id": 15 }
+                            {"attrib_id": 15}
                         ]
                     }
                 ]
@@ -921,6 +1158,19 @@
                         ]
                     }
                 ]
+            },
+            {
+                "id": 244,
+                "name": "Vull's Hammer",
+                "description": "Bound by a chain to the floor of the cavern. Neither the chain nor the hammer itself can be bent or broken even by Crush.",
+                "q_limit": 1.0,
+                "slot": "Main Hand"
+            },
+            {
+                "id": 236,
+                "name": "Wheelchair",
+                "description": "Made of sturdy metal. A {peru|Stonereach} could bend it however.",
+                "q_limit": 1.0
             },
             {
                 "id": 40,
@@ -958,17 +1208,23 @@
                 "id": 23,
                 "name": "Wooden Club",
                 "description": "Blunt dmg",
-                "slot": "Main Hand",
                 "attribs": [
                     [28, 1.0],
                     [29, 2.0]
                 ],
-                "q_limit": 1.0
+                "q_limit": 1.0,
+                "slot": "Main Hand"
             },
             {"id": 18, "name": "Worldbridge Repaired", "storage_type": "u"}
         ],
         "locations": [
-            {"id": 56, "name": "BH Cell D1"},
+            {
+                "id": 56,
+                "name": "BH Cell D1",
+                "destinations": [
+                    {"loc2_id": 75, "direction": "loc1"}
+                ]
+            },
             {
                 "id": 53,
                 "name": "BH Cell D2",
@@ -984,14 +1240,16 @@
             {
                 "id": 94,
                 "name": "BH Cell D2 Window",
-                "description": "Going to the surface here shows a small, low cavern with only three feet between the water and the cave ceiling. The bars of a small cell window are east, allowing conversation with whoever is inside."
+                "description": "Going to the surface here shows a small, low cavern with only three feet between the water and the cave ceiling. The bars of a small cell window are east, allowing conversation with whoever is inside.",
+                "items": [
+                    {"item_id": 230, "quantity": 1.0}
+                ]
             },
             {
                 "id": 60,
                 "name": "BH D Wing",
                 "destinations": [
-                    {"loc2_id": 56},
-                    {"loc2_id": 75}
+                    {"loc2_id": 56}
                 ],
                 "entrance_reqs": [
                     {"attrib_id": 88, "val_required": true}
@@ -1000,11 +1258,12 @@
             {
                 "id": 34,
                 "name": "Blackvein Gate",
-                "description": "The guards determine who to let in and out. After hearing that a Nalaran woman helped free **Kormak**, they'll interrogate **Lyria** if she approaches.",
+                "description": "The guards determine who to let in and out. After hearing that a {blue|Nalaran} woman helped free **Kormak**, they'll interrogate **Lyria** if she approaches.\r\n\r\nA number of {peru|Stonereach} work here, and {pink|Jovial} guests are welcomed by prisoners, as they are everywhere.",
                 "destinations": [
                     {"loc2_id": 60}
                 ],
                 "entrance_reqs": [
+                    {"attrib_id": 15, "val_required": false},
                     {"attrib_id": 89, "val_required": true}
                 ]
             },
@@ -1019,6 +1278,7 @@
                         "loc2_id": 35,
                         "door2": [4, 6]
                     },
+                    {"loc2_id": 64, "direction": "loc2"},
                     {"loc2_id": 65}
                 ],
                 "entrance_reqs": [
@@ -1040,6 +1300,7 @@
                 "zones": [
                     {
                         "coords": [1, 1, 5, 3],
+                        "label": "Water",
                         "color": "blue",
                         "prevents_travel": false
                     }
@@ -1121,26 +1382,27 @@
             {
                 "id": 61,
                 "name": "Dustridge Tavern",
-                "description": "Cozy, dimly lit tavern with a roaring fireplace."
+                "description": "Cozy, dimly lit tavern with a roaring fireplace.",
+                "destinations": [
+                    {"loc2_id": 64}
+                ]
             },
             {
                 "id": 64,
                 "name": "Dustridge Town",
                 "description": "Busy working class community. The most important local industry is mining.",
                 "destinations": [
-                    {"loc2_id": 17, "bidirectional": false},
-                    {"loc2_id": 61},
+                    {"loc2_id": 65},
                     {"loc2_id": 66},
-                    {"loc2_id": 71}
+                    {"loc2_id": 71},
+                    {"loc2_id": 177},
+                    {"loc2_id": 180}
                 ]
             },
             {
                 "id": 65,
                 "name": "East Harbor",
                 "description": "A major road goes through here, and there is a dock for freight ships. The ocean expands to the horizon in the east. Southwest is the town of **Dustridge**, while to the north lie the cold lands.",
-                "destinations": [
-                    {"loc2_id": 64}
-                ],
                 "entrance_reqs": [
                     {"item_id": 101, "val_required": 1.0}
                 ]
@@ -1159,12 +1421,22 @@
                 "description": "Frequented by Dustridge workers for harvesting wood.",
                 "items": [
                     {"item_id": 41, "quantity": 1.0}
-                ],
-                "destinations": [
-                    {"loc2_id": 64}
                 ]
             },
-            {"id": 72, "name": "Jungle", "description": "Home of many Treemates."},
+            {
+                "id": 260,
+                "name": "Jungle Interior",
+                "description": "Looming trees and tangled vines stretch for miles. Anyone skillful and brave enough to navigate to the western edge would find only a desert."
+            },
+            {
+                "id": 72,
+                "name": "Jungle East Side",
+                "destinations": [
+                    {"loc2_id": 256},
+                    {"loc2_id": 257},
+                    {"loc2_id": 260}
+                ]
+            },
             {
                 "id": 66,
                 "name": "Mine First Level",
@@ -1176,20 +1448,20 @@
                 ]
             },
             {
+                "id": 256,
+                "name": "Mountainside",
+                "description": "To the southwest lies a vast jungle. From this height, the beginning of the desert can also be seen at the western edge of the jungle.\r\n\r\nFar below and to the east, Lyria can make out the pool she had used to enter Blackvein Hold."
+            },
+            {
                 "id": 9,
                 "name": "Murky Pond",
                 "description": "On a hot afternoon, Lyria decides to cool off with a swim. She doesn't really mind the algae — the scum slips off of her dress.",
                 "dimensions": [5, 8],
                 "destinations": [
                     {
-                        "loc2_id": 8,
-                        "door1": [2, 1],
-                        "door2": [9, 10]
-                    },
-                    {
                         "loc2_id": 17,
                         "door1": [1, 7],
-                        "bidirectional": false
+                        "direction": "loc1"
                     }
                 ],
                 "zones": [
@@ -1207,6 +1479,13 @@
                 "description": "A day's journey southeast of **Blackvein Hold.**\r\n\r\nGuards are starting the long march back with their prisoners, worried they're too far away.  Looking at the pond, **Kormak** considers that if he could free his hands, this might be a chance to escape by swimming. Suddenly, he notices a creature in green briefly popping above the pond surface before re-emerging. Curious, he looks carefully and discovers it's a young woman.",
                 "dimensions": [10, 10],
                 "masked": true,
+                "destinations": [
+                    {
+                        "loc2_id": 9,
+                        "door1": [9, 10],
+                        "door2": [2, 1]
+                    }
+                ],
                 "zones": [
                     {
                         "coords": [1, 2, 5, 3],
@@ -1314,9 +1593,6 @@
                 "name": "Smithy",
                 "items": [
                     {"item_id": 178, "quantity": 1.0}
-                ],
-                "destinations": [
-                    {"loc2_id": 64}
                 ]
             },
             {
@@ -1353,9 +1629,29 @@
                 ]
             },
             {
+                "id": 257,
+                "name": "Village in the Trees",
+                "description": "High above ground is a baffling network of roped wooden bridges and huts.\r\n\r\nIn one hut lives the Chief, not noticeably different from any of the rest of the huts because of the egalitarian cultural ethos. He sits on a chair made of poles tied together.",
+                "items": [
+                    {"item_id": 248, "quantity": 1.0}
+                ]
+            },
+            {
                 "id": 75,
                 "name": "Vuldelf",
-                "description": "Ancient cavern deep underground."
+                "description": "Ancient cavern deep underground. Fire and lava can be seen, and much of the room is filled with forge equipment.",
+                "items": [
+                    {"item_id": 241, "quantity": 1.0},
+                    {"item_id": 244, "quantity": 1.0}
+                ],
+                "masked": true,
+                "destinations": [
+                    {"loc2_id": 94, "direction": "loc2"},
+                    {"loc2_id": 256, "direction": "loc1"}
+                ],
+                "entrance_reqs": [
+                    {"item_id": 232, "val_required": 1.0}
+                ]
             },
             {
                 "id": 105,
@@ -1435,13 +1731,25 @@
                 ]
             },
             {
+                "id": 258,
+                "name": "Chief Dundii",
+                "description": "- Ancestry: {ForestGreen|Treemate}\r\n- Specialties: long knife, hunts crocodiles",
+                "location_id": 257
+            },
+            {
                 "id": 52,
                 "name": "Crush",
                 "description": "- **Ancestry:** {peru|Stonereach}, taciturn, can shape rocks, from Dustridge\r\n- **Specialties:** lumberjack, axe proficency, boxing skill\r\n- **Appearance:** thick and sturdy, dark gray skin",
                 "attribs": [
-                    [128, true]
+                    [22, 20.0],
+                    [30, 9.0],
+                    [31, 3.0],
+                    [88, true],
+                    [89, true],
+                    [128, true],
+                    [225, 20.0]
                 ],
-                "abilities": [119, 150],
+                "abilities": [27, 119, 150],
                 "location_id": 64,
                 "items": [
                     {"item_id": 198, "quantity": 1.0}
@@ -1450,13 +1758,21 @@
             {
                 "id": 49,
                 "name": "Danglars",
-                "description": "- **Ancestry:** {CornflowerBlue|Frostblended}, reserved, inviting\r\n- **Specialties:** seal hunter, ice hook proficiency\r\n- **Appearance:** fur clothing, bonelike skin not susceptible to frostbite, does not sweat",
+                "description": "- **Ancestry:** {CornflowerBlue|Frostblended}, reserved, inviting\r\n- **Specialties:** seal hunter, fishing hook proficiency\r\n- **Appearance:** fur clothing, bonelike skin not susceptible to frostbite, does not sweat",
                 "attribs": [
-                    [109, true]
+                    [22, 15.0],
+                    [30, 7.0],
+                    [31, 5.0],
+                    [109, true],
+                    [223, false],
+                    [225, 15.0]
                 ],
-                "abilities": [108, 204],
+                "abilities": [27, 108, 204],
                 "location_id": 50,
-                "travel_party": "Lyria"
+                "travel_party": "Lyria",
+                "items": [
+                    {"item_id": 224, "quantity": 1.0}
+                ]
             },
             {
                 "id": 74,
@@ -1471,14 +1787,22 @@
                 "location_id": 61
             },
             {
+                "id": 259,
+                "name": "Dryad Succubus",
+                "description": "- Ancestry: {purple|Demon}\r\n- Specialties: roots mage, wanders earthly forests and fiercely protects them\r\n- Appearance: veins of bark woven through her skin, lower body covered in bark instead of clothing, hooves and delicate deer-like horns",
+                "location_id": 260
+            },
+            {
                 "id": 62,
                 "name": "Dulcie",
                 "description": "- **Ancestry:** {pink|Jovial}, charismatic\r\n- **Specialties:** brings drinks and entertains tavern goers, usually men, not paid to be a prostitute although her job has at times led to sleeping with patrons\r\n- **Appearance:** age 30, soft and curvy build, light chocolate skin, low-cut bodice, messy layered colorful skirts",
                 "attribs": [
+                    [88, true],
+                    [89, true],
                     [140, true],
                     [153, 8.0]
                 ],
-                "abilities": [139],
+                "abilities": [139, 219],
                 "location_id": 61
             },
             {
@@ -1489,7 +1813,11 @@
                     [88, true],
                     [89, true]
                 ],
-                "location_id": 56
+                "location_id": 56,
+                "items": [
+                    {"item_id": 236, "quantity": 1.0}
+                ],
+                "travel_party": "Galebane"
             },
             {
                 "id": 58,
@@ -1499,7 +1827,7 @@
                     [88, true],
                     [89, true]
                 ],
-                "location_id": 56
+                "location_id": 75
             },
             {
                 "id": 4,
@@ -1534,13 +1862,15 @@
                 "name": "Lyria",
                 "description": "- **Ancestry:** {blue|Nalaran}, water affinity\r\n- **Specialties:** huntress, spear proficiency, young and brave explorer\r\n- **Appearance:** soft coral colored skin, slightly webbed fingers, popup fin flaps, lovely thin figure, tight dark green kelp-hide dress (sturdy leather), luminescent freckles across her nose and shoulders",
                 "attribs": [
+                    [7, false],
                     [15, true],
                     [22, 12.0],
                     [30, 6.0],
                     [31, 6.0],
-                    [89, true]
+                    [89, true],
+                    [225, 12.0]
                 ],
-                "abilities": [21, 26, 27, 33, 201],
+                "abilities": [21, 26, 27, 33, 201, 249],
                 "toplevel": true,
                 "location_id": 9,
                 "position": [3, 5]
@@ -1583,7 +1913,8 @@
                     [88, true],
                     [89, true]
                 ],
-                "location_id": 56
+                "location_id": 56,
+                "travel_party": "Galebane"
             },
             {
                 "id": 51,
@@ -1599,7 +1930,7 @@
                     [89, false],
                     [95, true]
                 ],
-                "abilities": [96, 145],
+                "abilities": [96, 145, 228],
                 "location_id": 94
             },
             {
@@ -1610,7 +1941,8 @@
                     [154, 4.0],
                     [158, true]
                 ],
-                "location_id": 67,
+                "abilities": [161],
+                "location_id": 61,
                 "items": [
                     {"item_id": 68, "quantity": 1.0}
                 ]
@@ -1618,7 +1950,7 @@
             {
                 "id": 76,
                 "name": "Vull",
-                "description": "- god of molten rock, forges\r\n- passively upholds seal of Blackvein Hold\r\n- teamed up with Sunderforge to build the bridge in the depths of time",
+                "description": "- god of molten rock, forges\r\n- passively upholds seal of Blackvein Hold\r\n- teamed up with Sunderforge to build the bridge in the depths of time\r\n- almost completely inactive in modern times as if he were part of the rock itself",
                 "location_id": 75
             }
         ],
@@ -1681,6 +2013,40 @@
                         "op_application": "-",
                         "op_transform": "c",
                         "outcome_success": "failure_any"
+                    }
+                ]
+            },
+            {
+                "id": 233,
+                "name": "Detonated",
+                "description": "{OrangeRed|Instead of blasting through the steel doors, the dynamite breaks open a huge fissure in the earth, and unleashed currents sweep them down into unknown depths.}\r\n\r\n- {lemonchiffon|Edit **Tethered One** and mark *Show in Overview.*}\r\n- The party is now complete. Set all four to be in \"main party\" for travel convenience.\r\n- Move from the D block cells to the **Vuldelf** location: Galebane with his party (Evelyn and Suhkh), then the main party. Not Lorcan — he was cowering in a corner of cell D1 that still held.\r\n- Continue with **Convo Dulcie 3a.**",
+                "outcome_type": "determined",
+                "determinants": [
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 232},
+                        "op_application": "==",
+                        "negate": true
+                    },
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 235},
+                        "op_application": ">=",
+                        "negate": true
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 232},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "auto_apply": true
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 235},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "auto_apply": true
                     }
                 ]
             },
@@ -1922,6 +2288,46 @@
                 ]
             },
             {
+                "id": 219,
+                "name": "Start Convo Du2",
+                "outcome_type": "determined",
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 140},
+                        "op_application": "=="
+                    },
+                    {
+                        "infield": {"role": "target char", "attrib_id": 128},
+                        "op_application": "=="
+                    },
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 218},
+                        "op_application": "==",
+                        "val_required": 0.0
+                    },
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 216},
+                        "op_application": "=="
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 218},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "auto_apply": true
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "field_mode": "qty", "item_id": 229},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "auto_apply": true
+                    }
+                ]
+            },
+            {
                 "id": 13,
                 "name": "Start Convo Ko1",
                 "description": "Run this event once Lyria is ready to speak with Kormak, out of earshot of the guards.\r\nThen start the conversation by going to **Convo Kormak 1a.**",
@@ -1950,6 +2356,39 @@
                     {
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 16},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "auto_apply": true
+                    }
+                ]
+            },
+            {
+                "id": 249,
+                "name": "Start Convo Ly1",
+                "outcome_type": "determined",
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 15},
+                        "op_application": "=="
+                    },
+                    {
+                        "infield": {"role": "target char", "attrib_id": 95},
+                        "op_application": "=="
+                    },
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 251},
+                        "op_application": "==",
+                        "val_required": 0.0
+                    },
+                    {
+                        "infield": {"role": "target char", "field_mode": "qty", "item_id": 77},
+                        "op_application": "=="
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 251},
                         "op_application": ":=",
                         "op_transform": "c",
                         "auto_apply": true
@@ -2012,6 +2451,40 @@
                     {
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 146},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "auto_apply": true
+                    }
+                ]
+            },
+            {
+                "id": 228,
+                "name": "Start Convo Te3",
+                "outcome_type": "determined",
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 95},
+                        "op_application": "=="
+                    },
+                    {
+                        "infield": {"role": "target char", "attrib_id": 15},
+                        "op_application": "=="
+                    },
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 227},
+                        "op_application": "==",
+                        "val_required": 0.0
+                    },
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 218},
+                        "op_application": "==",
+                        "val_required": 2.0
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 227},
                         "op_application": ":=",
                         "op_transform": "c",
                         "auto_apply": true
@@ -2124,7 +2597,44 @@
         ]
     },
     "general data": {
-        "piles": []
+        "piles": [
+            {"item_id": 16, "quantity": 2.0},
+            {"item_id": 19, "quantity": 1.0},
+            {"item_id": 97, "quantity": 2.0},
+            {"item_id": 99, "quantity": 1.0},
+            {"item_id": 101, "quantity": 1.0},
+            {"item_id": 110, "quantity": 2.0},
+            {"item_id": 112, "quantity": 1.0},
+            {"item_id": 114, "quantity": 1.0},
+            {"item_id": 117, "quantity": 2.0},
+            {"item_id": 120, "quantity": 1.0},
+            {"item_id": 122, "quantity": 1.0},
+            {"item_id": 124, "quantity": 1.0},
+            {"item_id": 126, "quantity": 2.0},
+            {"item_id": 129, "quantity": 1.0},
+            {"item_id": 131, "quantity": 1.0},
+            {"item_id": 133, "quantity": 1.0},
+            {"item_id": 135, "quantity": 1.0},
+            {"item_id": 137, "quantity": 1.0},
+            {"item_id": 141, "quantity": 2.0},
+            {"item_id": 143, "quantity": 1.0},
+            {"item_id": 146, "quantity": 2.0},
+            {"item_id": 148, "quantity": 1.0},
+            {"item_id": 151, "quantity": 1.0},
+            {"item_id": 156, "quantity": 2.0},
+            {"item_id": 159, "quantity": 2.0},
+            {"item_id": 162, "quantity": 1.0},
+            {"item_id": 164, "quantity": 1.0},
+            {"item_id": 203, "quantity": 2.0},
+            {"item_id": 206, "quantity": 1.0},
+            {"item_id": 210, "quantity": 1.0},
+            {"item_id": 212, "quantity": 1.0},
+            {"item_id": 216, "quantity": 1.0},
+            {"item_id": 218, "quantity": 2.0},
+            {"item_id": 227, "quantity": 2.0},
+            {"item_id": 232, "quantity": 1.0},
+            {"item_id": 235, "quantity": 1.0}
+        ]
     },
     "progress": []
 }

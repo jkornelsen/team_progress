@@ -483,12 +483,12 @@ class Location(Entity):
 
     @property
     def exits(self):
-        """
-        Any route where we are loc1 (always an exit)
-        Any route where we are loc2 AND it is bidirectional
-        """
-        forward = [r for r in self.routes_forward]
-        backward = [r for r in self.routes_backward if r.bidirectional]
+        forward = [
+            r for r in self.routes_forward
+            if r.direction in (DestExit.BOTH, DestExit.LOC1)]
+        backward = [
+            r for r in self.routes_backward
+            if r.direction in (DestExit.BOTH, DestExit.LOC2)]
         return forward + backward
 
     item_refs = db.relationship(
@@ -1089,6 +1089,14 @@ class EntranceReq(db.Model, DictHydrator):
             ['attribs.game_token', 'attribs.id'], ondelete='CASCADE'),
     )
 
+
+class DestExit:
+    BOTH = 'both'
+    LOC1 = 'loc1'  # loc1 to loc2 only
+    LOC2 = 'loc2'  # loc2 to loc1 only
+
+    ALL = [BOTH, LOC1, LOC2]
+
 class LocDest(db.Model, DictHydrator):
     __tablename__ = 'loc_destinations'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -1097,14 +1105,14 @@ class LocDest(db.Model, DictHydrator):
     loc2_id = db.Column(db.Integer, nullable=False)
     door1 = db.Column(ARRAY(db.Integer))
     door2 = db.Column(ARRAY(db.Integer))
-    bidirectional = db.Column(db.Boolean, default=True)
+    direction = db.Column(db.String(4), default=DestExit.BOTH)
 
     def to_dict(self):
         data = {
             "loc2_id": self.loc2_id,
             "door1": self.door1,
             "door2": self.door2,
-            "bidirectional": self.bidirectional
+            "direction": self.direction
         }
         return self.to_dict_sparse(data)
 
@@ -1146,6 +1154,8 @@ class LocDest(db.Model, DictHydrator):
         db.ForeignKeyConstraint(
             ['game_token', 'loc2_id'],
             ['locations.game_token', 'locations.id'], ondelete='CASCADE'),
+        db.CheckConstraint(
+            direction.in_(DestExit.ALL), name='check_direction_valid'),
     )
 
 class LocZone(db.Model, DictHydrator):

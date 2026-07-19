@@ -11,7 +11,7 @@ from app.models import (
     Entity, Item, Character, Location, Attrib, Event, 
     Pile, ItemLimit, AttribVal, EnumEntry, Operation, EntityAbility,
     Recipe, RecipeSource, RecipeByproduct, RecipeAttribReq,
-    LocDest, LocZone, EntranceReq, ItemRef,
+    DestExit, LocDest, LocZone, EntranceReq, ItemRef,
     Participant, OutcomeType, SuccessTier, EventFactor, EventField, EventLink,
     Scenario, WinRequirement, IdSequence)
 from app.serialization import clone_entity
@@ -401,21 +401,28 @@ def edit_location(id):
                 db.session.add(route)
 
             door_here = row.get_coords('door_here')
-            bidirectional = (direction == 'two-way')
             here_is_loc1 = (direction != 'backward')
+            route.direction = DestExit.BOTH
             if loc.id < target_id:
+                if direction == 'forward':
+                    route.direction = DestExit.LOC1
+                elif direction == 'backward':
+                    route.direction = DestExit.LOC2
                 route.loc1_id, route.loc2_id = loc.id, target_id
                 if here_is_loc1:
                     route.door1, route.door2 = door_here, old_door_there
                 else:
                     route.door1, route.door2 = old_door_there, door_here
             else:
+                if direction == 'forward':
+                    route.direction = DestExit.LOC2
+                elif direction == 'backward':
+                    route.direction = DestExit.LOC1
                 route.loc1_id, route.loc2_id = target_id, loc.id
                 if here_is_loc1:
                     route.door1, route.door2 = old_door_there, door_here
                 else:
                     route.door1, route.door2 = door_here, old_door_there
-            route.bidirectional = bidirectional
 
             db.session.flush()
 
@@ -541,10 +548,13 @@ def edit_location(id):
     for r in routes:
         target = r.other_loc(id)
         if not target: continue
-        if r.bidirectional:
+        if r.direction == DestExit.BOTH:
             direction = 'two-way'
         else:
-            direction = 'forward' if r.loc1_id == id else 'backward'
+            direction = 'backward'
+            if (r.loc1_id == id and r.direction == DestExit.LOC1) or (
+                    r.loc2_id == id and r.direction == DestExit.LOC2):
+                direction = 'forward'
         normalized_dests.append({
             'id': r.id,
             'target_id': target.id,
