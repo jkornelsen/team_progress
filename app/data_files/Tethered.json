@@ -6,7 +6,10 @@
             {"char_id": 4, "attrib_id": 7, "attrib_value": false},
             {"item_id": 107, "quantity": 1.0, "char_id": 3},
             {"item_id": 125, "quantity": 1.0, "char_id": 52},
+            {"item_id": 68, "quantity": 1.0, "char_id": 67},
             {"char_id": 3, "attrib_id": 7, "attrib_value": false},
+            {"item_id": 77, "quantity": 1.0, "char_id": 54},
+            {"item_id": 266, "quantity": 1.0, "char_id": 258},
             {"item_id": 18, "quantity": 1.0}
         ],
         "tag_introduce_order": 35,
@@ -42,9 +45,12 @@
             {"id": 22, "name": "HP Current"},
             {"id": 225, "name": "HP Max"},
             {"id": 116, "name": "Is Atlanth", "is_binary": true},
+            {"id": 282, "name": "Is Captain", "is_binary": true},
             {"id": 128, "name": "Is Crush", "is_binary": true},
             {"id": 109, "name": "Is Danglars", "is_binary": true},
+            {"id": 272, "name": "Is Daphnia", "is_binary": true},
             {"id": 140, "name": "Is Dulcie", "is_binary": true},
+            {"id": 263, "name": "Is Dundii", "is_binary": true},
             {"id": 14, "name": "Is Kormak", "is_binary": true},
             {"id": 15, "name": "Is Lyria", "is_binary": true},
             {"id": 208, "name": "Is Snow Cave", "is_binary": true},
@@ -69,6 +75,12 @@
             }
         ],
         "items": [
+            {
+                "id": 266,
+                "name": "Animated Tree Bark",
+                "description": "Can only be harvested after the tree is destroyed.",
+                "q_limit": 1.0
+            },
             {
                 "id": 93,
                 "name": "Beast Melee",
@@ -482,6 +494,24 @@
                 ]
             },
             {
+                "id": 271,
+                "name": "Convo Daphnia 1a",
+                "description": "The Tethered One sees **Daphnia** walking down the path by a grassy hill, carrying a pitcher of milk. *\"We need a way to cross the desert in the west.\"*\r\n\r\nDaphnia looks at his dark clothes and glowing eyes, then sees the rest of the party and feels less frightened. *\"Well, there is a **Sky Ship** that harbors here from time to time. Perhaps they could help.\"*\r\n\r\nHe considers this. *\"That is an {LemonChiffon|Aetherian} pirate ship. They will not grant us passage so easily.\"* Then he looks down at his blade and smiles coldly. *\"We must persuade them.\"*\r\n\r\n*\"Heavens, I want no part of such matters.\"* Daphnia raises the hem of her skirt and hurries down the path in the opposite direction.",
+                "storage_type": "u",
+                "q_limit": 2.0,
+                "recipes": [
+                    {
+                        "id": 270,
+                        "sources": [
+                            {"item_id": 271, "q_required": 1.0, "preserve": true}
+                        ],
+                        "attrib_reqs": [
+                            {"attrib_id": 272}
+                        ]
+                    }
+                ]
+            },
+            {
                 "id": 141,
                 "name": "Convo Dulcie 1a",
                 "description": "Lyria washes into the tavern. She spots Dulcie handing a drink to a patron, who responds by slapping her on the butt. Dulcie frowns and walks away.\r\n\r\nLyria calls over to her. *\"Hey Dulcie, could we talk?\"*\r\n\r\n*\"Sure, I need a break from this place anyway,\"* she says sourly. They step out to the front of the tavern.",
@@ -538,7 +568,7 @@
             {
                 "id": 235,
                 "name": "Convo Dulcie 3a",
-                "description": "Landing on solid rock, but with water continuing to pour in from above, Dulcie looks around and sees a huge cavern lit by fire. Lyria, Crush, and the Tethered One have fallen with her.\r\n\r\nTheir cell was not the only one broken open. **Galebane,** who with **Suhkh** had been tormenting a prisoner named Lorcan, are also here.\r\n\r\n**Evelyn** could not survive the fall in a wheelchair. Her body now lies dead on the ground, sending Suhkh screeching out of it. The demon, now untethered, claws at nothing in a vain attempt at avoiding being dragged back to the underworld. With one last screech that gets drowned out by the water, her shadow is gone.\r\n\r\nSet the location of Suhkh to *Nowhere.*",
+                "description": "Landing on solid rock, but with water continuing to pour in from above, Dulcie looks around and sees a huge cavern lit by fire. Lyria, Crush, and the Tethered One have fallen with her.\r\n\r\nTheir cell was not the only one broken open. **Galebane,** who with **Suhkh** had been tormenting a prisoner named Lorcan, are also here.\r\n\r\n**Evelyn** could not survive the fall in a **Wheelchair.** Her body now lies dead on the ground, sending Suhkh screeching out of it. The demon, now untethered, claws at nothing in a vain attempt at avoiding being dragged back to the underworld. With one last screech that gets drowned out by the water, her shadow is gone.\r\n\r\nSet the location of Suhkh to *Nowhere.*",
                 "storage_type": "u",
                 "q_limit": 2.0,
                 "recipes": [
@@ -556,7 +586,7 @@
             {
                 "id": 238,
                 "name": "Convo Dulcie 3b",
-                "description": "The Tethered One points to the rock. *\"We are in the presence of a god.\"*\r\n\r\nDulcie looks, and where she thought there was only rock, a huge form rests. But Vull, involved in shaping not only Blackvein Hold but the Worldbridge itself, does not move or speak. He has long lain inactive, and now, the blast through the rock he had upheld has left him stunned.\r\n\r\nThe Tethered One stands up cautiously. *\"It is he who is the cause of my long imprisonment, else I would have escaped long ago. But for now, he is unresponsive. We should use this opportunity before he recovers.\"*\r\n\r\nDulcie speaks. *\"First of all, this {LemonChiffon|Aetherian}, Galebane, has done a great evil. Behold, the body of Evelyn, who was no threat to him.\"*\r\n\r\nGalebane is wild with fear at being trapped underground. At her words, Galebane lunges at Dulcie. He stabs her side, causing a grave wound. *\"For these words, you will die.\"* A second time, he raises his weapon against her.",
+                "description": "The Tethered One points toward a wall. *\"We are in the presence of a god.\"*\r\n\r\nDulcie looks, and where she thought there was only rock, a huge form rests. But **Vull,** who was involved in shaping not only Blackvein Hold but the Worldbridge itself, does not move or speak. He has long lain inactive, and now, the blast through the rock he had upheld and the cold rushing water have left him stunned.\r\n\r\nThe Tethered One stands up cautiously. *\"It is he who is the cause of my long imprisonment, else I would have escaped long ago. But for now, he is unresponsive. We should use this opportunity before he recovers.\"*\r\n\r\nDulcie speaks. *\"First, this {LemonChiffon|Aetherian}, Galebane, has done a great evil. Behold, the body of Evelyn, a simple legal clerk who was no threat to him.\"*\r\n\r\nGalebane is wild with panic at being trapped underground. At her words, Galebane lunges at Dulcie. He stabs her side, causing a grave wound. *\"For these words, you will die.\"* A second time, he raises his weapon against her.",
                 "storage_type": "u",
                 "q_limit": 1.0,
                 "recipes": [
@@ -574,7 +604,7 @@
             {
                 "id": 240,
                 "name": "Convo Dulcie 3c",
-                "description": "Before the blow can land, Crush seizes the wheelchair and twists the metal around Galebane, binding him.\r\n\r\nCrush rushes over to Dulcie. *\"She will not overcome this wound without help. The weapon from Galebane contained sickness.\"*\r\n\r\nThe Tethered One looks at the rising water. *\"There is no time. I need your help to forge a weapon.\"*\r\n\r\nCrush is adamant. *\"I'm taking her now. Here are the bars you need.\"* Then he hoists Dulcie over his strong shoulders and climbs towards the surface, navigating the irregular stone steps with ease.\r\n\r\nLyria understands the importance of the weapon for their quest. *\"I'll stay to help while Crush takes care of Dulcie.\"*\r\n\r\nUse the Tethered One to forge **Needle** and **Shadow Silk,** then do **Start Convo Ly1.**",
+                "description": "Before the blow can land, Crush seizes the wheelchair and twists the metal around Galebane, binding him.\r\n\r\nCrush rushes over to Dulcie. *\"She will not overcome this wound without help. The blade from Galebane contains sickness.\"*\r\n\r\nThe Tethered One looks at the rising water. *\"There is no time. I need your help to forge a weapon.\"*\r\n\r\nCrush is adamant. *\"I'm taking her now. Here are the bars you need.\"* Then he hoists Dulcie over his strong shoulders and climbs towards the surface, navigating the irregular stone steps with ease.\r\n\r\nLyria understands the importance of the weapon for their quest. *\"I'll stay to help while Crush takes care of Dulcie.\"*\r\n\r\nUse the Tethered One to forge **Needle** and some **Shadow Silk,** then **Start Convo Ly1.**",
                 "storage_type": "u",
                 "q_limit": 1.0,
                 "recipes": [
@@ -585,6 +615,42 @@
                         ],
                         "attrib_reqs": [
                             {"attrib_id": 140}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 262,
+                "name": "Convo Dundii 1a",
+                "description": "Crush gingerly climbs a wooden ladder that creaks dangerously under his weight. At the top is a hut. Crush lays Dulcie on the bed.\r\n\r\n*\"This woman is gravely ill and will die without treatment. Please help us.\"*\r\n\r\nChief Dundii looks at her. *\"Our healers can brew a cure potion, but you must do something for us. Destroy the **Animated Tree** in the **Jungle Interior.** Bring me a piece of its bark.\"*",
+                "storage_type": "u",
+                "q_limit": 2.0,
+                "recipes": [
+                    {
+                        "id": 261,
+                        "sources": [
+                            {"item_id": 262, "q_required": 1.0, "preserve": true}
+                        ],
+                        "attrib_reqs": [
+                            {"attrib_id": 263}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 269,
+                "name": "Convo Dundii 2a",
+                "description": "Chief Dundii takes the bark and hands Crush the cure potion, who helps Dulcie drink it. After only an hour, she stands up from the bed.\r\n\r\nLyria arrives with the Tethered One. He looks around. *\"There is a loom, but I do not have the skill to use it.\"*\r\n\r\nDulcie glares at him. *\"I'm doing very well after being at death's door, thanks for asking. Seriously, am I the only one who knows how to weave? Give me that silk.*\"\r\n\r\nAfter she finishes, the party travels to the plains. Speak with **Daphnia.**",
+                "storage_type": "u",
+                "q_limit": 2.0,
+                "recipes": [
+                    {
+                        "id": 268,
+                        "sources": [
+                            {"item_id": 269, "q_required": 1.0, "preserve": true}
+                        ],
+                        "attrib_reqs": [
+                            {"attrib_id": 263}
                         ]
                     }
                 ]
@@ -664,7 +730,7 @@
             {
                 "id": 255,
                 "name": "Convo Lyria 1c",
-                "description": "Climbing higher, Lyria and the Tethered One leave the water behind. Yet the steps continue, on and on, until they lose any grasp of how many there might be, or how high.\r\n\r\nFinally, they emerge in daylight, blinking to adjust their eyes.\r\n\r\nNext, Crush brings Dulcie to the Jungle and speaks with the Chief.",
+                "description": "Climbing higher, Lyria and the Tethered One leave the water behind. The steps continue on and on, until they lose any grasp of how many there might be, or how high.\r\n\r\nFinally, they emerge in daylight, blinking to adjust their eyes.\r\n\r\nNext, Crush brings Dulcie to the Jungle and speaks with the Chief.",
                 "storage_type": "u",
                 "q_limit": 1.0,
                 "recipes": [
@@ -913,6 +979,13 @@
             {"id": 178, "name": "Forge", "storage_type": "l", "q_limit": 1.0},
             {"id": 68, "name": "Harmony Pick", "slot": "Main Hand"},
             {
+                "id": 279,
+                "name": "Helm",
+                "description": "Wheel to steer the rudder.",
+                "storage_type": "l",
+                "q_limit": 1.0
+            },
+            {
                 "id": 183,
                 "name": "Iron Dagger",
                 "description": "Piercing dmg",
@@ -956,6 +1029,10 @@
                 "id": 77,
                 "name": "Needle",
                 "description": "Hypodermically sharp thin blade that phases in and out of this plane. Stitch an earthly soul to the steel.",
+                "attribs": [
+                    [28, 8.0],
+                    [29, 5.0]
+                ],
                 "q_limit": 1.0,
                 "slot": "Main Hand",
                 "recipes": [
@@ -995,7 +1072,7 @@
             {
                 "id": 79,
                 "name": "Refractive Stealth Cloak",
-                "description": "Made from **Shadow Silk**. Equip to *Back* slot.",
+                "description": "Equip to the Tethered One's *Back* slot and increase dexterity by **+3** for a total of **12.**\r\n\r\nWhile wearing the cloak, they'll never see him coming unless it's the brightest of sunny days, or else an {yellow|Anorkind} mage with light magic.",
                 "q_limit": 1.0,
                 "slot": "Back"
             },
@@ -1006,6 +1083,17 @@
                 "q_limit": 1.0
             },
             {
+                "id": 276,
+                "name": "Scimitar",
+                "description": "Swings quickly and does slashing dmg.",
+                "attribs": [
+                    [28, 3.0],
+                    [29, 2.0]
+                ],
+                "q_limit": 1.0,
+                "slot": "Main Hand"
+            },
+            {
                 "id": 246,
                 "name": "Shadow Cloak",
                 "description": "Phases to hide the wearer from detection.",
@@ -1014,9 +1102,13 @@
                 "recipes": [
                     {
                         "id": 247,
+                        "rate_duration": 15,
                         "sources": [
                             {"item_id": 80, "q_required": 5.0},
                             {"item_id": 248, "q_required": 1.0, "preserve": true}
+                        ],
+                        "attrib_reqs": [
+                            {"attrib_id": 140}
                         ]
                     }
                 ]
@@ -1033,6 +1125,25 @@
                             {"item_id": 70, "q_required": 2.0},
                             {"item_id": 241, "q_required": 1.0, "preserve": true},
                             {"item_id": 244, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 280,
+                "name": "Sky Ship Flight",
+                "description": "It takes 4 days for the **Sky Pirate Captain** to sail your party over the desert to the Western End.",
+                "storage_type": "u",
+                "q_limit": 4.0,
+                "recipes": [
+                    {
+                        "id": 281,
+                        "rate_duration": 15,
+                        "sources": [
+                            {"item_id": 279, "q_required": 1.0, "preserve": true}
+                        ],
+                        "attrib_reqs": [
+                            {"attrib_id": 282}
                         ]
                     }
                 ]
@@ -1374,10 +1485,7 @@
             {
                 "id": 87,
                 "name": "Desert",
-                "description": "Impractical to traverse except for the Firebranded.",
-                "destinations": [
-                    {"loc2_id": 84}
-                ]
+                "description": "Impractical to traverse except for the Firebranded."
             },
             {
                 "id": 61,
@@ -1424,11 +1532,6 @@
                 ]
             },
             {
-                "id": 260,
-                "name": "Jungle Interior",
-                "description": "Looming trees and tangled vines stretch for miles. Anyone skillful and brave enough to navigate to the western edge would find only a desert."
-            },
-            {
                 "id": 72,
                 "name": "Jungle East Side",
                 "destinations": [
@@ -1436,6 +1539,11 @@
                     {"loc2_id": 257},
                     {"loc2_id": 260}
                 ]
+            },
+            {
+                "id": 260,
+                "name": "Jungle Interior",
+                "description": "Looming trees and tangled vines stretch for miles. Anyone skillful and brave enough to navigate to the western edge would find only a desert."
             },
             {
                 "id": 66,
@@ -1546,13 +1654,52 @@
                     {"attrib_id": 7, "val_required": false}
                 ]
             },
-            {"id": 73, "name": "Plains"},
+            {
+                "id": 73,
+                "name": "Plains",
+                "destinations": [
+                    {
+                        "loc2_id": 82,
+                        "door2": [2, 7]
+                    }
+                ]
+            },
             {"id": 85, "name": "Sheer Pole"},
             {
                 "id": 82,
                 "name": "Sky Ship",
+                "dimensions": [10, 7],
+                "items": [
+                    {
+                        "item_id": 279,
+                        "quantity": 1.0,
+                        "position": [10, 4]
+                    }
+                ],
                 "destinations": [
-                    {"loc2_id": 73}
+                    {"loc2_id": 84}
+                ],
+                "zones": [
+                    {
+                        "coords": [1, 1, 10, 7],
+                        "label": "deck",
+                        "color": "CadetBlue"
+                    },
+                    {
+                        "coords": [4, 3, 4, 6],
+                        "label": "sail",
+                        "color": "PowderBlue"
+                    },
+                    {
+                        "coords": [5, 4, 5, 5],
+                        "label": "mast",
+                        "color": "Sienna"
+                    },
+                    {
+                        "coords": [10, 4, 10, 4],
+                        "label": "helm",
+                        "color": "DarkKhaki"
+                    }
                 ]
             },
             {
@@ -1666,8 +1813,11 @@
                 "name": "Western End",
                 "description": "Sparsely populated -- horse nomad people comfortable in the thin dusty air.",
                 "destinations": [
-                    {"loc2_id": 82},
-                    {"loc2_id": 85}
+                    {"loc2_id": 85},
+                    {"loc2_id": 87}
+                ],
+                "entrance_reqs": [
+                    {"item_id": 280, "val_required": 4.0}
                 ]
             },
             {
@@ -1688,6 +1838,23 @@
             }
         ],
         "characters": [
+            {
+                "id": 265,
+                "name": "Animated Tree",
+                "description": "Branches send out curling vines like whiplashes at passersby. Almost entirely immobile and very slow, attacking only 1 out of every 3 normal combat turns. Fears axes and fire.",
+                "attribs": [
+                    [22, 120.0],
+                    [30, 5.0],
+                    [31, 1.0],
+                    [225, 120.0]
+                ],
+                "abilities": [27],
+                "location_id": 260,
+                "items": [
+                    {"item_id": 32, "quantity": 1.0, "slot": "Main Hand"},
+                    {"item_id": 266, "quantity": 1.0, "slot": "Body"}
+                ]
+            },
             {
                 "id": 47,
                 "name": "Atlanth Tiderender",
@@ -1733,8 +1900,15 @@
             {
                 "id": 258,
                 "name": "Chief Dundii",
-                "description": "- Ancestry: {ForestGreen|Treemate}\r\n- Specialties: long knife, hunts crocodiles",
-                "location_id": 257
+                "description": "- Ancestry: {ForestGreen|Treemate}\r\n- Specialties: long knife, hunts crocodiles\r\n- Appearance: brimmed hat, weathered skin",
+                "attribs": [
+                    [263, true]
+                ],
+                "abilities": [264, 267],
+                "location_id": 257,
+                "items": [
+                    {"item_id": 266, "quantity": 1.0}
+                ]
             },
             {
                 "id": 52,
@@ -1778,6 +1952,10 @@
                 "id": 74,
                 "name": "Daphnia",
                 "description": "- **Ancestry:** {peru|Stonereach}\r\n- **Specialties:** milk maid, family owns livestock",
+                "attribs": [
+                    [272, true]
+                ],
+                "abilities": [273],
                 "location_id": 73
             },
             {
@@ -1789,7 +1967,7 @@
             {
                 "id": 259,
                 "name": "Dryad Succubus",
-                "description": "- Ancestry: {purple|Demon}\r\n- Specialties: roots mage, wanders earthly forests and fiercely protects them\r\n- Appearance: veins of bark woven through her skin, lower body covered in bark instead of clothing, hooves and delicate deer-like horns",
+                "description": "- Ancestry: {purple|Demon}\r\n- Specialties: roots mage, wanders earthly forests and fiercely protects them, enjoys humble lumberjacks but hates fire and heavy industry\r\n- Appearance: veins of wood woven through her skin, lower body covered in bark instead of clothing, hooves and branching deer-like horns",
                 "location_id": 260
             },
             {
@@ -1797,10 +1975,12 @@
                 "name": "Dulcie",
                 "description": "- **Ancestry:** {pink|Jovial}, charismatic\r\n- **Specialties:** brings drinks and entertains tavern goers, usually men, not paid to be a prostitute although her job has at times led to sleeping with patrons\r\n- **Appearance:** age 30, soft and curvy build, light chocolate skin, low-cut bodice, messy layered colorful skirts",
                 "attribs": [
+                    [22, 20.0],
                     [88, true],
                     [89, true],
                     [140, true],
-                    [153, 8.0]
+                    [153, 8.0],
+                    [225, 20.0]
                 ],
                 "abilities": [139, 219],
                 "location_id": 61
@@ -1876,10 +2056,57 @@
                 "position": [3, 5]
             },
             {
+                "id": 277,
+                "name": "Sky Pirate 2",
+                "description": "- **Ancestry:** {LemonChiffon|Aetherian}, wings to prevent injury from falling and facilitate jumps",
+                "attribs": [
+                    [22, 15.0],
+                    [30, 4.0],
+                    [31, 8.0],
+                    [225, 15.0]
+                ],
+                "abilities": [27],
+                "location_id": 82,
+                "position": [5, 2],
+                "items": [
+                    {"item_id": 276, "quantity": 1.0, "slot": "Main Hand"}
+                ]
+            },
+            {
+                "id": 278,
+                "name": "Sky Pirate 3",
+                "description": "- **Ancestry:** {LemonChiffon|Aetherian}, wings to prevent injury from falling and facilitate jumps",
+                "attribs": [
+                    [22, 15.0],
+                    [30, 4.0],
+                    [31, 8.0],
+                    [225, 15.0]
+                ],
+                "abilities": [27],
+                "location_id": 82,
+                "position": [5, 3],
+                "items": [
+                    {"item_id": 276, "quantity": 1.0, "slot": "Main Hand"}
+                ]
+            },
+            {
                 "id": 83,
-                "name": "Sky Pirate 1",
-                "description": "- **Ancestry:** {LemonChiffon|Aetherian}, wings to prevent injury from falling and facilitate jumps\r\n- **Specialties:** scimitar proficiency",
-                "location_id": 82
+                "name": "Sky Pirate Captain",
+                "description": "- **Ancestry:** {LemonChiffon|Aetherian}, wings to prevent injury from falling and facilitate jumps\r\n\r\nMust be alive to pilot the craft. More accommodating when tickled with something sharp from behind.",
+                "attribs": [
+                    [12, 8.0],
+                    [22, 25.0],
+                    [30, 4.0],
+                    [31, 8.0],
+                    [225, 25.0],
+                    [282, true]
+                ],
+                "abilities": [27],
+                "location_id": 82,
+                "position": [9, 4],
+                "items": [
+                    {"item_id": 276, "quantity": 1.0, "slot": "Main Hand"}
+                ]
             },
             {
                 "id": 106,
@@ -1926,11 +2153,15 @@
                 "name": "Tethered One",
                 "description": "- **Ancestry:** {rebeccapurple|half fallen celestial} (unique category)\r\n- **Specialties:** partial existence in both spiritual and physical plane, dagger/knives proficiency, rogue, can slip through cracks, reportedly can stitch souls onto physical surfaces\r\n- **Appearance:** extroardinarily thin, from within eye sockets comes a {rebeccapurple|purple glow} rather than irises, long smooth dark pants and shirt, pale face, slick hair",
                 "attribs": [
+                    [22, 25.0],
+                    [30, 5.0],
+                    [31, 9.0],
                     [88, true],
                     [89, false],
-                    [95, true]
+                    [95, true],
+                    [225, 25.0]
                 ],
-                "abilities": [96, 145, 228],
+                "abilities": [10, 27, 96, 145, 228],
                 "location_id": 94
             },
             {
@@ -2180,6 +2411,77 @@
                 ]
             },
             {
+                "id": 264,
+                "name": "Start Convo Dd1",
+                "outcome_type": "determined",
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 263},
+                        "op_application": "=="
+                    },
+                    {
+                        "infield": {"role": "target char", "attrib_id": 140},
+                        "op_application": "=="
+                    },
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 262},
+                        "op_application": "==",
+                        "val_required": 0.0
+                    },
+                    {
+                        "infield": {"role": "target char", "attrib_id": 22},
+                        "op_application": "=="
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 262},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "auto_apply": true
+                    }
+                ]
+            },
+            {
+                "id": 267,
+                "name": "Start Convo Dd2",
+                "outcome_type": "determined",
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 263},
+                        "op_application": "=="
+                    },
+                    {
+                        "infield": {"role": "target char", "attrib_id": 140},
+                        "op_application": "=="
+                    },
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 269},
+                        "op_application": "==",
+                        "val_required": 0.0
+                    },
+                    {
+                        "infield": {"field_mode": "qty", "item_id": 266},
+                        "op_application": "=="
+                    }
+                ],
+                "effects": [
+                    {
+                        "infield": {"role": "target char", "attrib_id": 225},
+                        "outfield": {"role": "target char", "attrib_id": 22},
+                        "op_application": ":="
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 269},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "auto_apply": true
+                    }
+                ]
+            },
+            {
                 "id": 108,
                 "name": "Start Convo Dg1",
                 "outcome_type": "determined",
@@ -2251,6 +2553,40 @@
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": 0.0
+                    }
+                ]
+            },
+            {
+                "id": 273,
+                "name": "Start Convo Dp1",
+                "outcome_type": "determined",
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 272},
+                        "op_application": "=="
+                    },
+                    {
+                        "infield": {"role": "target char", "attrib_id": 95},
+                        "op_application": "=="
+                    },
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 271},
+                        "op_application": "==",
+                        "val_required": 0.0
+                    },
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 269},
+                        "op_application": "==",
+                        "val_required": 2.0
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 271},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "auto_apply": true
                     }
                 ]
             },
@@ -2565,7 +2901,7 @@
             {
                 "id": 27,
                 "name": "Weapon To-Hit",
-                "description": "Attempt to land a physical blow, either melee or ranged depending on the weapon. Could also be unarmed.\r\nOn **Major Failure,** the opponent gets an extra opportunity to move.",
+                "description": "Attempt to land a physical blow, either melee or ranged depending on the weapon. Could also be unarmed.\r\n- On **Major Success,** get an extra attack.\r\n- On **Major Failure,** the opponent gets an extra opportunity to move.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
