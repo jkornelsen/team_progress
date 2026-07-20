@@ -15,7 +15,7 @@
         "tag_introduce_order": 35,
         "tag_best_order": 17,
         "tag_progress_type": "RPG",
-        "tag_complete": "07 Playable / Under Construction"
+        "tag_complete": "09 Complete"
     },
     "entities": {
         "attribs": [
@@ -54,6 +54,7 @@
             {"id": 14, "name": "Is Kormak", "is_binary": true},
             {"id": 15, "name": "Is Lyria", "is_binary": true},
             {"id": 208, "name": "Is Snow Cave", "is_binary": true},
+            {"id": 292, "name": "Is Sunderforge", "is_binary": true},
             {"id": 95, "name": "Is Tethered One", "is_binary": true},
             {"id": 158, "name": "Is Thaddeus", "is_binary": true},
             {"id": 223, "name": "Lame", "is_binary": true},
@@ -94,6 +95,13 @@
                 "id": 230,
                 "name": "Blast Point",
                 "description": "Partially submerged weak point in the rocky floor.",
+                "storage_type": "l",
+                "q_limit": 1.0
+            },
+            {
+                "id": 284,
+                "name": "Broken Wagon",
+                "description": "The remains of a smashed wagon and the deceased horses that must have pulled it are here.",
                 "storage_type": "l",
                 "q_limit": 1.0
             },
@@ -746,6 +754,60 @@
                 ]
             },
             {
+                "id": 291,
+                "name": "Convo Sunderforge 1a",
+                "description": "As they climb off the pole onto the end of the Worldbridge, a great voice hails them. *\"Our {RebeccaPurple|half fallen celestial} has returned, bringing a {blue|Nalaran} in tow once again.\"*\r\n\r\nThe Tethered One faces the god across the broken bridge. *\"Sunderforge Stormcaller, the world has been broken for too long, and both the celestial and earthly planes have paid the price.\"*\r\n\r\nLight flashes across the god's face. *\"Grown proud, have we?\"*  Then he laughs. *\"If you think this little band of yours is enough to challenge our realm, then you have become foolish in the last few hundred years.\"*",
+                "storage_type": "u",
+                "q_limit": 2.0,
+                "recipes": [
+                    {
+                        "id": 290,
+                        "sources": [
+                            {"item_id": 291, "q_required": 1.0, "preserve": true}
+                        ],
+                        "attrib_reqs": [
+                            {"attrib_id": 292}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 295,
+                "name": "Convo Sunderforge 1b",
+                "description": "Lyria can no longer contain the words burning within her. *\"Stormcaller, the gods lie dormant or in hiding, and there is sickness in the earthly plane. The Drowned Court King is long gone, and the rest of my people had only sought shelter from you, not dominion over the earth.\"*\r\n\r\nSunderforge looks closely at her. *\"I have followed your travels. You deal in matters that perhaps you do not understand. Yet your words belie a certain wisdom. What guarantee would you offer that your people will not seek to rise up and flood the world?\"*\r\n\r\nThe Tethered One answers. *\"I propose an offer. Make me mortal, and I will live as an {darkgray|Ithilborn}.\"*",
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 294,
+                        "sources": [
+                            {"item_id": 291, "q_required": 2.0, "preserve": true}
+                        ],
+                        "attrib_reqs": [
+                            {"attrib_id": 292}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 297,
+                "name": "Convo Sunderforge 1c",
+                "description": "The Stormcaller's face lessens its intensity. *\"The Drowned Court King may not be as fully gone as you believe. However, the proposed offer has the potential to set many wrongs right. Very well, I accept this offer. I will mend the broken bridge so that the celestial realm may once again govern the earthly plane.\"*",
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 296,
+                        "sources": [
+                            {"item_id": 295, "q_required": 1.0, "preserve": true}
+                        ],
+                        "attrib_reqs": [
+                            {"attrib_id": 292}
+                        ]
+                    }
+                ]
+            },
+            {
                 "id": 97,
                 "name": "Convo Tethered 1a",
                 "description": "Lyria peers into the cell. She sees a man seated on a dirty mattress without sheets. Noticing the movement in the window, he looks up at her in surprise. *\"How did you get here?\"*\r\n\r\n*\"I dove through the underground waterways,\"* she explains. *\"I hear you're a special prisoner. Is there a reason I should help you?\"*",
@@ -1013,6 +1075,22 @@
                 ]
             },
             {
+                "id": 287,
+                "name": "Leather Straps",
+                "description": "The leather reins and harness are a mass of misshapen knots, but with patience, they can be untangled and remade into a functional harness that suits the party's particular need.",
+                "q_limit": 2.0,
+                "recipes": [
+                    {
+                        "id": 288,
+                        "rate_duration": 20,
+                        "sources": [
+                            {"item_id": 284, "q_required": 1.0, "preserve": true},
+                            {"item_id": 287, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
                 "id": 200,
                 "name": "Letter",
                 "description": "Lyria opens a hastily scribbled note. *\"My darling Lyria, someone you care about could be in danger.\"*\r\n\r\nEyes widening, she continues reading. *\"My sources tell me how you tricked the sea god. Fiercely angry, he's plotting revenge against Sutherdepth.\"*\r\n\r\n*\"Find me in Pike Village as soon as possible so we can prevent that from happening.\"*\r\n\r\nThe note is signed, *\"Yours, Danglars.\"*",
@@ -1132,7 +1210,7 @@
             {
                 "id": 280,
                 "name": "Sky Ship Flight",
-                "description": "It takes 4 days for the **Sky Pirate Captain** to sail your party over the desert to the Western End.",
+                "description": "It takes 4 days for the **Sky Pirate Captain** to sail your party over the desert to the **Western End.**",
                 "storage_type": "u",
                 "q_limit": 4.0,
                 "recipes": [
@@ -1326,7 +1404,24 @@
                 "q_limit": 1.0,
                 "slot": "Main Hand"
             },
-            {"id": 18, "name": "Worldbridge Repaired", "storage_type": "u"}
+            {
+                "id": 18,
+                "name": "Worldbridge Mended",
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 298,
+                        "rate_duration": 300,
+                        "sources": [
+                            {"item_id": 297, "q_required": 1.0, "preserve": true}
+                        ],
+                        "attrib_reqs": [
+                            {"attrib_id": 292}
+                        ]
+                    }
+                ]
+            }
         ],
         "locations": [
             {
@@ -1485,7 +1580,7 @@
             {
                 "id": 87,
                 "name": "Desert",
-                "description": "Impractical to traverse except for the Firebranded."
+                "description": "Impractical to traverse except for the {orange|Firebranded.}"
             },
             {
                 "id": 61,
@@ -1664,7 +1759,15 @@
                     }
                 ]
             },
-            {"id": 85, "name": "Sheer Pole"},
+            {
+                "id": 85,
+                "name": "Sheer Pole",
+                "description": "The western lands end in a vast pole parallel to the ground, some height above. Its length extends beyond the horizon both north and south, even when looking down from the sky. The pole is part of the world itself, bound by the same invisible threads that keep the entire terrestrial plane from falling into the great abyssal void.\r\n\r\n----\r\nAfter the party is bound to the **Leather Harness,** they push off south along the frictionless pole. The air is so thin in this region that it does not slow their movement. After some hours, the earth below them curves away, while the pole continues to go straight until the earth can be seen in the shape of a shell far behind. At last, they arrive at the **Worldbridge.**\r\n\r\nMove to the Worldbridge and then detach from the harness.",
+                "destinations": [
+                    {"loc2_id": 86},
+                    {"loc2_id": 283}
+                ]
+            },
             {
                 "id": 82,
                 "name": "Sky Ship",
@@ -1777,7 +1880,7 @@
             },
             {
                 "id": 257,
-                "name": "Village in the Trees",
+                "name": "Treetop Village",
                 "description": "High above ground is a baffling network of roped wooden bridges and huts.\r\n\r\nIn one hut lives the Chief, not noticeably different from any of the rest of the huts because of the egalitarian cultural ethos. He sits on a chair made of poles tied together.",
                 "items": [
                     {"item_id": 248, "quantity": 1.0}
@@ -1811,13 +1914,22 @@
             {
                 "id": 84,
                 "name": "Western End",
-                "description": "Sparsely populated -- horse nomad people comfortable in the thin dusty air.",
+                "description": "Sparsely populated. Horse riding nomads live here who are suited for the steppe land and thin dusty air.",
+                "masked": true,
                 "destinations": [
-                    {"loc2_id": 85},
-                    {"loc2_id": 87}
+                    {"loc2_id": 87},
+                    {"loc2_id": 283}
                 ],
                 "entrance_reqs": [
                     {"item_id": 280, "val_required": 4.0}
+                ]
+            },
+            {
+                "id": 283,
+                "name": "Western Rise",
+                "description": "Near the landing site of the Sky Ship, a stretch of elevated land rises up to meet the pole, stopping only a few feet below.",
+                "items": [
+                    {"item_id": 284, "quantity": 1.0}
                 ]
             },
             {
@@ -1832,9 +1944,7 @@
             {
                 "id": 86,
                 "name": "Worldbridge",
-                "destinations": [
-                    {"loc2_id": 85}
-                ]
+                "item_refs": [18]
             }
         ],
         "characters": [
@@ -2028,6 +2138,19 @@
                 "travel_party": "Chain Gang"
             },
             {
+                "id": 285,
+                "name": "Leather Harness",
+                "description": "After finishing the harness (**Leather Straps** quantity **2**), tie it around the pole, with leather straps to bind the party members.\r\n\r\nTo do this, set the harness to travel with \"main party\" and toggle the **Bound** status of the 4 members to *On.* Then, move all onto the pole and push off.",
+                "attribs": [
+                    [7, true]
+                ],
+                "location_id": 86,
+                "travel_party": "main party",
+                "items": [
+                    {"item_id": 287, "quantity": 2.0}
+                ]
+            },
+            {
                 "id": 55,
                 "name": "Lorcan",
                 "description": "- **Ancestry:** {yellow|Anorkind}\r\n- **Specialties:** corrupt lawyer who twisted law for personal financial gain\r\n\r\nPrisoner.",
@@ -2142,6 +2265,16 @@
                 ],
                 "location_id": 56,
                 "travel_party": "Galebane"
+            },
+            {
+                "id": 289,
+                "name": "Sunderforge Stormcaller",
+                "description": "Forged the first anchors between celestial and earthly realms, but also smashed the Worldbridge with his mighty hammer.",
+                "attribs": [
+                    [292, true]
+                ],
+                "abilities": [293],
+                "location_id": 86
             },
             {
                 "id": 51,
@@ -2725,6 +2858,35 @@
                     {
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 251},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "auto_apply": true
+                    }
+                ]
+            },
+            {
+                "id": 293,
+                "name": "Start Convo Su1",
+                "outcome_type": "determined",
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 292},
+                        "op_application": "=="
+                    },
+                    {
+                        "infield": {"role": "target char", "attrib_id": 95},
+                        "op_application": "=="
+                    },
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 291},
+                        "op_application": "==",
+                        "val_required": 0.0
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 291},
                         "op_application": ":=",
                         "op_transform": "c",
                         "auto_apply": true
