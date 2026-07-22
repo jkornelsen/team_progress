@@ -4,13 +4,18 @@
 
 ---- functional, tightening, quality of life ----
 
-checkbox in event determiners to require an item to be equipped
+disallow travel with another char if exiting from a grid and they're not nearby
 
-daal and rice shows qty 0 when at limit
-    when viewing general storage item "ate" with qty 1/1
-    context is in kitchen
-    shows qty 4 as expected when ate is 0/1
-    also shows as expected when limit is increased to 2
+move with checkbox on play loc isn't very in sync with the one on the char page
+    checking on loc page doesn't stay when returning to loc page
+    unchecked on loc page becomes checked on char page
+
+show spin icon in char play like in loc play when the item is in production
+    but it already shows that sometimes
+    show for any host -- not only hosted by that char
+
+checkbox in event determiners to require an item to be equipped
+    adventurer might carry a 2h sword and battleaxe and only one should apply
 
 old_loc_id doesn't always get set when going to loc page
     http://localhost:5000/play/location/14 (navigate and reload both failed)
@@ -54,26 +59,23 @@ lumber
         offices -- sales over time at better prices
             not worth it for just owner unless possibly for heavy idling
             sales manager
-        racks to store large quantities of boards while they sell
+        warehouse to store large quantities of boards while they sell
         tool shed to minimize rust
             chance of rust whenever you pick up a tool
             convenient to not carry around old axe
     could make sales manager a universal item for idling
-        how to get access to rack storage if not
+        how to get access to warehouse storage if not
         or put at a desktop computer local item
     HR manager might be better as universal item
         because we don't want to track employee happiness, hours etc
         maybe don't need then -- hiring boost alone is not that interesting
         makes sense that owner could hire
-    hire employees at town hall as well as handling any legal paperwork
     getting boards should be practical to idle eventually,
         although manual chopping is still always going to be meaningful
-    idle only certain steps at first, starting with chopping (splitter)
     idle a certain number of batches that require fuel
         can either burn wood or purchased gasoline
-    silver axe is highly accurate although not as powerful as chainsaw
-        steel axe is the standard tool
     add status attrib (flag) on natural 1 that must be cleared by event
+    item event to Deliver Feller, repositioning from hardware store
 
 tethered one
     deception check for lyria in sunken library
@@ -156,6 +158,9 @@ disconnect after 30 minutes without user interaction
 
 consider sharing community scenarios
 perhaps submit to reddit, or github via pull requests
+ask for feedback about:
+    which scenarios would you like to see developed further
+    do you like creating and modifying or would you prefer to avoid using configuration pages as much as possible
 
 screenshots
     infestation baby mouse attack

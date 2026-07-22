@@ -39,19 +39,19 @@ def find_best_host(recipe, owner_id, ctx):
     # 2. UNIVERSAL PRODUCT BRANCH (Currencies, Global Upgrades)
     if product.storage_type == StorageType.UNIVERSAL:
         # Priority A: General Host (System)
-        # We use this if ingredients/stats are all in the global bank.
-        if can_perform_recipe(GENERAL_ID, recipe, owner_id, ctx)[0]:
+        # If ingredients/stats are all in the global bank.
+        if has_ingredients(GENERAL_ID, recipe, owner_id, ctx)[0]:
             return GENERAL_ID
 
         # Priority B: Character (Personal Trigger)
         # If the bank is missing ingredients, but the character has them.
-        if ctx.char_id and can_perform_recipe(
+        if ctx.char_id and has_ingredients(
                 ctx.char_id, recipe, owner_id, ctx)[0]:
             return ctx.char_id
 
         # Priority C: Location (Environment/Passive)
         # If no character is there.
-        if ctx.loc_id and can_perform_recipe(
+        if ctx.loc_id and has_ingredients(
                 ctx.loc_id, recipe, owner_id, ctx)[0]:
             return ctx.loc_id
 
@@ -97,11 +97,20 @@ def get_eligible_placements(recipe, target_owner_id, host_id, sources=None):
 
     loc_id, anchor_pos = resolve_host_pos(host_id, recipe, sources)
 
-    # Intent: Backpack (Only if item is CARRIED and target is Character)
+    # Intended Target: Backpack
     if product.storage_type == StorageType.CARRIED:
         target_ent = db.session.get(Entity, (game_token, target_owner_id))
         if target_ent and target_ent.entity_type == Character.TYPENAME:
-            placements.append((target_owner_id, None))
+            # If a machine is at a Location, Character must be there too
+            if loc_id:
+                if target_ent.location_id == loc_id:
+                    placements.append((target_owner_id, None))
+                else:
+                    # Character left the location
+                    logger.info(f"Target {target_ent.name} left {loc_id}. Spilling to floor.")
+            else:
+                # No specific location (Universal Host), allow backpack delivery
+                placements.append((target_owner_id, None))
 
     # Physical: Floor / Surroundings
     if loc_id:
@@ -413,7 +422,8 @@ def execute_production(
                     max_possible = limit
         
         # Check Output Limits
-        for limit in (recipe.product.q_limit, stop_at):
+        q_limit = get_quantity_limit(recipe.product_id, target_owner_id)
+        for limit in (q_limit, stop_at):
             if limit and net_change:
                 remaining = limit - current_qty
                 if net_change * remaining > 0: # Same sign and neither 0

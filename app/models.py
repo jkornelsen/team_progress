@@ -330,10 +330,6 @@ class Item(Entity):
     masked = db.Column(db.Boolean, default=False)
     counted_for_unmasking = db.Column(db.Boolean, default=False)
 
-    @property
-    def slot_label(self):
-        return self.slot_entry.label if self.slot_entry else ""
-
     def to_dict(self):
         data = super().to_dict()
         data.update({
@@ -369,6 +365,18 @@ class Item(Entity):
             updates['slot_id'] = resolve_enum_id(
                 game_token, EQUIPMENT_SLOTS_ID, slot_label)
         return super().from_dict(data, game_token, **updates)
+
+    @property
+    def slot_label(self):
+        return self.slot_entry.label if self.slot_entry else ""
+
+    def limit_for(self, owner_id):
+        if not owner_id or owner_id == GENERAL_ID:
+            return self.q_limit
+        for limit in self.limits_for:
+            if limit.owner.id == owner_id:
+                return limit.q_limit
+        return self.q_limit
 
     in_piles = db.relationship(
         'Pile',

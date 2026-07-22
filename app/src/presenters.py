@@ -39,12 +39,21 @@ class ItemPlayPresenter:
         Determine Viewed Pile Owner.
         This is the pile displayed at the top of the page.
         """
+        if self.item.storage_type == StorageType.UNIVERSAL:
+            return GENERAL_ID
+
         owner_id = req.get_int('owner_id')
+
+        # Local items must be owned by a Location
+        if self.item.storage_type == StorageType.LOCAL and owner_id:
+            ent = db.session.get(Entity, (self.game_token, owner_id))
+            if ent and ent.entity_type == Character.TYPENAME:
+                char = db.session.get(Character, (self.game_token, owner_id))
+                return char.location_id or owner_id
+
         if owner_id:
             return owner_id
             
-        if self.item.storage_type == StorageType.UNIVERSAL:
-            return GENERAL_ID
         if session.get('old_char_id'):
             return session.get('old_char_id')
         return session.get('old_loc_id') or GENERAL_ID
@@ -258,16 +267,17 @@ class ItemPlayPresenter:
                 ) if item is not None
             )
 
-        # Reverse dependencies
+        # Used for Production links
         used_for_production, seen_ids = [], {self.item_id}
         for source_link in self.item.as_ingredient:
             prod = source_link.recipe.product
             if prod.id not in seen_ids:
+                target_ctx = self.ctx.for_item(prod)
                 used_for_production.append({
                     'item': prod,
                     'q_required': source_link.q_required,
                     'preserve': source_link.preserve,
-                    'url_params': self.ctx.get_params()})
+                    'url_params': target_ctx.get_params()})
                 seen_ids.add(prod.id)
 
         # Other characters here (Give button)
@@ -334,10 +344,10 @@ class ItemPlayPresenter:
             "used_for_production": sort_by_name_stripped(
                 used_for_production, lambda d: d['item']),
             "byproduct_of": [{
-                'item': bl.recipe.product,
-                'rate_amount': bl.rate_amount,
-                'url_params': self.ctx.get_params()}
-                for bl in self.item.as_byproducts],
+                'item': bo.recipe.product,
+                'rate_amount': bo.rate_amount,
+                'url_params': self.ctx.for_item(bo.recipe.product).get_params()
+                } for bo in self.item.as_byproducts],
             "progress": Progress.query.filter_by(
                 game_token=self.game_token, product_id=self.item_id).first(),
             "available_slots": available_slots,

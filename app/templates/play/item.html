@@ -90,8 +90,8 @@
         <h1>
             {{ render.maskable_name(item) }}
             <span class="text-accent" id="main-qty-display">{{ pile.quantity | formatNum }}</span>
-            {% if item.q_limit > 0 %}
-                <small class="label-like">/ {{ item.q_limit | formatNum }}</small>
+            {% if item.limit_for(owner.id) > 0 %}
+                <small class="label-like">/ {{ item.limit_for(owner.id) | formatNum }}</small>
             {% endif %}
         </h1>
         {% if item.masked %}
@@ -664,11 +664,13 @@ async function updateStatus() {
             stockMap[s.id] = val;
             
             // Update the UI text for the source quantity
-            const el = document.getElementById(`source-qty-${s.id}`);
-            if (el) el.textContent = s.quantity;
+            const elements = document.querySelectorAll(`[id="source-qty-${s.id}"]`);
+            elements.forEach(el => {
+                el.textContent = s.quantity;
+            });
         });
 
-        const qLimit = {{ item.q_limit }};
+        const qLimit = {{ item.limit_for(owner.id) }};
         const currentQty = parseFloat(main.quantity.replace(/,/g, '')) || 0;
 
         // Update max_batches for each recipe

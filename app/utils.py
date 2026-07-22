@@ -8,7 +8,7 @@ import markdown
 from markupsafe import Markup
 import bleach
 from bleach.css_sanitizer import CSSSanitizer
-from .models import GENERAL_ID
+from .models import GENERAL_ID, StorageType
 
 logger = logging.getLogger(__name__)
 
@@ -398,11 +398,29 @@ class ContextIds:
         """Is the loc id additional info besides owner id."""
         return self.loc_id and self.loc_id != self.owner_id
 
+    def for_item(self, target_item):
+        """Returns a cloned context tailored for the destination item's storage
+        rules.
+        """
+        new_owner = self.owner_id
+        
+        if target_item.storage_type == StorageType.UNIVERSAL:
+            new_owner = GENERAL_ID
+        elif target_item.storage_type == StorageType.LOCAL:
+            # If we are viewing a character, but the next item is a machine,
+            # point the owner to the current room (Location).
+            if self.owner_id == self.char_id:
+                new_owner = self.loc_id
+        
+        return self.clone(owner_id=new_owner)
+
     def get_params(self):
         """Returns a dict of non-redundant IDs useful for unpacking
         in url_for: **ctx_ids.get_params()
         """
         params = {}
+        if self.owner_id and self.owner_id != GENERAL_ID:
+            params['owner_id'] = self.owner_id
         if self.addl_char_id:
             params['char_id'] = self.char_id
         if self.addl_loc_id:

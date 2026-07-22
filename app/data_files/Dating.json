@@ -2384,26 +2384,26 @@
             {
                 "id": 195,
                 "name": "Conception",
-                "description": "Success means she **does** get pregnant, even if this is not what you want.\r\n\r\n- *No birth control:* **5/50** chance (10%)\r\n- *Birth control:* **2/50** chance\r\n- *Double birth control:* still a **1/50** chance by rolling *Natural Max*",
+                "description": "Success means she **does** get pregnant, even if this is not what you want.\r\n\r\n- *No birth control:* **10/50** (20%) chance\r\n- *Birth control:* **2/50** (4%) chance\r\n- *Double birth control:* still a **1/50** (2%) chance by rolling *Natural Max*",
                 "numeric_range": [1, 50],
                 "determinants": [
                     {
                         "infield": {"attrib_id": 194},
                         "op_application": "-",
                         "op_transform": "*",
-                        "val_transform": 3.0
+                        "val_transform": 8.0
                     },
                     {
                         "infield": {"role": "target char", "attrib_id": 194},
                         "op_application": "-",
                         "op_transform": "*",
-                        "val_transform": 3.0
+                        "val_transform": 8.0
                     },
                     {
                         "label": "Base Threshold",
                         "op_application": "-",
                         "op_transform": "c",
-                        "val_transform": 16.0
+                        "val_transform": 11.0
                     }
                 ]
             },
