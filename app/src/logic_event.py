@@ -271,23 +271,40 @@ def get_entity_value(anchor_id, field_def, subject_id=None, ledger=None):
 
     # Handle Depth Traversal
     if field_def.child_of_anchor:
+        anchor_ent = db.session.get(Entity, (game_token, anchor_id))
+        is_character = (
+            anchor_ent and anchor_ent.entity_type == Character.TYPENAME)
+
         # Find the first pile that satisfies the requirement
         if field_def.field_mode == Participant.ATTR:
-            pile = db.session.query(Pile).join(
+            query = db.session.query(Pile).join(
                 Item, 
-                (Pile.item_id == Item.id) & (Pile.game_token == Item.game_token)
+                (Pile.item_id == Item.id) &
+                (Pile.game_token == Item.game_token)
             ).join(
                 AttribVal, 
-                (AttribVal.subject_id == Item.id) & (AttribVal.game_token == Item.game_token)
+                (AttribVal.subject_id == Item.id) &
+                (AttribVal.game_token == Item.game_token)
             ).filter(
                 Pile.game_token == game_token,
                 Pile.owner_id == anchor_id,
                 AttribVal.attrib_id == field_def.attrib_id
-            ).first()
+            )
+            if is_character:
+                query = query.filter(Pile.slot_id.is_not(None))
+            pile = query.first()
             if not pile: return 0.0
             target_id = pile.item_id 
         else:
             # Quantity Mode: Target is the specific item_id requested
+            if is_character:
+                # Verify the specific item is equipped
+                equipped_pile = Pile.query.filter_by(
+                    game_token=game_token, owner_id=anchor_id, 
+                    item_id=field_def.item_id
+                ).filter(
+                    Pile.slot_id.is_not(None)).first()
+                if not equipped_pile: return 0.0
             target_id = field_def.item_id
 
     # Fetch Attribute Value
@@ -338,12 +355,18 @@ def can_use_field(field, entity):
 
     # --- 1. CHILD TRAVERSAL (Item inside a Location/Character) ---
     if field.child_of_anchor:
-        # Check all item piles currently at this location or owned by this character
-        # 'entity' here is the Anchor (e.g., The Energy Core Room)
+        # Check all item piles currently at this location
+        # or owned by this character.
+        # 'entity' here is the Anchor (e.g., The Energy Core Room).
         for pile in entity.piles:
+            # If it's a character, the item must be equipped
+            if entity.entity_type == Character.TYPENAME \
+                    and pile.slot_id is None:
+                continue
             if field.field_mode == Participant.ATTR:
                 # Check if the Item Blueprint has the required attribute
-                if any(av.attrib_id == field.attrib_id for av in pile.item.attrib_values):
+                if any(av.attrib_id == field.attrib_id
+                        for av in pile.item.attrib_values):
                     return True
             elif field.field_mode == Participant.QTY:
                 if pile.item_id == field.item_id:
@@ -488,24 +511,25 @@ def calculate_determinants(event, role_entities):
                 if infield.child_of_anchor:
                     # Find the specific child item that provided the value
                     child_name = "Item"
-                    pile_query = db.session.query(Pile).join(
+                    query = db.session.query(Pile).join(
                         Item, (Pile.item_id == Item.id) &
                               (Pile.game_token == Item.game_token)
+                    ).filter(
+                        Pile.game_token == game_token,
+                        Pile.owner_id == anchor_id
                     )
+                    if anchor and anchor.entity_type == Character.TYPENAME:
+                        query = query.filter(Pile.slot_id.is_not(None))
                     if infield.field_mode == Participant.ATTR:
-                        pile = pile_query.join(
+                        pile = query.join(
                             AttribVal, (
                                 AttribVal.subject_id == Item.id) & (
                                 AttribVal.game_token == Item.game_token)
                         ).filter(
-                            Pile.game_token == game_token,
-                            Pile.owner_id == anchor_id,
                             AttribVal.attrib_id == infield.attrib_id
                         ).first()
                     else:
-                        pile = pile_query.filter(
-                            Pile.game_token == game_token,
-                            Pile.owner_id == anchor_id,
+                        pile = query.filter(
                             Pile.item_id == infield.item_id
                         ).first()
                     if pile:
@@ -699,7 +723,8 @@ def preview_effects(event, role_entities, roll_val=None):
 
             if field_def.child_of_anchor and \
                     field_def.field_mode == Participant.ATTR:
-                pile = db.session.query(Pile).join(
+                target_ent = db.session.get(Entity, (game_token, target_id))
+                query = db.session.query(Pile).join(
                     Item, 
                     (Pile.item_id == Item.id) &
                     (Pile.game_token == Item.game_token)
@@ -711,7 +736,10 @@ def preview_effects(event, role_entities, roll_val=None):
                     Pile.game_token == game_token,
                     Pile.owner_id == target_id,
                     AttribVal.attrib_id == field_def.attrib_id
-                ).first()
+                )
+                if target_ent and target_ent.entity_type == Character.TYPENAME:
+                    query = query.filter(Pile.slot_id.is_not(None))
+                pile = query.first()
                 if pile:
                     parent_name = "🌐" if target_id == GENERAL_ID \
                         else maskable_name(
@@ -1005,7 +1033,8 @@ def do_effect_change(eff, roll_val, role_entities):
     # Destination A: Attributes
     if field_def.field_mode == Participant.ATTR:
         if field_def.child_of_anchor:
-            pile = db.session.query(Pile).join(
+            anchor = db.session.get(Entity, (game_token, out_entity_id))
+            query = db.session.query(Pile).join(
                 Item, 
                 (Pile.item_id == Item.id) &
                 (Pile.game_token == Item.game_token)
@@ -1017,7 +1046,10 @@ def do_effect_change(eff, roll_val, role_entities):
                 Pile.game_token == game_token,
                 Pile.owner_id == out_entity_id,
                 AttribVal.attrib_id == field_def.attrib_id
-            ).first()
+            )
+            if anchor and anchor.entity_type == Character.TYPENAME:
+                query = query.filter(Pile.slot_id.is_not(None))
+            pile = query.first()
             if pile:
                 out_entity_id = pile.item_id
             else:

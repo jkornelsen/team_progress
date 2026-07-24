@@ -10,12 +10,7 @@ move with checkbox on play loc isn't very in sync with the one on the char page
     checking on loc page doesn't stay when returning to loc page
     unchecked on loc page becomes checked on char page
 
-show spin icon in char play like in loc play when the item is in production
-    but it already shows that sometimes
-    show for any host -- not only hosted by that char
-
-checkbox in event determiners to require an item to be equipped
-    adventurer might carry a 2h sword and battleaxe and only one should apply
+show spin icon when char inventory is the target owner even if not the host
 
 old_loc_id doesn't always get set when going to loc page
     http://localhost:5000/play/location/14 (navigate and reload both failed)
@@ -53,29 +48,27 @@ constants in effects show `"get_val_from": "outcome",`
 ---- scenario ----
 
 lumber
-    oak also on main lot -- maybe just "oak trees" rather than "plot 1 oak"
     cedar on additional smaller lot -- buy with property deed
     buildings (mux location)
         offices -- sales over time at better prices
             not worth it for just owner unless possibly for heavy idling
             sales manager
         warehouse to store large quantities of boards while they sell
+        sell for "crypto" (currency) and then sell that for cash?
+            a multistep sales process or perhaps auction seems interesting
+            what about an item that produces idly and determines how much
+                you can auction (event)
+            optionally sell at lower average rate but still needs that idle counter
         tool shed to minimize rust
             chance of rust whenever you pick up a tool
-            convenient to not carry around old axe
-    could make sales manager a universal item for idling
-        how to get access to warehouse storage if not
-        or put at a desktop computer local item
-    HR manager might be better as universal item
-        because we don't want to track employee happiness, hours etc
-        maybe don't need then -- hiring boost alone is not that interesting
-        makes sense that owner could hire
-    getting boards should be practical to idle eventually,
-        although manual chopping is still always going to be meaningful
+            convenient to not carry around old axe?
+    HR and Office manager
+        handle sales and hauler control as well as hiring benefit
+        put at a desktop computer local item to access warehouse storage
+        or perhaps need to walk into warehouse and start a locally hosted idle task
     idle a certain number of batches that require fuel
         can either burn wood or purchased gasoline
     add status attrib (flag) on natural 1 that must be cleared by event
-    item event to Deliver Feller, repositioning from hardware store
 
 tethered one
     deception check for lyria in sunken library

@@ -163,6 +163,16 @@ def has_ingredients(
     if not host_id:
         return False, "No appropriate host."
 
+    # A Character host must still be at the location that any local
+    # ingredient depends on
+    host_ent = db.session.get(Entity, (game_token, host_id))
+    if host_ent and host_ent.entity_type == Character.TYPENAME:
+        needs_local = any(
+            s.ingredient.storage_type == StorageType.LOCAL
+            for s in recipe.sources)
+        if needs_local and ctx.loc_id and host_ent.location_id != ctx.loc_id:
+            return False, f"{host_ent.name} left the location."
+
     if stop_at is not None:
         current_qty = get_accessible_quantity(recipe.product_id, target_owner_id)
         if recipe.is_producer and current_qty >= stop_at:

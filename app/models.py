@@ -1729,7 +1729,8 @@ class Recipe(db.Model, DictHydrator):
     def is_location_hosted(self):
         return any(
             s.ingredient.storage_type == StorageType.LOCAL and 
-            s.ingredient.loc_hosted 
+            s.ingredient.loc_hosted and
+            s.preserve
             for s in self.sources
         )
 

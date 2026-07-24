@@ -1,7 +1,7 @@
 {
     "overall settings": {
         "title": "Lumber",
-        "description": "Run an outfit to {saddlebrown|harvest resources} with a vehicle for transport.",
+        "description": "Run an outfit to {saddlebrown|harvest resources} with a vehicle for hauling.",
         "win_reqs": [
             {"item_id": 28, "quantity": 20.0, "loc_id": 27}
         ],
@@ -15,17 +15,16 @@
             {
                 "id": 4,
                 "name": "Accuracy",
-                "description": "Increases likelihood of getting better rolls for chopping."
+                "description": "Increases likelihood of getting better rolls for chopping checks."
             },
             {
                 "id": 5,
                 "name": "Base Power",
                 "description": "Values are negative, to change a tree's HP. Similar to *Strength* but additive."
             },
-            {"id": 101, "name": "Can Auto Fell", "is_binary": true},
-            {"id": 103, "name": "Can Auto Split", "is_binary": true},
             {"id": 51, "name": "Can Build Bridge", "is_binary": true},
             {"id": 100, "name": "Can Chop", "is_binary": true},
+            {"id": 109, "name": "Can Climb for Honey", "is_binary": true},
             {"id": 102, "name": "Can Plant", "is_binary": true},
             {
                 "id": 61,
@@ -41,11 +40,12 @@
                     "Severe injury"
                 ]
             },
+            {"id": 113, "name": "Climbing Bonus"},
             {
                 "id": 2,
                 "name": "Equipment Slots",
                 "description": "Equipment slots for characters.",
-                "enum_list": ["Held"]
+                "enum_list": ["Held", "Waist", "Shoes"]
             },
             {"id": 57, "name": "Hired", "is_binary": true},
             {
@@ -82,18 +82,19 @@
         ],
         "items": [
             {
-                "id": 98,
-                "name": "Bigger Wood Bin",
-                "description": "After purchasing, [modify Pine Logs](/configure/item/7) to double storage for the Wood Bin to **161 logs.**",
-                "storage_type": "u",
-                "q_limit": 1.0,
+                "id": 145,
+                "name": "Acorns",
+                "description": "More difficult to grow than saplings.",
+                "q_limit": 5.0,
+                "limits_for": [
+                    {"owner_id": 47, "q_limit": 10.0}
+                ],
                 "recipes": [
                     {
-                        "id": 99,
-                        "instant": true,
+                        "id": 144,
+                        "rate_duration": 30,
                         "sources": [
-                            {"item_id": 8, "q_required": 50.0},
-                            {"item_id": 35, "q_required": 1.0, "preserve": true}
+                            {"item_id": 130, "q_required": 1.0, "preserve": true}
                         ]
                     }
                 ]
@@ -103,13 +104,13 @@
                 "name": "Bridge Framework",
                 "description": "Under construction. Requires lumber.\r\n\r\nWhen finished (limit reached), [edit **\"Bridge Site\"** zone](/configure/location/27) to allow passage and clear the color.",
                 "storage_type": "l",
-                "q_limit": 20.0,
+                "q_limit": 50.0,
                 "recipes": [
                     {
                         "id": 79,
                         "rate_duration": 300,
                         "sources": [
-                            {"item_id": 12, "q_required": 50.0}
+                            {"item_id": 12, "q_required": 100.0}
                         ],
                         "attrib_reqs": [
                             {"attrib_id": 51}
@@ -131,6 +132,24 @@
                         "sources": [
                             {"item_id": 12, "q_required": 5.0},
                             {"item_id": 35, "q_required": 1.0, "preserve": true}
+                        ]
+                    },
+                    {
+                        "id": 147,
+                        "rate_amount": 18.0,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 35, "q_required": 1.0, "preserve": true},
+                            {"item_id": 149, "q_required": 5.0}
+                        ]
+                    },
+                    {
+                        "id": 110,
+                        "rate_amount": 60.0,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 35, "q_required": 1.0, "preserve": true},
+                            {"item_id": 106, "q_required": 1.0}
                         ]
                     }
                 ]
@@ -161,6 +180,23 @@
                 "storage_type": "l",
                 "q_limit": 1.0,
                 "loc_hosted": true
+            },
+            {
+                "id": 159,
+                "name": "Desktop Computer",
+                "description": "Critical for the **Technician.** The **Office Manager** may also want one to handle sales.\r\n\r\nWhen purchased, configure the [Office](/configure/location/11) to place the computer at a position where someone can conveniently sit next to it.",
+                "storage_type": "l",
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 160,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 8, "q_required": 35.0},
+                            {"item_id": 35, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
             },
             {
                 "id": 85,
@@ -196,6 +232,23 @@
                 ]
             },
             {
+                "id": 141,
+                "name": "Feller Speed Upgrade",
+                "description": "After purchasing, [modify Pine Trunks](/configure/item/93) to decrease **Feller** recipe duration to **300 seconds.**",
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 140,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 8, "q_required": 40.0},
+                            {"item_id": 35, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
                 "id": 35,
                 "name": "Hardware Store Clerk",
                 "description": "\"Hello, what can I get you today?\"",
@@ -203,22 +256,196 @@
                 "q_limit": 1.0
             },
             {
+                "id": 111,
+                "name": "Harness",
+                "description": "Wrap the leather strap around the tree, clipped in place. Use it to shimmy up.",
+                "attribs": [
+                    [113, 3.0]
+                ],
+                "q_limit": 1.0,
+                "slot": "Waist",
+                "recipes": [
+                    {
+                        "id": 112,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 8, "q_required": 25.0},
+                            {"item_id": 35, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 135,
+                "name": "Hauler Bill of Sale",
+                "description": "After purchasing this item, edit the **Hauler** to place at the **Main Plot** location.",
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 134,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 8, "q_required": 250.0},
+                            {"item_id": 35, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {"id": 106, "name": "Honey", "q_limit": 1.0},
+            {
                 "id": 13,
                 "name": "Honeycomb",
-                "description": "Looks tempting. Smoke may help drive the bees away.",
+                "description": "Looks tempting. Smoke drives the bees away. When harvested, takes 24 hours for the bees to replenish.",
+                "abilities": [108],
+                "storage_type": "l",
+                "q_limit": 2.0,
+                "recipes": [
+                    {
+                        "id": 105,
+                        "rate_duration": 86400,
+                        "sources": [
+                            {"item_id": 13, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 149,
+                "name": "Oak Boards",
+                "description": "Cut from logs.",
+                "recipes": [
+                    {
+                        "id": 148,
+                        "rate_duration": 25,
+                        "sources": [
+                            {"item_id": 11, "q_required": 1.0, "preserve": true},
+                            {"item_id": 153, "q_required": 1.0}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 154,
+                "name": "Oak Log Bonus",
+                "description": "Set by *Oak Chopping Check* on Major Success.",
+                "storage_type": "u"
+            },
+            {
+                "id": 153,
+                "name": "Oak Logs",
+                "description": "Chop a felled tree into logs, plus any bonus gained during the felling.",
+                "q_limit": 15.0,
+                "limits_for": [
+                    {"owner_id": 16, "q_limit": 1000.0},
+                    {"owner_id": 19, "q_limit": 100.0},
+                    {"owner_id": 48, "q_limit": 30.0},
+                    {"owner_id": 133, "q_limit": 250.0}
+                ],
+                "recipes": [
+                    {
+                        "id": 150,
+                        "rate_amount": 10.0,
+                        "rate_duration": 25,
+                        "sources": [
+                            {"item_id": 142, "q_required": 1.0}
+                        ],
+                        "attrib_reqs": [
+                            {"attrib_id": 3, "op_compare": "<", "val_required": 0.1}
+                        ]
+                    },
+                    {
+                        "id": 151,
+                        "rate_amount": 5.0,
+                        "rate_duration": 11,
+                        "sources": [
+                            {"item_id": 154, "q_required": 1.0}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 142,
+                "name": "Oak Marked",
+                "description": "Plots are full of trees, but mark only one tree at a time for harvesting.",
+                "attribs": [
+                    [3, 250.0],
+                    [60, 250.0]
+                ],
                 "storage_type": "l",
                 "q_limit": 1.0
             },
             {
-                "id": 15,
-                "name": "Marked Tree P1",
-                "description": "Plots are full of trees, but mark only one at a time for harvesting.",
-                "attribs": [
-                    [3, 100.0],
-                    [60, 100.0]
+                "id": 127,
+                "name": "Oak Saplings",
+                "q_limit": 5.0,
+                "limits_for": [
+                    {"owner_id": 47, "q_limit": 20.0}
                 ],
-                "storage_type": "l",
-                "q_limit": 1.0
+                "recipes": [
+                    {
+                        "id": 126,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 8, "q_required": 5.0},
+                            {"item_id": 35, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 130,
+                "name": "Oak Trees",
+                "description": "How many trees are available on the **Main Plot.**",
+                "storage_type": "u",
+                "q_limit": 100.0,
+                "recipes": [
+                    {
+                        "id": 128,
+                        "rate_duration": 400,
+                        "sources": [
+                            {"item_id": 127, "q_required": 1.0}
+                        ],
+                        "attrib_reqs": [
+                            {"attrib_id": 102}
+                        ]
+                    },
+                    {
+                        "id": 146,
+                        "rate_duration": 2400,
+                        "sources": [
+                            {"item_id": 145, "q_required": 1.0}
+                        ],
+                        "attrib_reqs": [
+                            {"attrib_id": 102}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 118,
+                "name": "Office Construction",
+                "description": "Purchase the materials, then construct.",
+                "storage_type": "u",
+                "q_limit": 2.0,
+                "recipes": [
+                    {
+                        "id": 119,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 8, "q_required": 60.0},
+                            {"item_id": 35, "q_required": 1.0, "preserve": true}
+                        ]
+                    },
+                    {
+                        "id": 120,
+                        "rate_amount": 2.0,
+                        "rate_duration": 3600,
+                        "sources": [
+                            {"item_id": 118, "q_required": 1.0}
+                        ]
+                    }
+                ]
             },
             {
                 "id": 14,
@@ -242,22 +469,6 @@
                 ]
             },
             {
-                "id": 37,
-                "name": "Old Truck — Bill of Sale",
-                "description": "After purchasing this item, set the truck's *Mileage Left* to 20 and *Repair* to 3.",
-                "storage_type": "u",
-                "q_limit": 1.0,
-                "recipes": [
-                    {
-                        "id": 78,
-                        "sources": [
-                            {"item_id": 8, "q_required": 40.0},
-                            {"item_id": 35, "q_required": 1.0, "preserve": true}
-                        ]
-                    }
-                ]
-            },
-            {
                 "id": 12,
                 "name": "Pine Boards",
                 "description": "Cut from logs.",
@@ -275,7 +486,7 @@
             {
                 "id": 30,
                 "name": "Pine Log Bonus",
-                "description": "Set by *Chopping Check* on Major Success.",
+                "description": "Set by *Pine Chopping Check* on Major Success.",
                 "storage_type": "u"
             },
             {
@@ -286,7 +497,9 @@
                 "limits_for": [
                     {"owner_id": 16, "q_limit": 1000.0},
                     {"owner_id": 19, "q_limit": 100.0},
-                    {"owner_id": 87, "q_limit": 81.0}
+                    {"owner_id": 48, "q_limit": 30.0},
+                    {"owner_id": 87, "q_limit": 81.0},
+                    {"owner_id": 133, "q_limit": 250.0}
                 ],
                 "recipes": [
                     {
@@ -315,17 +528,29 @@
                         "sources": [
                             {"item_id": 86, "q_required": 1.0, "preserve": true},
                             {"item_id": 93, "q_required": 1.0}
-                        ],
-                        "attrib_reqs": [
-                            {"attrib_id": 103}
                         ]
                     }
                 ]
             },
             {
+                "id": 15,
+                "name": "Pine Marked",
+                "description": "Plots are full of trees, but mark only one tree at a time for harvesting.",
+                "attribs": [
+                    [3, 100],
+                    [60, 100.0]
+                ],
+                "storage_type": "l",
+                "q_limit": 1.0
+            },
+            {
                 "id": 41,
                 "name": "Pine Saplings",
                 "description": "It takes awhile before they are ready to be harvested, but it's better than planting pinecones.",
+                "q_limit": 10.0,
+                "limits_for": [
+                    {"owner_id": 47, "q_limit": 40.0}
+                ],
                 "recipes": [
                     {
                         "id": 42,
@@ -339,8 +564,8 @@
             },
             {
                 "id": 10,
-                "name": "Pine Trees P1",
-                "description": "How many trees are available on a plot.",
+                "name": "Pine Trees",
+                "description": "How many trees are available on the **Main Plot.**",
                 "storage_type": "u",
                 "q_limit": 100.0,
                 "recipes": [
@@ -378,9 +603,6 @@
                         "sources": [
                             {"item_id": 10, "q_required": 1.0},
                             {"item_id": 85, "q_required": 1.0, "preserve": true}
-                        ],
-                        "attrib_reqs": [
-                            {"attrib_id": 101}
                         ]
                     }
                 ]
@@ -406,8 +628,28 @@
             {
                 "id": 31,
                 "name": "Rock",
-                "description": "Landscape feature that can get in the way of a lumber operation.",
+                "description": "Landscape feature that prevents this tile from being used.",
                 "storage_type": "l"
+            },
+            {
+                "id": 115,
+                "name": "Shoe Spikes",
+                "description": "Better grip when climbing the tree.",
+                "attribs": [
+                    [113, 2.0]
+                ],
+                "q_limit": 1.0,
+                "slot": "Waist",
+                "recipes": [
+                    {
+                        "id": 114,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 8, "q_required": 15.0},
+                            {"item_id": 35, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
             },
             {
                 "id": 84,
@@ -464,6 +706,23 @@
                 ]
             },
             {
+                "id": 139,
+                "name": "Splitter Speed Upgrade",
+                "description": "After purchasing, [modify Pine Logs](/configure/item/7) to decrease **Splitter** recipe duration to **300 seconds.**",
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 138,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 8, "q_required": 90.0},
+                            {"item_id": 35, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
                 "id": 82,
                 "name": "Steel Axe",
                 "description": "The industry standard.",
@@ -483,14 +742,162 @@
                         ]
                     }
                 ]
+            },
+            {
+                "id": 125,
+                "name": "Take Off Shoes",
+                "description": "Equip this item to go barefoot and use your natural toes and muscles for decent grip.",
+                "attribs": [
+                    [113, 1.0]
+                ],
+                "q_limit": 1.0,
+                "slot": "Shoes"
+            },
+            {
+                "id": 37,
+                "name": "Truck Bill of Sale",
+                "description": "After purchasing this item, set the truck's *Mileage Left* to 20 and *Repair* to 3.",
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 78,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 8, "q_required": 40.0},
+                            {"item_id": 35, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 124,
+                "name": "Warehouse Construction",
+                "description": "Purchase the materials, then construct.",
+                "storage_type": "u",
+                "q_limit": 2.0,
+                "recipes": [
+                    {
+                        "id": 122,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 8, "q_required": 40.0},
+                            {"item_id": 35, "q_required": 1.0, "preserve": true}
+                        ]
+                    },
+                    {
+                        "id": 123,
+                        "rate_amount": 2.0,
+                        "rate_duration": 3600,
+                        "sources": [
+                            {"item_id": 124, "q_required": 1.0}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 98,
+                "name": "Wood Bin Bigger",
+                "description": "After purchasing, [modify Pine Logs](/configure/item/7) to double storage for the Wood Bin to **161 logs.**",
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 99,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 8, "q_required": 50.0},
+                            {"item_id": 35, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 132,
+                "name": "Wood Bin Biggest",
+                "description": "After purchasing, [modify Pine Logs](/configure/item/7) to increase storage for the Wood Bin to **501 logs.**",
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 131,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 8, "q_required": 120.0},
+                            {"item_id": 35, "q_required": 1.0, "preserve": true},
+                            {"item_id": 98, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
             }
         ],
         "locations": [
+            {
+                "id": 116,
+                "name": "Buildings",
+                "description": "Go to the area where any buildings are for the site.",
+                "dimensions": [5, 4],
+                "destinations": [
+                    {
+                        "loc2_id": 117,
+                        "door1": [2, 1],
+                        "door2": [1, 6]
+                    },
+                    {
+                        "loc2_id": 121,
+                        "door1": [4, 1],
+                        "door2": [1, 2]
+                    }
+                ]
+            },
             {
                 "id": 59,
                 "name": "California",
                 "description": "Now that the railway has access to the gold mines, your company grows like wildfire.",
                 "masked": true
+            },
+            {
+                "id": 17,
+                "name": "Climbing For Honey",
+                "description": "Use this view for characters to climb a tree, starting from the bottom.",
+                "abilities": [107],
+                "dimensions": [4, 20],
+                "items": [
+                    {
+                        "item_id": 13,
+                        "quantity": 1.0,
+                        "position": [1, 2]
+                    }
+                ],
+                "destinations": [
+                    {
+                        "loc2_id": 18,
+                        "door1": [3, 20],
+                        "door2": [18, 8]
+                    }
+                ],
+                "zones": [
+                    {
+                        "coords": [1, 4, 2, 20],
+                        "color": "Black"
+                    },
+                    {
+                        "coords": [1, 1, 2, 1],
+                        "color": "Black"
+                    },
+                    {
+                        "coords": [1, 2, 2, 3],
+                        "label": "Branch",
+                        "color": "SaddleBrown",
+                        "prevents_travel": false
+                    },
+                    {
+                        "coords": [3, 1, 4, 20],
+                        "label": "Trunk",
+                        "color": "SaddleBrown",
+                        "prevents_travel": false
+                    }
+                ]
             },
             {
                 "id": 34,
@@ -528,11 +935,6 @@
                         "item_id": 11,
                         "quantity": 1.0,
                         "position": [3, 2]
-                    },
-                    {
-                        "item_id": 12,
-                        "quantity": 94.0,
-                        "position": [4, 2]
                     }
                 ],
                 "destinations": [
@@ -555,10 +957,6 @@
                 "id": 18,
                 "name": "Main Plot",
                 "description": "This plot of land is your family inheritance and the basis for setting up the company. Pine trees have been planted.",
-                "attribs": [
-                    [60, 100.0],
-                    [101, true]
-                ],
                 "dimensions": [20, 20],
                 "items": [
                     {
@@ -574,20 +972,35 @@
                     {
                         "item_id": 31,
                         "quantity": 1.0,
+                        "position": [4, 4]
+                    },
+                    {
+                        "item_id": 31,
+                        "quantity": 1.0,
+                        "position": [6, 15]
+                    },
+                    {
+                        "item_id": 31,
+                        "quantity": 1.0,
                         "position": [14, 5]
                     }
                 ],
-                "item_refs": [10],
+                "item_refs": [10, 130],
                 "destinations": [
                     {
                         "loc2_id": 34,
                         "door1": [1, 11],
-                        "door2": [5, 2]
+                        "door2": [5, 1]
                     },
                     {
                         "loc2_id": 58,
-                        "door1": [18, 1],
+                        "door1": [19, 1],
                         "door2": [4, 5]
+                    },
+                    {
+                        "loc2_id": 116,
+                        "door1": [7, 9],
+                        "door2": [3, 4]
                     }
                 ],
                 "zones": [
@@ -596,6 +1009,15 @@
                         "label": "Pond",
                         "color": "#55a"
                     }
+                ]
+            },
+            {
+                "id": 117,
+                "name": "Office",
+                "description": "Wooden steps lead up to a raised trailer building. Inside are desks and computers.",
+                "dimensions": [4, 7],
+                "entrance_reqs": [
+                    {"item_id": 118, "val_required": 2.0}
                 ]
             },
             {
@@ -716,28 +1138,12 @@
                 "dimensions": [6, 4]
             },
             {
-                "id": 17,
-                "name": "Tree — Climbing",
-                "description": "Use this view for characters to climb a tree, starting from the bottom.",
-                "dimensions": [4, 20],
-                "items": [
-                    {
-                        "item_id": 13,
-                        "quantity": 1.0,
-                        "position": [1, 2]
-                    }
-                ],
-                "destinations": [
-                    {
-                        "loc2_id": 18,
-                        "door1": [3, 20],
-                        "door2": [18, 8]
-                    }
-                ],
-                "zones": [
-                    {
-                        "coords": [1, 3, 2, 20]
-                    }
+                "id": 121,
+                "name": "Warehouse",
+                "description": "Shelves line the walls on either side.",
+                "dimensions": [8, 3],
+                "entrance_reqs": [
+                    {"item_id": 124, "val_required": 2.0}
                 ]
             }
         ],
@@ -754,14 +1160,20 @@
                 "position": [5, 4]
             },
             {
+                "id": 133,
+                "name": "CHAD Wheeler",
+                "description": "Controlled Hauling And Driving Wheeler\r\n\r\n- Operated remotely: does not require anyone to move/travel with as long as the **Technician** is in the office at a computer\r\n- Solar powered: does not require starting\r\n- Larger capacity than **Truck**\r\n- Can pick up, drop, and store items, although it does not produce them or make purchases"
+            },
+            {
                 "id": 50,
-                "name": "HR Manager",
+                "name": "HR and Sales Manager",
+                "description": "Handles sales operations from the office rather than through the **Hardware Store Clerk.**",
                 "attribs": [
-                    [53, 50.0],
+                    [53, 90.0],
                     [54, 1.0],
                     [57, false]
                 ],
-                "abilities": [52],
+                "abilities": [52, 157],
                 "location_id": 80,
                 "position": [3, 3]
             },
@@ -769,14 +1181,20 @@
                 "id": 48,
                 "name": "Lumberjack",
                 "attribs": [
-                    [4, 2.0],
+                    [4, 1.4],
                     [6, 2.0],
                     [53, 200.0],
                     [57, false],
-                    [100, true]
+                    [100, true],
+                    [109, true]
                 ],
+                "abilities": [21, 23, 25, 107, 108, 143, 155],
+                "toplevel": true,
                 "location_id": 80,
-                "position": [2, 4]
+                "position": [2, 4],
+                "items": [
+                    {"item_id": 125, "quantity": 1.0}
+                ]
             },
             {
                 "id": 20,
@@ -785,17 +1203,19 @@
                 "attribs": [
                     [4, 1.1],
                     [6, 1.1],
-                    [54, 2.0],
+                    [54, 1.3],
                     [100, true],
-                    [102, true]
+                    [102, true],
+                    [109, true]
                 ],
-                "abilities": [21, 23, 25, 52],
+                "abilities": [21, 23, 25, 52, 107, 108, 143, 155],
                 "toplevel": true,
                 "location_id": 18,
                 "position": [4, 3],
                 "travel_party": "Driving",
                 "items": [
-                    {"item_id": 14, "quantity": 1.0, "slot": "Held"}
+                    {"item_id": 14, "quantity": 1.0, "slot": "Held"},
+                    {"item_id": 125, "quantity": 1.0}
                 ]
             },
             {
@@ -803,9 +1223,27 @@
                 "name": "Planter",
                 "description": "Better at carrying pinecones.",
                 "attribs": [
-                    [53, 100.0],
+                    [4, 1.1],
+                    [6, 1.1],
+                    [53, 90.0],
                     [57, false],
-                    [102, true]
+                    [102, true],
+                    [109, true]
+                ],
+                "toplevel": true,
+                "location_id": 18,
+                "position": [14, 10],
+                "items": [
+                    {"item_id": 125, "quantity": 1.0}
+                ]
+            },
+            {
+                "id": 158,
+                "name": "Technician",
+                "description": "When sitting by a computer in the office, can operate the **CHAD Wheeler** as well as control production of automated machinery: **Circular Saw,** **Feller,** **Splitter.**",
+                "attribs": [
+                    [53, 300.0],
+                    [57, false]
                 ],
                 "location_id": 80,
                 "position": [4, 4]
@@ -819,7 +1257,6 @@
                     [40, 3.0]
                 ],
                 "abilities": [24],
-                "toplevel": true,
                 "location_id": 18,
                 "position": [4, 2],
                 "travel_party": "Driving"
@@ -828,20 +1265,60 @@
                 "id": 87,
                 "name": "Wood Bin",
                 "description": "Stores a large quantity of logs from auto production.\r\nKeep at least one log in the bin to manage collection.\r\nThe bin is difficult to move — use a vehicle instead to transport the logs.",
-                "attribs": [
-                    [103, true]
-                ],
                 "location_id": 18,
                 "position": [15, 9],
                 "items": [
-                    {"item_id": 7, "quantity": 11.0}
+                    {"item_id": 7, "quantity": 1.0}
                 ]
             }
         ],
         "events": [
             {
+                "id": 156,
+                "name": "Chopping Check — Oak",
+                "description": "- **Major Success:** Gain 50% more logs\r\n- **Any Failure:** The attempt didn't land cleanly — restores 20% **HP**\r\n- **Major Failure:** Run *Chopping Mishap Type*",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "infield": {"child_of_anchor": true, "attrib_id": 4}
+                    },
+                    {
+                        "infield": {"attrib_id": 4},
+                        "op_application": "*"
+                    },
+                    {
+                        "label": "Threshold for Typical",
+                        "op_application": "-",
+                        "op_transform": "c"
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 154},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "outcome_success": "success_major",
+                        "auto_apply": true
+                    },
+                    {
+                        "infield": {"role": "universal", "item_id": 142, "attrib_id": 60},
+                        "outfield": {"role": "universal", "item_id": 142, "attrib_id": 3},
+                        "op_transform": "*",
+                        "val_transform": 0.2,
+                        "outcome_success": "failure_any"
+                    }
+                ],
+                "chained": [
+                    {
+                        "child_id": 22,
+                        "req": {"outcome_success": "failure_major"}
+                    }
+                ]
+            },
+            {
                 "id": 26,
-                "name": "Chopping Check",
+                "name": "Chopping Check — Pine",
                 "description": "- **Major Success:** Gain 50% more logs\r\n- **Any Failure:** The attempt didn't land cleanly — restores 20% **HP**\r\n- **Major Failure:** Run *Chopping Mishap Type*",
                 "numeric_range": [1, 20],
                 "determinants": [
@@ -868,8 +1345,8 @@
                         "auto_apply": true
                     },
                     {
-                        "infield": {"role": "at", "child_of_anchor": true, "attrib_id": 60},
-                        "outfield": {"role": "at", "child_of_anchor": true, "attrib_id": 3},
+                        "infield": {"role": "universal", "item_id": 15, "attrib_id": 60},
+                        "outfield": {"role": "universal", "item_id": 15, "attrib_id": 3},
                         "op_transform": "*",
                         "val_transform": 0.2,
                         "outcome_success": "failure_any"
@@ -890,9 +1367,67 @@
                 "selection_attrib_id": 61
             },
             {
+                "id": 107,
+                "name": "Climb Honey Tree",
+                "description": "Success at making the climb up.\r\n\r\n- On **Minor Failure,** try again. For repeated minor failures, try again later when it's not raining.\r\n- On **Major Failure,** fall and sustain injury.",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "infield": {"role": "target char", "child_of_anchor": true, "attrib_id": 113}
+                    },
+                    {
+                        "infield": {"role": "target char", "attrib_id": 6},
+                        "op_transform": "/",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "infield": {"role": "target char", "attrib_id": 4},
+                        "op_transform": "/",
+                        "val_transform": 2.0
+                    },
+                    {"op_application": ":=", "op_transform": "floor"}
+                ]
+            },
+            {
+                "id": 108,
+                "name": "Harvest Honey",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "infield": {"role": "at", "field_mode": "qty", "item_id": 13},
+                        "op_application": ">=",
+                        "val_required": 2.0
+                    },
+                    {
+                        "infield": {"role": "target char", "attrib_id": 109},
+                        "op_application": "=="
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "at", "field_mode": "qty", "item_id": 13},
+                        "op_application": ":=",
+                        "op_transform": "c"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "field_mode": "qty", "item_id": 106},
+                        "op_transform": "c",
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "field_mode": "qty", "item_id": 106},
+                        "op_transform": "c",
+                        "outcome_success": "success_major"
+                    }
+                ]
+            },
+            {
                 "id": 52,
                 "name": "Hire",
-                "description": "You must have the required funds in order to hire someone (do not go into debt by hiring).",
+                "description": "You must have the required funds in order to hire someone — do not go into debt by hiring.\r\nAfter hiring someone, configure them to **Show in Overview.**",
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -901,7 +1436,8 @@
                     {
                         "infield": {"attrib_id": 54},
                         "op_application": "*"
-                    }
+                    },
+                    {"op_application": ":=", "op_transform": "floor"}
                 ],
                 "effects": [
                     {
@@ -920,11 +1456,11 @@
             {
                 "id": 21,
                 "name": "Mark a Pine",
-                "description": "Choose the grid coordinates of the next tree to be actively harvested on a plot.\r\n\r\n**{saddlebrown|When Marked Pine quantity is 0}**:\r\n- Sets the marked tree position to the new coordinates at the *Main Plot*.\r\n- Produces a *Marked Pine* from *Plot 1 Trees* so quantity goes from 0 to 1.\r\n- Sets HP to 100.\r\n\r\nNow the tree is ready for *Swing to Chop*.",
+                "description": "Choose the grid coordinates of the next tree to be actively harvested on a plot.\r\n\r\n**{saddlebrown|When Pine Marked quantity is 0}**:\r\n- Sets the marked tree position to the new coordinates at the *Main Plot*.\r\n- Produces a *Pine Marked* from *Plot 1 Trees* so quantity goes from 0 to 1.\r\n- Sets HP to max.\r\n\r\nNow the tree is ready for *Swing to Chop Pine*.",
                 "outcome_type": "coordinates",
                 "determinants": [
                     {
-                        "infield": {"role": "at", "child_of_anchor": true, "attrib_id": 3},
+                        "infield": {"role": "universal", "item_id": 15, "attrib_id": 3},
                         "op_application": ">=",
                         "val_required": 0.1,
                         "negate": true
@@ -951,17 +1487,9 @@
                         "op_application": ":="
                     },
                     {
-                        "get_val_from": "outcome",
-                        "outfield": {"role": "at", "child_of_anchor": true, "attrib_id": 3},
+                        "infield": {"role": "universal", "item_id": 15, "attrib_id": 60},
+                        "outfield": {"role": "universal", "item_id": 15, "attrib_id": 3},
                         "op_application": ":=",
-                        "op_transform": "c",
-                        "val_transform": 100.0
-                    },
-                    {
-                        "get_val_from": "outcome",
-                        "outfield": {"role": "at", "attrib_id": 60},
-                        "op_application": ":=",
-                        "op_transform": "c",
                         "val_transform": 100.0
                     },
                     {
@@ -973,10 +1501,73 @@
                 ]
             },
             {
+                "id": 143,
+                "name": "Mark an Oak",
+                "description": "Choose the grid coordinates of the next tree, and prepare the tree for *Swing to Chop*.",
+                "outcome_type": "coordinates",
+                "determinants": [
+                    {
+                        "infield": {"role": "universal", "item_id": 142, "attrib_id": 3},
+                        "op_application": ">=",
+                        "val_required": 0.1,
+                        "negate": true
+                    },
+                    {
+                        "infield": {"role": "at", "field_mode": "qty", "item_id": 142},
+                        "op_application": ">=",
+                        "negate": true
+                    },
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 130},
+                        "op_application": ">="
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {
+                            "role": "blueprint",
+                            "field_mode": "place",
+                            "item_id": 142,
+                            "loc_id": 18
+                        },
+                        "op_application": ":="
+                    },
+                    {
+                        "infield": {"role": "universal", "item_id": 142, "attrib_id": 60},
+                        "outfield": {"role": "universal", "item_id": 142, "attrib_id": 3},
+                        "op_application": ":=",
+                        "val_transform": 100.0
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 130},
+                        "op_application": "-",
+                        "op_transform": "c"
+                    }
+                ]
+            },
+            {
                 "id": 25,
                 "name": "Operate Sawmill",
                 "description": "Chance of success. Roll to determine how well a batch of logs turns into boards, or if something perhaps goes wrong.\r\n\r\nUse *Very Easy* difficulty, or *Moderate* if there is a large number of logs to be processed.",
                 "numeric_range": [1, 20]
+            },
+            {
+                "id": 157,
+                "name": "Rather Nice",
+                "description": "Roll whenever you accidentally doze off IRL while waiting for an idle task to finish.",
+                "outcome_type": "numeric",
+                "numeric_range": [-4, 15],
+                "determinants": [
+                    {"op_application": ":=", "op_transform": "*", "val_transform": 10.0}
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 8}
+                    }
+                ]
             },
             {
                 "id": 24,
@@ -1008,9 +1599,9 @@
                 ]
             },
             {
-                "id": 23,
-                "name": "Swing to Chop",
-                "description": "For the final blow, or after rolling a natural 1, do a **Chopping Check.**",
+                "id": 155,
+                "name": "Swing to Chop Oak",
+                "description": "For the final blow, or after rolling a natural 1, do a **Chopping Check — Oak.**",
                 "outcome_type": "numeric",
                 "numeric_range": [1, 10],
                 "determinants": [
@@ -1022,7 +1613,7 @@
                         "op_application": "*"
                     },
                     {
-                        "infield": {"role": "at", "child_of_anchor": true, "attrib_id": 3},
+                        "infield": {"role": "universal", "item_id": 142, "attrib_id": 3},
                         "op_application": ">=",
                         "val_required": 0.01
                     }
@@ -1030,7 +1621,45 @@
                 "effects": [
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "at", "child_of_anchor": true, "attrib_id": 3},
+                        "outfield": {"role": "universal", "item_id": 142, "attrib_id": 3},
+                        "op_application": "-",
+                        "auto_apply": true
+                    }
+                ],
+                "chained": [
+                    {
+                        "child_id": 156,
+                        "req": {
+                            "infield": {"role": "universal", "item_id": 142, "attrib_id": 3},
+                            "op_application": "<"
+                        }
+                    }
+                ]
+            },
+            {
+                "id": 23,
+                "name": "Swing to Chop Pine",
+                "description": "For the final blow, or after rolling a natural 1, do a **Chopping Check — Pine.**",
+                "outcome_type": "numeric",
+                "numeric_range": [1, 10],
+                "determinants": [
+                    {
+                        "infield": {"child_of_anchor": true, "attrib_id": 5}
+                    },
+                    {
+                        "infield": {"attrib_id": 6},
+                        "op_application": "*"
+                    },
+                    {
+                        "infield": {"role": "universal", "item_id": 15, "attrib_id": 3},
+                        "op_application": ">=",
+                        "val_required": 0.01
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "item_id": 15, "attrib_id": 3},
                         "op_application": "-",
                         "auto_apply": true
                     }
@@ -1039,7 +1668,7 @@
                     {
                         "child_id": 26,
                         "req": {
-                            "infield": {"role": "at", "child_of_anchor": true, "attrib_id": 3},
+                            "infield": {"role": "universal", "item_id": 15, "attrib_id": 3},
                             "op_application": "<"
                         }
                     }

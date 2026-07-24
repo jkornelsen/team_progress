@@ -146,11 +146,14 @@ class ItemPlayPresenter:
             'link_entity_id': satisfying_entity or entity_with_value
         }
 
-    def _enrich_recipe(self, r):
+    def _enrich_recipe(self, recipe):
         """Resolves one recipe. Returns (enriched_dict, discovered_ids)."""
-        host_id = find_best_host(r, self.owner_id, self.ctx)
-        can_do, reason = can_perform_recipe(host_id, r, self.owner_id, self.ctx)
-        resolved = resolve_recipe_sources(host_id, r, self.ctx)
+        host_id = find_best_host(
+            recipe, self.owner_id, self.ctx)
+        can_do, reason = can_perform_recipe(
+            host_id, recipe, self.owner_id, self.ctx)
+        resolved = resolve_recipe_sources(
+            host_id, recipe, self.ctx)
 
         discovered_ids = set()
         sources_ui = []
@@ -159,15 +162,12 @@ class ItemPlayPresenter:
                 discovered_ids.add(res['anticipated_owner_id'])
             discovered_ids.add(res['item'].id)
 
-            url_params = {'owner_id': res['anticipated_owner_id']}
-            if self.ctx.addl_char_id and \
-                    res['anticipated_owner_type'] != Character.TYPENAME:
-                url_params['char_id'] = self.ctx.char_id
-            elif self.ctx.addl_loc_id and \
-                    res['anticipated_owner_id'] == GENERAL_ID:
-                url_params['loc_id'] = self.ctx.loc_id
+            url_params = self.ctx.for_item(
+                recipe.product, recipe.is_location_hosted
+            ).get_params()
             if res['best_pile'] and res['best_pile'].position:
-                url_params['pos[]'] = res['best_pile'].position
+                url_params['pos'] = ",".join(
+                    str(x) for x in res['best_pile'].position)
 
             sources_ui.append({
                 'ingredient': res['item'],
@@ -189,7 +189,7 @@ class ItemPlayPresenter:
             Entity, (self.game_token, host_id)) if host_id else None
 
         enriched = {
-            'recipe': r,
+            'recipe': recipe,
             'host_id': host_id,
             'host_name': host_ent.name if host_ent else "No Host",
             'can_produce': can_do,
@@ -200,7 +200,10 @@ class ItemPlayPresenter:
             'byproducts': [{
                 'item': bp.item,
                 'rate_amount': bp.rate_amount,
-                'url_params': self.ctx.get_params()} for bp in r.byproducts]
+                'url_params': self.ctx.for_item(
+                    bp.item, recipe.is_location_hosted
+                ).get_params()
+            } for bp in recipe.byproducts]
         }
         return enriched, discovered_ids
 
@@ -272,7 +275,8 @@ class ItemPlayPresenter:
         for source_link in self.item.as_ingredient:
             prod = source_link.recipe.product
             if prod.id not in seen_ids:
-                target_ctx = self.ctx.for_item(prod)
+                target_ctx = self.ctx.for_item(
+                    prod, source_link.recipe.is_location_hosted)
                 used_for_production.append({
                     'item': prod,
                     'q_required': source_link.q_required,
@@ -346,8 +350,10 @@ class ItemPlayPresenter:
             "byproduct_of": [{
                 'item': bo.recipe.product,
                 'rate_amount': bo.rate_amount,
-                'url_params': self.ctx.for_item(bo.recipe.product).get_params()
-                } for bo in self.item.as_byproducts],
+                'url_params': self.ctx.for_item(
+                    bo.recipe.product, bo.recipe.is_location_hosted
+                ).get_params()
+            } for bo in self.item.as_byproducts],
             "progress": Progress.query.filter_by(
                 game_token=self.game_token, product_id=self.item_id).first(),
             "available_slots": available_slots,

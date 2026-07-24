@@ -398,9 +398,11 @@ class ContextIds:
         """Is the loc id additional info besides owner id."""
         return self.loc_id and self.loc_id != self.owner_id
 
-    def for_item(self, target_item):
+    def for_item(self, target_item, location_hosted=False):
         """Returns a cloned context tailored for the destination item's storage
         rules.
+        - location_hosted: True if the specific recipe link being followed
+          is hosted by a Location
         """
         new_owner = self.owner_id
         
@@ -411,6 +413,13 @@ class ContextIds:
             # point the owner to the current room (Location).
             if self.owner_id == self.char_id:
                 new_owner = self.loc_id
+        elif target_item.storage_type == StorageType.CARRIED:
+            # If we are viewing a Location, but the next item is carryable
+            # and this link isn't a genuine machine hosting relationship,
+            # hand ownership back to the character.
+            if not location_hosted and self.owner_id == self.loc_id \
+                    and self.char_id:
+                new_owner = self.char_id
         
         return self.clone(owner_id=new_owner)
 
