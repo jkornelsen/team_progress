@@ -199,15 +199,23 @@
                                     {{ ent.name }}
                                 {% endcall %}
                             {% elif ent.entity_type == 'attrib' %}
-                                {% set target_url = url_for('play.play_attrib',
+                                {% set valid_subject_id = subject.id if subject
+                                    else ctx_char.id if ctx_char else none %}
+                                {% if valid_subject_id %}
+                                    {% set target_url = url_for('play.play_attrib',
                                         attrib_id=ent.id, subject_id=(
                                             subject.id if subject
                                             else ctx_char.id if ctx_char else 1)) %}
+                                {% else %}
+                                    {% set target_url = url_for('configure.lookup',
+                                        ent_type='attrib', id=ent.id) %}
+                                {% endif %}
                                 {% call hk.hotlink(target_url, link_letters) %}
                                     {{ ent.name }}
                                 {% endcall %}
                             {% else %}
-                                {% set target_url = url_for('play.play_' ~ ent.entity_type, id=ent.id) %}
+                                {% set target_url = url_for('play.play_' ~ ent.entity_type,
+                                    id=ent.id) %}
                                 {{ render.maskable_name(ent, target_url, link_letters) }}
                             {% endif %}
                         </div>

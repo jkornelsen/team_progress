@@ -4,7 +4,7 @@
 
 ---- functional, tightening, quality of life ----
 
-an effect that decreases a pile produced a new pile instead of changing the original
+effect that decreases pile on grid produces a new pile instead of changing original
 
 disallow travel with another char if exiting from a grid and they're not nearby
 
@@ -22,11 +22,6 @@ old_loc_id doesn't always get set when going to loc page
     with 7 tabs open -- maybe because of chrome performance behavior
     holding shift to reload didn't help
     waiting 5 seconds may have helped?
-
-Value: -4.500000000000018
-    truncate floating point limits with epsilon or whatever it was
-    or 6-8 places, especially when writing to json and maybe also db
-    at least 3 more than displayed 3, up to 1 million if turned to integer
 
 don't show duplicate destinations in play location
     same door positions (null in the example)
@@ -54,9 +49,6 @@ lumber
         can either burn wood or purchased gasoline
     add status attrib (flag) on natural 1 that must be cleared by event
         set flag to either 1 or 0: x -> 2 - roll, x -> min(x, 0)
-
-dating
-    cliff location with hiking next to beach
 
 tethered one
     deception check for lyria in sunken library
@@ -104,11 +96,6 @@ dungeon crawl
 
 mine helium-3 with location production
     then char converts to cannisters
-
-furniture
-    distance affects chance of success
-saving grandfather clock resets hour, an enumerated attrib, to 12am
-    hasn't been tested in new version
 
 scenario idea: comedy
     lighthearted

@@ -437,6 +437,11 @@ def serialize_smart(obj, indent=4, max_line_length=60, current_indent=0):
         return "{" + "".join(lines) + f"\n{padding}}}"
 
     # --- HANDLE PRIMITIVES ---
+
+    # Clean up epsilon inaccuracy, changing 23.000000000000007 to 23.0
+    if isinstance(obj, float):
+        obj = round(obj, 10)
+
     # Prefer unicode symbols over escape sequences as they're easier to edit.
     return json.dumps(obj, ensure_ascii=False)
 
