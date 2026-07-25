@@ -86,23 +86,27 @@ def is_in_grid(loc, pos, check_zones=True):
             
     return True
 
-def blocked_by_local_item(loc_id, pos):
-    """Returns True if a StorageType.LOCAL item exists at the given coordinate."""
+def blocked_by_local_item(loc_id, pos, allow_item_id=None):
+    """
+    Returns True if a StorageType.LOCAL item exists at the given coordinate.
+    Except if allow_item_id is given then it may be stacked onto instead.
+    """
     game_token = g.game_token
     if not pos:
         return False
     x, y = pos
 
-    blocking_pile = db.session.query(Pile).join(
+    query = db.session.query(Pile).join(
         Item, (Pile.item_id == Item.id) & (Pile.game_token == Item.game_token)
     ).filter(
         Pile.game_token == game_token,
         Pile.owner_id == loc_id,
         Pile.position == [x, y],
         Item.storage_type == StorageType.LOCAL
-    ).first()
-    
-    return blocking_pile is not None
+    )
+    if allow_item_id is not None:
+        query = query.filter(Pile.item_id != allow_item_id)
+    return query.first() is not None
 
 def is_cell_blocked(loc, pos, exclude_char_id=None):
     """
@@ -175,7 +179,7 @@ def get_default_position(loc):
     valid = get_all_valid_coords(loc)
     return list(valid[0]) if valid else None
 
-def get_output_positions(loc, anchor_pos):
+def get_output_positions(loc, anchor_pos, product_item_id=None):
     """Returns an ordered list of [x, y] coordinates for placing an item."""
     if not anchor_pos or len(anchor_pos) != 2:
         return [None]
@@ -185,7 +189,8 @@ def get_output_positions(loc, anchor_pos):
 
     for dx, dy in NEIGHBORHOOD:
         cand = [x + dx, y + dy]
-        if is_in_grid(loc, cand) and not blocked_by_local_item(loc.id, cand):
+        if is_in_grid(loc, cand, False) and not blocked_by_local_item(
+                loc.id, cand, product_item_id):
             candidates.append(cand)
     
     return candidates
@@ -204,7 +209,7 @@ def find_best_output_pos(item_id, loc_id, anchor_pos):
     if not loc or not loc.dimensions:
         return None
 
-    candidates = get_output_positions(loc, anchor_pos)
+    candidates = get_output_positions(loc, anchor_pos, item_id)
 
     # PHASE 1: Search for existing pile of the same item to merge into
     for candidate in candidates:
@@ -219,7 +224,8 @@ def find_best_output_pos(item_id, loc_id, anchor_pos):
 
     # PHASE 2: Find first unblocked square
     for candidate in candidates:
-        if not blocked_by_local_item(loc_id, candidate):
+        if is_in_grid(loc, candidate, True) and \
+                not blocked_by_local_item(loc_id, candidate, item_id):
             return candidate
 
     # Fallback: If everything is blocked, return the anchor position itself

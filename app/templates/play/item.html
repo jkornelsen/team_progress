@@ -999,6 +999,9 @@ async function startProd(recipeId, targetHostId) {
     fd.append('owner_id', ownerId);
     fd.append('char_id', charId);
     fd.append('loc_id', locId);
+    const urlParams = new URLSearchParams(window.location.search);
+    const pos = urlParams.get('pos');
+    if (pos) fd.append('pos', pos);
 
     const batchesStopInput = document.getElementById(`batches-stop-${recipeId}`);
     if (batchesStopInput && batchesStopInput.value !== '') {

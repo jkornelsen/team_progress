@@ -372,18 +372,22 @@ def maskable_name(entity):
 # ------------------------------------------------------------------------
 
 class ContextIds:
-    def __init__(self, owner_id=None, char_id=None, loc_id=None, host_id=None):
+    def __init__(
+            self, owner_id=None, char_id=None, loc_id=None, host_id=None,
+            position=None):
         self.owner_id = owner_id
         self.char_id = char_id
         self.loc_id = loc_id
         self.host_id = host_id
+        self.position = position
 
     def clone(self, **overrides):
         params = {
             'owner_id': self.owner_id,
             'char_id': self.char_id,
             'loc_id': self.loc_id,
-            'host_id': self.host_id
+            'host_id': self.host_id,
+            'position': self.position
         }
         params.update(overrides)
         return ContextIds(**params)

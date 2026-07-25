@@ -1948,6 +1948,7 @@ class Progress(db.Model, DictHydrator):
     host_id = db.Column(db.Integer, nullable=False)
     char_id = db.Column(db.Integer)
     loc_id = db.Column(db.Integer)
+    position = db.Column(ARRAY(db.Integer), default=None)
     
     # status
     start_time = db.Column(db.DateTime)
@@ -1961,6 +1962,7 @@ class Progress(db.Model, DictHydrator):
             "host_id": self.host_id,
             "char_id": self.char_id,
             "loc_id": self.loc_id,
+            "position": self.position,
             "start_time": timeToStr(self.start_time),
             "batches_processed": self.batches_processed,
             "stop_at": self.stop_at,

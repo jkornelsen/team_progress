@@ -642,9 +642,10 @@ def start_item_production(host_id):
 
     owner = db.session.get(Entity, (game_token, owner_id))
     ctx = ContextIds(
-        owner.id,
+        owner_id,
         req.get_int('char_id'),
         req.get_int('loc_id'),
+        position=req.get_coords('pos')
     )
 
     logger.debug(
@@ -681,7 +682,8 @@ def instant_item_production(host_id):
         owner_id,
         session.get('old_char_id'),
         session.get('old_loc_id'),
-        host_id
+        host_id,
+        position=req.get_coords('pos')
     )
 
     recipe = db.session.get(Recipe, (g.game_token, recipe_id))

@@ -4,6 +4,8 @@
 
 ---- functional, tightening, quality of life ----
 
+an effect that decreases a pile produced a new pile instead of changing the original
+
 disallow travel with another char if exiting from a grid and they're not nearby
 
 move with checkbox on play loc isn't very in sync with the one on the char page
@@ -48,27 +50,13 @@ constants in effects show `"get_val_from": "outcome",`
 ---- scenario ----
 
 lumber
-    cedar on additional smaller lot -- buy with property deed
-    buildings (mux location)
-        offices -- sales over time at better prices
-            not worth it for just owner unless possibly for heavy idling
-            sales manager
-        warehouse to store large quantities of boards while they sell
-        sell for "crypto" (currency) and then sell that for cash?
-            a multistep sales process or perhaps auction seems interesting
-            what about an item that produces idly and determines how much
-                you can auction (event)
-            optionally sell at lower average rate but still needs that idle counter
-        tool shed to minimize rust
-            chance of rust whenever you pick up a tool
-            convenient to not carry around old axe?
-    HR and Office manager
-        handle sales and hauler control as well as hiring benefit
-        put at a desktop computer local item to access warehouse storage
-        or perhaps need to walk into warehouse and start a locally hosted idle task
     idle a certain number of batches that require fuel
         can either burn wood or purchased gasoline
     add status attrib (flag) on natural 1 that must be cleared by event
+        set flag to either 1 or 0: x -> 2 - roll, x -> min(x, 0)
+
+dating
+    cliff location with hiking next to beach
 
 tethered one
     deception check for lyria in sunken library

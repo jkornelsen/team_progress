@@ -6,9 +6,9 @@
             {"item_id": 28, "quantity": 20.0, "loc_id": 27}
         ],
         "tag_introduce_order": 52,
-        "tag_best_order": 20,
+        "tag_best_order": 15,
         "tag_progress_type": "Incremental",
-        "tag_complete": "07 Playable / Under Construction"
+        "tag_complete": "09 Complete"
     },
     "entities": {
         "attribs": [
@@ -25,6 +25,7 @@
             {"id": 51, "name": "Can Build Bridge", "is_binary": true},
             {"id": 100, "name": "Can Chop", "is_binary": true},
             {"id": 109, "name": "Can Climb for Honey", "is_binary": true},
+            {"id": 166, "name": "Can Manage Sales", "is_binary": true},
             {"id": 102, "name": "Can Plant", "is_binary": true},
             {
                 "id": 61,
@@ -104,7 +105,7 @@
                 "name": "Bridge Framework",
                 "description": "Under construction. Requires lumber.\r\n\r\nWhen finished (limit reached), [edit **\"Bridge Site\"** zone](/configure/location/27) to allow passage and clear the color.",
                 "storage_type": "l",
-                "q_limit": 50.0,
+                "q_limit": 20.0,
                 "recipes": [
                     {
                         "id": 79,
@@ -121,7 +122,7 @@
             {
                 "id": 8,
                 "name": "Cash",
-                "description": "Purchase new equipment, and eventually, a new plot of land.",
+                "description": "Purchase new equipment and hire employees.\r\nTo play on Easy mode, start with 300 instead of 0.",
                 "storage_type": "u",
                 "toplevel": true,
                 "recipes": [
@@ -182,9 +183,15 @@
                 "loc_hosted": true
             },
             {
+                "id": 161,
+                "name": "Construction Site",
+                "storage_type": "l",
+                "q_limit": 1.0
+            },
+            {
                 "id": 159,
                 "name": "Desktop Computer",
-                "description": "Critical for the **Technician.** The **Office Manager** may also want one to handle sales.\r\n\r\nWhen purchased, configure the [Office](/configure/location/11) to place the computer at a position where someone can conveniently sit next to it.",
+                "description": "Critical for the **Technician.** The **Office Manager** may also want one to handle sales.\r\n\r\nWhen purchased, remove from the floor of the **Hardware Store.** Instead, configure the [Office](/configure/location/117) to place the computer at a position where someone can conveniently sit next to it.",
                 "storage_type": "l",
                 "q_limit": 1.0,
                 "recipes": [
@@ -249,13 +256,6 @@
                 ]
             },
             {
-                "id": 35,
-                "name": "Hardware Store Clerk",
-                "description": "\"Hello, what can I get you today?\"",
-                "storage_type": "l",
-                "q_limit": 1.0
-            },
-            {
                 "id": 111,
                 "name": "Harness",
                 "description": "Wrap the leather strap around the tree, clipped in place. Use it to shimmy up.",
@@ -270,23 +270,6 @@
                         "instant": true,
                         "sources": [
                             {"item_id": 8, "q_required": 25.0},
-                            {"item_id": 35, "q_required": 1.0, "preserve": true}
-                        ]
-                    }
-                ]
-            },
-            {
-                "id": 135,
-                "name": "Hauler Bill of Sale",
-                "description": "After purchasing this item, edit the **Hauler** to place at the **Main Plot** location.",
-                "storage_type": "u",
-                "q_limit": 1.0,
-                "recipes": [
-                    {
-                        "id": 134,
-                        "instant": true,
-                        "sources": [
-                            {"item_id": 8, "q_required": 250.0},
                             {"item_id": 35, "q_required": 1.0, "preserve": true}
                         ]
                     }
@@ -311,9 +294,23 @@
                 ]
             },
             {
+                "id": 173,
+                "name": "Mem",
+                "description": "Temporary stored value for event calculations.",
+                "storage_type": "u"
+            },
+            {
                 "id": 149,
                 "name": "Oak Boards",
                 "description": "Cut from logs.",
+                "q_limit": 10.0,
+                "limits_for": [
+                    {"owner_id": 16, "q_limit": 800.0},
+                    {"owner_id": 19, "q_limit": 80.0},
+                    {"owner_id": 87, "q_limit": 400.0},
+                    {"owner_id": 121, "q_limit": 1600.0},
+                    {"owner_id": 133, "q_limit": 200.0}
+                ],
                 "recipes": [
                     {
                         "id": 148,
@@ -380,7 +377,8 @@
                 "name": "Oak Saplings",
                 "q_limit": 5.0,
                 "limits_for": [
-                    {"owner_id": 47, "q_limit": 20.0}
+                    {"owner_id": 47, "q_limit": 20.0},
+                    {"owner_id": 133, "q_limit": 20.0}
                 ],
                 "recipes": [
                     {
@@ -442,7 +440,8 @@
                         "rate_amount": 2.0,
                         "rate_duration": 3600,
                         "sources": [
-                            {"item_id": 118, "q_required": 1.0}
+                            {"item_id": 118, "q_required": 1.0},
+                            {"item_id": 161, "q_required": 1.0, "preserve": true}
                         ]
                     }
                 ]
@@ -469,9 +468,50 @@
                 ]
             },
             {
+                "id": 164,
+                "name": "Pine Board Offers — Found",
+                "description": "Search for buyers who are willing to make offers on merchandise.\r\nAfter searching, **Select Best Offer — Pine Boards** (event).",
+                "storage_type": "u",
+                "q_limit": 500.0,
+                "recipes": [
+                    {
+                        "id": 165,
+                        "rate_duration": 20,
+                        "sources": [
+                            {"item_id": 159, "q_required": 1.0, "preserve": true},
+                            {"item_id": 162, "q_required": 1.0}
+                        ],
+                        "attrib_reqs": [
+                            {"attrib_id": 166}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 170,
+                "name": "Pine Board Offers — Priced",
+                "description": "How many boards where a specific price rate has been agreed on.\r\nGo to the **Warehouse** and **Sell Pine Boards.**",
+                "storage_type": "u"
+            },
+            {
+                "id": 169,
+                "name": "Pine Board Offers — Rate",
+                "description": "The price agreed on. You're not obligated to sell if it's an unfavorable offer.\r\n\r\nTo reject an offer:\r\n\r\n- Set both this quantity (edit item) and [Priced](/configure/item/170?) to 0.\r\n- Go back to the **Warehouse** and count again, then continue searching for offers.",
+                "storage_type": "u"
+            },
+            {
                 "id": 12,
                 "name": "Pine Boards",
                 "description": "Cut from logs.",
+                "q_limit": 30.0,
+                "limits_for": [
+                    {"owner_id": 16, "q_limit": 2000.0},
+                    {"owner_id": 19, "q_limit": 200.0},
+                    {"owner_id": 49, "q_limit": 200.0},
+                    {"owner_id": 87, "q_limit": 1000.0},
+                    {"owner_id": 121, "q_limit": 4000.0},
+                    {"owner_id": 133, "q_limit": 500.0}
+                ],
                 "recipes": [
                     {
                         "id": 73,
@@ -482,6 +522,12 @@
                         ]
                     }
                 ]
+            },
+            {
+                "id": 162,
+                "name": "Pine Boards Counted",
+                "description": "How many pine boards were in the warehouse ready to sell when last counted.\r\nThose that have buyers are no longer counted.",
+                "storage_type": "u"
             },
             {
                 "id": 30,
@@ -537,7 +583,7 @@
                 "name": "Pine Marked",
                 "description": "Plots are full of trees, but mark only one tree at a time for harvesting.",
                 "attribs": [
-                    [3, 100],
+                    [3, 100.0],
                     [60, 100.0]
                 ],
                 "storage_type": "l",
@@ -549,7 +595,8 @@
                 "description": "It takes awhile before they are ready to be harvested, but it's better than planting pinecones.",
                 "q_limit": 10.0,
                 "limits_for": [
-                    {"owner_id": 47, "q_limit": 40.0}
+                    {"owner_id": 47, "q_limit": 40.0},
+                    {"owner_id": 133, "q_limit": 40.0}
                 ],
                 "recipes": [
                     {
@@ -630,6 +677,23 @@
                 "name": "Rock",
                 "description": "Landscape feature that prevents this tile from being used.",
                 "storage_type": "l"
+            },
+            {
+                "id": 167,
+                "name": "Sales Computer Upgrade",
+                "description": "When purchased, increase [Pine Board Offers](/configure/item/164) limit to 500.",
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 168,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 8, "q_required": 70.0},
+                            {"item_id": 35, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
             },
             {
                 "id": 115,
@@ -744,6 +808,13 @@
                 ]
             },
             {
+                "id": 35,
+                "name": "Store Clerk",
+                "description": "\"Hello, what can I get you today?\"",
+                "storage_type": "l",
+                "q_limit": 1.0
+            },
+            {
                 "id": 125,
                 "name": "Take Off Shoes",
                 "description": "Equip this item to go barefoot and use your natural toes and muscles for decent grip.",
@@ -752,6 +823,23 @@
                 ],
                 "q_limit": 1.0,
                 "slot": "Shoes"
+            },
+            {
+                "id": 135,
+                "name": "THUNDER Bill of Sale",
+                "description": "After purchasing this item, [edit THUNDER](/configure/character/133) to place at the **Main Plot** location, and mark **Show in Overview.**",
+                "storage_type": "u",
+                "q_limit": 1.0,
+                "recipes": [
+                    {
+                        "id": 134,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 8, "q_required": 250.0},
+                            {"item_id": 35, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
             },
             {
                 "id": 37,
@@ -790,7 +878,8 @@
                         "rate_amount": 2.0,
                         "rate_duration": 3600,
                         "sources": [
-                            {"item_id": 124, "q_required": 1.0}
+                            {"item_id": 124, "q_required": 1.0},
+                            {"item_id": 161, "q_required": 1.0, "preserve": true}
                         ]
                     }
                 ]
@@ -836,7 +925,14 @@
                 "id": 116,
                 "name": "Buildings",
                 "description": "Go to the area where any buildings are for the site.",
-                "dimensions": [5, 4],
+                "dimensions": [6, 4],
+                "items": [
+                    {
+                        "item_id": 161,
+                        "quantity": 1.0,
+                        "position": [6, 3]
+                    }
+                ],
                 "destinations": [
                     {
                         "loc2_id": 117,
@@ -845,7 +941,7 @@
                     },
                     {
                         "loc2_id": 121,
-                        "door1": [4, 1],
+                        "door1": [5, 1],
                         "door2": [1, 2]
                     }
                 ]
@@ -1016,6 +1112,7 @@
                 "name": "Office",
                 "description": "Wooden steps lead up to a raised trailer building. Inside are desks and computers.",
                 "dimensions": [4, 7],
+                "item_refs": [8, 162, 164, 169, 170],
                 "entrance_reqs": [
                     {"item_id": 118, "val_required": 2.0}
                 ]
@@ -1141,7 +1238,8 @@
                 "id": 121,
                 "name": "Warehouse",
                 "description": "Shelves line the walls on either side.",
-                "dimensions": [8, 3],
+                "dimensions": [3, 3],
+                "item_refs": [169, 170],
                 "entrance_reqs": [
                     {"item_id": 124, "val_required": 2.0}
                 ]
@@ -1153,29 +1251,11 @@
                 "name": "Bridge Engineer",
                 "attribs": [
                     [51, true],
-                    [53, 1000.0],
+                    [53, 300.0],
                     [57, false]
                 ],
                 "location_id": 80,
                 "position": [5, 4]
-            },
-            {
-                "id": 133,
-                "name": "CHAD Wheeler",
-                "description": "Controlled Hauling And Driving Wheeler\r\n\r\n- Operated remotely: does not require anyone to move/travel with as long as the **Technician** is in the office at a computer\r\n- Solar powered: does not require starting\r\n- Larger capacity than **Truck**\r\n- Can pick up, drop, and store items, although it does not produce them or make purchases"
-            },
-            {
-                "id": 50,
-                "name": "HR and Sales Manager",
-                "description": "Handles sales operations from the office rather than through the **Hardware Store Clerk.**",
-                "attribs": [
-                    [53, 90.0],
-                    [54, 1.0],
-                    [57, false]
-                ],
-                "abilities": [52, 157],
-                "location_id": 80,
-                "position": [3, 3]
             },
             {
                 "id": 48,
@@ -1230,23 +1310,42 @@
                     [102, true],
                     [109, true]
                 ],
-                "toplevel": true,
-                "location_id": 18,
-                "position": [14, 10],
+                "location_id": 80,
+                "position": [2, 2],
                 "items": [
                     {"item_id": 125, "quantity": 1.0}
                 ]
             },
             {
+                "id": 50,
+                "name": "Sales and HR Manager",
+                "description": "Handles sales operations from the **Office** and **Warehouse** rather than through the **Hardware Store Clerk.**",
+                "attribs": [
+                    [53, 90.0],
+                    [54, 1.0],
+                    [57, false],
+                    [166, true]
+                ],
+                "abilities": [52, 157, 163, 171, 172],
+                "location_id": 80,
+                "position": [3, 3]
+            },
+            {
                 "id": 158,
                 "name": "Technician",
-                "description": "When sitting by a computer in the office, can operate the **CHAD Wheeler** as well as control production of automated machinery: **Circular Saw,** **Feller,** **Splitter.**",
+                "description": "When sitting by a computer in the office, can operate **THUNDER** as well as control production of automated machinery: **Circular Saw,** **Feller,** **Splitter.**",
                 "attribs": [
-                    [53, 300.0],
+                    [53, 120.0],
                     [57, false]
                 ],
                 "location_id": 80,
                 "position": [4, 4]
+            },
+            {
+                "id": 133,
+                "name": "THUNDER",
+                "description": "**T**imber **H**auling **U**tility a**N**d **D**riverless **E**lectric **R**over\r\n\r\n- Operated remotely: does not require anyone to move/travel with as long as the **Technician** is in the office at a computer\r\n- Solar powered: does not require starting\r\n- Larger capacity than the **Truck**\r\n- Can pick up, drop, and store items",
+                "location_id": null
             },
             {
                 "id": 19,
@@ -1386,6 +1485,25 @@
                         "val_transform": 2.0
                     },
                     {"op_application": ":=", "op_transform": "floor"}
+                ]
+            },
+            {
+                "id": 163,
+                "name": "Count Pine Boards",
+                "description": "Go to the **Warehouse** and count what is available to sell, then return to the **Office** to search for buyers.",
+                "outcome_type": "determined",
+                "determinants": [
+                    {
+                        "infield": {"role": "at", "field_mode": "qty", "item_id": 12}
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 162},
+                        "op_application": ":=",
+                        "auto_apply": true
+                    }
                 ]
             },
             {
@@ -1556,7 +1674,7 @@
             {
                 "id": 157,
                 "name": "Rather Nice",
-                "description": "Roll whenever you accidentally doze off IRL while waiting for an idle task to finish.",
+                "description": "The HR department takes care of players. Roll whenever you accidentally doze off IRL while waiting for an idle task to finish.",
                 "outcome_type": "numeric",
                 "numeric_range": [-4, 15],
                 "determinants": [
@@ -1570,9 +1688,94 @@
                 ]
             },
             {
+                "id": 172,
+                "name": "Sell Pine Boards",
+                "description": "The determining factors figure out how much to sell by taking the lower of *a)* the number of offers, or *b)* what's currently in stock. To do this, the math identity is:\r\n\r\n&nbsp;&nbsp;&nbsp;&nbsp;    min(a, b) = (a+b − ∣a−b∣​) / 2​",
+                "outcome_type": "determined",
+                "determinants": [
+                    {
+                        "infield": {"role": "at", "field_mode": "qty", "item_id": 12},
+                        "op_application": ">="
+                    },
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 170},
+                        "op_application": ">="
+                    },
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 169},
+                        "op_application": ">=",
+                        "val_required": 0.1
+                    },
+                    {
+                        "infield": {"role": "at", "field_mode": "qty", "item_id": 12}
+                    },
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 170},
+                        "op_application": "-"
+                    },
+                    {"label": "∣a−b∣​", "op_application": "m:=", "op_transform": "abs"},
+                    {"op_application": ":=", "op_transform": "c", "val_transform": 0.0},
+                    {
+                        "infield": {"role": "at", "field_mode": "qty", "item_id": 12}
+                    },
+                    {
+                        "label": "a + b",
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 170}
+                    },
+                    {"op_application": "-", "op_transform": "mr"},
+                    {
+                        "label": "min(a,b)",
+                        "op_application": "/",
+                        "op_transform": "c",
+                        "val_transform": 2.0
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "at", "field_mode": "qty", "item_id": 12},
+                        "op_application": "-"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 173},
+                        "op_application": ":="
+                    },
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 169},
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 173},
+                        "op_application": "*"
+                    },
+                    {
+                        "get_val_from": "outfield",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 173},
+                        "op_application": ":=",
+                        "op_transform": "floor"
+                    },
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 173},
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 8}
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 170},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 0.0
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 169},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 0.0
+                    }
+                ]
+            },
+            {
                 "id": 24,
                 "name": "Start Engine",
-                "description": "Start the engine once per trip — leave it running while you work at the current location.",
+                "description": "Start the engine after not having used the vehicle recently. Otherwise, leave it running while you work.\r\n\r\nFor example, you can get out, chop a trunk into logs, load the logs, carry the load to the sawmill, and drive back to the main plot without turning the engine off. Then, if you move on to planting, or if you simply stop chopping for awhile, you'd turn the truck off at that point.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -1671,6 +1874,47 @@
                             "infield": {"role": "universal", "item_id": 15, "attrib_id": 3},
                             "op_application": "<"
                         }
+                    }
+                ]
+            },
+            {
+                "id": 171,
+                "name": "Take Best Offer — Pine Boards",
+                "description": "Determine the rate that the buyer agrees to. For example, an outcome of **0.5** means they agree to pay 1 cash for every 2 boards you deliver.",
+                "outcome_type": "numeric",
+                "numeric_range": [3, 10],
+                "determinants": [
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 164},
+                        "op_application": ">="
+                    },
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 170},
+                        "op_application": ">=",
+                        "negate": true
+                    },
+                    {"op_application": ":=", "op_transform": "/", "val_transform": 10.0}
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 169},
+                        "op_application": ":=",
+                        "auto_apply": true
+                    },
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 164},
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 170},
+                        "op_application": ":=",
+                        "auto_apply": true
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 164},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 0.0,
+                        "auto_apply": true
                     }
                 ]
             }

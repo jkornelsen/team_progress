@@ -71,7 +71,8 @@ def tick_all_active(messages_host_id=None):
                     owner_id=p.owner_id, 
                     host_id=p.host_id, 
                     char_id=p.char_id, 
-                    loc_id=p.loc_id
+                    loc_id=p.loc_id,
+                    position=p.position
                 )
             })
 
@@ -221,6 +222,7 @@ def start_production(host_id, recipe_id, owner_id, ctx, stop_at=None):
             host_id=host_id,
             char_id=ctx.char_id,
             loc_id=ctx.loc_id,
+            position=ctx.position,
             stop_at=stop_at)
         db.session.add(progress)
     else:

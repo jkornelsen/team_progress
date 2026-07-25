@@ -65,7 +65,7 @@ def find_best_host(recipe, owner_id, ctx):
         f" | result:{ctx.char_id}")
     return ctx.char_id
 
-def resolve_host_pos(host_id, recipe, sources=None):
+def resolve_host_pos(host_id, recipe, sources=None, output_pos=None):
     """Returns (loc_id, anchor_pos) for a host."""
     host_ent = db.session.get(Entity, (g.game_token, host_id))
     if not host_ent or host_ent.entity_type not in [
@@ -73,7 +73,7 @@ def resolve_host_pos(host_id, recipe, sources=None):
         return None, None
 
     if host_ent.entity_type == Character.TYPENAME:
-        return host_ent.location_id, host_ent.position
+        return host_ent.location_id, output_pos or host_ent.position
 
     anchor_pos = None
     if recipe.is_location_hosted and sources:
@@ -84,7 +84,8 @@ def resolve_host_pos(host_id, recipe, sources=None):
                 break
     return host_ent.id, anchor_pos
 
-def get_eligible_placements(recipe, target_owner_id, host_id, sources=None):
+def get_eligible_placements(
+        recipe, target_owner_id, host_id, sources=None, output_pos=None):
     """
     Returns the prioritized list of (owner_id, position) for yield storage.
     """
@@ -95,7 +96,8 @@ def get_eligible_placements(recipe, target_owner_id, host_id, sources=None):
     if product.storage_type == StorageType.UNIVERSAL:
         return [(GENERAL_ID, None)]
 
-    loc_id, anchor_pos = resolve_host_pos(host_id, recipe, sources)
+    loc_id, anchor_pos = resolve_host_pos(
+        host_id, recipe, sources, output_pos)
 
     # Intended Target: Backpack
     if product.storage_type == StorageType.CARRIED:
@@ -116,15 +118,21 @@ def get_eligible_placements(recipe, target_owner_id, host_id, sources=None):
     if loc_id:
         loc = db.session.get(Location, (game_token, loc_id))
         if loc.has_grid and anchor_pos:
-            for cand in get_output_positions(loc, anchor_pos):
-                placements.append((loc_id, cand))
+            best = find_best_output_pos(recipe.product_id, loc_id, anchor_pos)
+            if best:
+                placements.append((loc_id, best))
+            for cand in get_output_positions(
+                    loc, anchor_pos, recipe.product_id):
+                if (loc_id, cand) not in placements:
+                    placements.append((loc_id, cand))
         else:
             # No grid: spill to the location's "general" floor pile
             placements.append((loc_id, None))
 
     return placements
 
-def get_placement_capacity(recipe, target_owner_id, host_id, sources=None):
+def get_placement_capacity(
+        recipe, target_owner_id, host_id, sources=None, output_pos=None):
     """
     Returns the total space available across all eligible output placements,
     expressed as a number of whole batches. Returns float('inf') if unlimited.
@@ -134,7 +142,7 @@ def get_placement_capacity(recipe, target_owner_id, host_id, sources=None):
 
     game_token = g.game_token
     placements = get_eligible_placements(
-        recipe, target_owner_id, host_id, sources)
+        recipe, target_owner_id, host_id, sources, output_pos)
     if not placements:
         return 0, 0.0
     owner_id, pos = placements[0]
@@ -382,7 +390,7 @@ def execute_production(
     # block a partial batch — we produce as much as fits, consuming full
     # source quantities per batch (no partial ingredient splits).
     capacity_batches, total_capacity = get_placement_capacity(
-        recipe, target_owner_id, host_id, sources)
+        recipe, target_owner_id, host_id, sources, ctx.position)
     if capacity_batches == float('inf'):
         pass  # unlimited
     elif capacity_batches >= 1:
@@ -476,9 +484,9 @@ def execute_production(
                 debt = abs(unpaid) 
 
     # Produce
-    _, anchor_pos = resolve_host_pos(host_id, recipe, sources)
+    _, anchor_pos = resolve_host_pos(host_id, recipe, sources, ctx.position)
     placements = get_eligible_placements(
-        recipe, target_owner_id, host_id, sources)
+        recipe, target_owner_id, host_id, sources, ctx.position)
     amount_to_place = recipe.rate_amount * batches
     if placements:
         owner_id, pos = placements[0]
