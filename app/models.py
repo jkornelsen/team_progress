@@ -1325,6 +1325,7 @@ class Operation:
     CEIL = 'ceil'
     MIN = 'min'
     MAX = 'max'
+    MASK = 'mask'
     SOFTCAP = 'scap'
     MEM_STORE = 'm:='
     MEM_RECALL = 'mr'
@@ -1349,6 +1350,7 @@ class Operation:
         CEIL:       'Ceiling',
         MIN:        'Min',
         MAX:        'Max',
+        MASK:       '>0→1',
         SOFTCAP:    'SoftCap',
         MEM_STORE:  'Store',
         MEM_RECALL: 'Recall',
@@ -1362,8 +1364,9 @@ class Operation:
     # Modify the Field Value before we apply it to the total
     TRANSFORM = [
         ADD, SUB, MULT, DIV, MOD,
-        VAL_TO_POW, POW_OF_VAL, ROUND, FLOOR, CEIL, ABS, MIN, MAX, SOFTCAP]
-    FUNCTIONAL = [ROUND, FLOOR, CEIL, MIN, MAX, SOFTCAP]
+        VAL_TO_POW, POW_OF_VAL, ROUND, FLOOR, CEIL,
+        ABS, MIN, MAX, MASK, SOFTCAP]
+    FUNCTIONAL = [ROUND, FLOOR, CEIL, MIN, MAX, MASK, SOFTCAP]
 
 
 class EventField(db.Model, DictHydrator):

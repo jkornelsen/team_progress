@@ -86,7 +86,7 @@
                         <label class="checkbox-label">
                             <input type="checkbox"
                                    id="travel-with-party-chk"
-                                   onchange="this.blur()"
+                                   onchange="syncPartySession(this.checked); this.blur();"
                                    {{ 'checked' if travel_with_party }}>
                                 Travel {{ hk.bracket('w') }}ith
                                 <i>{{ character.travel_party if character.travel_party else 'Followers' }}</i> 
@@ -232,6 +232,12 @@
 
 <script>
     const charId = {{ character.id }};
+
+    async function syncPartySession(checked) {
+        const fd = new FormData();
+        fd.append('travel_with_party', checked ? 'true' : 'false');
+        await apiPost('/play/sync_session', fd);
+    }
     
     document.getElementById('do-travel-btn')?.addEventListener('click', async () => {
         const destId = document.getElementById('dest-select').value;

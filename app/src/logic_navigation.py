@@ -317,11 +317,15 @@ def get_moving_party(main_char, move_party=False):
     - Any characters sharing the same 'travel_party' string.
     - Any character whose 'name' is the 'travel_party' of the main character.
     - Any character whose 'travel_party' is the 'name' of the main character.
+    - For grids, only include nearby party members.
     """
     if not move_party:
         return [main_char]
-    game_token = g.game_token
 
+    if main_char.location and main_char.location.has_grid:
+        return get_cohesive_party(main_char, move_party)
+
+    game_token = g.game_token
     party_name = main_char.travel_party
     my_name = main_char.name
 

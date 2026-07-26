@@ -65,6 +65,51 @@ def get_accessible_quantity(item_id, owner_id):
 
     return total
 
+def adjust_accessible_quantity(item_id, owner_id, delta):
+    """
+    Applies a net change (positive or negative) to an owner's accessible
+    stock by pulling from / adding to the actual piles that make up that
+    stock.
+    """
+    game_token = g.game_token
+    if delta == 0:
+        return
+
+    def drain(piles, amount):
+        for pile in piles:
+            if amount <= 0:
+                break
+            take = min(pile.quantity, amount)
+            if take <= 0:
+                continue
+            pile.quantity -= take
+            amount -= take
+            if abs(pile.quantity) <= 0.000000001:
+                safe_remove(pile)
+        return amount
+
+    if delta < 0:
+        remaining = drain(
+            Pile.query.filter_by(
+                game_token=game_token, item_id=item_id, owner_id=owner_id
+            ).all(),
+            -delta
+        )
+        if remaining > 0:
+            owner_entity = db.session.get(Entity, (game_token, owner_id))
+            if owner_entity and owner_entity.entity_type == 'character':
+                char = db.session.get(Character, (game_token, owner_id))
+                if char and char.location_id:
+                    drain(
+                        Pile.query.filter_by(
+                            game_token=game_token, item_id=item_id,
+                            owner_id=char.location_id
+                        ).all(),
+                        remaining
+                    )
+    else:
+        adjust_quantity(item_id, owner_id, delta)
+
 def set_quantity(item_id, owner_id, new_value, position=None, slot=None):
     """
     Overwrites the quantity of an item pile.

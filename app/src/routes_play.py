@@ -29,7 +29,7 @@ from .logic_production import (
     find_best_host, resolve_recipe_sources, can_perform_recipe,
     execute_production)
 from .logic_navigation import (
-    move_group, get_available_destinations, arrive_at_destination,
+    move_group, get_cohesive_party, get_available_destinations, arrive_at_destination,
     is_in_grid, blocked_by_local_item, find_nearest_available_pos, is_adjacent)
 from .logic_objectives import validate_requirements
 from .logic_user_interaction import add_message, get_chronicle
@@ -217,10 +217,20 @@ def play_location(id):
     referenced_data = sort_by_name_stripped(
         referenced_data, lambda d: d['item'])
 
-    # 6. Active Character Setup
-    active_char_id = request.args.get('active_char_id', type=int)
+    # 6. Grid Driver (The moving character)
+    url_driver = request.args.get('active_char_id', type=int)
+    session_driver = session.get('grid_driver_id')
+    session_context = session.get('old_char_id')
+    active_char_id = None
+    ids_to_check = [url_driver, session_driver, session_context]
+    room_char_ids = {c.id for c in characters_here}
+    for cand_id in ids_to_check:
+        if cand_id in room_char_ids:
+            active_char_id = cand_id
+            break
     if not active_char_id and characters_here:
         active_char_id = characters_here[0].id
+    session['grid_driver_id'] = active_char_id
 
     return render_template(
         'play/location.html',
@@ -234,8 +244,9 @@ def play_location(id):
             AttribVal.query.filter_by(
                 game_token=game_token, subject_id=id).all(),
             lambda p: p.attrib),
-        active_char_id=active_char_id,
         ctx_char=current_char,
+        active_char_id=active_char_id,
+        travel_with_party=session.get('travel_with_party', False),
         link_letters=LinkLetters(excluded='ctmoedw')
     )
 
@@ -252,6 +263,7 @@ def play_character(id):
     else:
         move_party = session['travel_with_party']
     session['old_char_id'] = id
+    session['grid_driver_id'] = id
     session.pop('old_loc_id', None)
     
     # Identify other party members at this location
@@ -263,12 +275,18 @@ def play_character(id):
     party_criteria.append(Character.travel_party == character.name)
 
     if party_criteria:
-        party_members = Character.query.filter(
+        all_candidates = Character.query.filter(
             Character.game_token == game_token,
             Character.location_id == character.location_id,
             or_(*party_criteria),
             Character.id != character.id
         ).all()
+        if character.location and character.location.has_grid:
+            party_members = [
+                c for c in get_cohesive_party(character, True)
+                if c.id != character.id]
+        else:
+            party_members = all_candidates
 
     # Fetch Navigation (Nearby Destinations)
     destinations, has_nonadjacent = get_available_destinations(character)
@@ -478,6 +496,7 @@ def char_move(id):
     dx = req.get_int('dx')
     dy = req.get_int('dy')
     move_party = req.get_bool('move_party')
+    session['travel_with_party'] = move_party
     
     success, results = move_group(id, dx, dy, move_party)
     if success:
@@ -496,6 +515,15 @@ def char_travel(id):
         db.session.commit()
         return '', HTTPStatus.NO_CONTENT
     return jsonify({"message": message}), HTTPStatus.BAD_REQUEST
+
+@play_bp.route('/play/sync_session', methods=['POST'])
+def sync_session():
+    req = RequestHelper('form')
+    if 'grid_driver_id' in req:
+        session['grid_driver_id'] = req.get_int('grid_driver_id')
+    if 'travel_with_party' in req:
+        session['travel_with_party'] = req.get_bool('travel_with_party')
+    return '', 204
 
 # ------------------------------------------------------------------------
 # Item Route

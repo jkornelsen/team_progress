@@ -690,7 +690,8 @@ function syncInnerExprState(card) {
         "{{ Operation.ABS }}",
         "{{ Operation.ROUND }}",
         "{{ Operation.FLOOR }}",
-        "{{ Operation.CEIL }}"
+        "{{ Operation.CEIL }}",
+        "{{ Operation.MASK }}"
         ].includes(op));
     const hasNoTransform = (op === ""); 
     const isEff = card.classList.contains('eff-card');

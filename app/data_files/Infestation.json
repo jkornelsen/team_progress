@@ -4,8 +4,8 @@
         "description": "After a disastrous lab experiment, Florida has been overrun with mutant rodents. Especially dangerous ones are further south. Vacationers and residents have fled. Many retired folks are missing.\r\n\r\nHack 'n slash dueling where you {lime|level up}.",
         "win_reqs": [
             {"char_id": 13, "attrib_id": 4, "attrib_value": 10.0},
-            {"char_id": 17, "attrib_id": 20, "attrib_value": 1.0},
-            {"char_id": 25, "attrib_id": 20, "attrib_value": 1.0}
+            {"char_id": 17, "attrib_id": 20, "attrib_value": true},
+            {"char_id": 25, "attrib_id": 20, "attrib_value": true}
         ],
         "tag_introduce_order": 30,
         "tag_best_order": 30,
@@ -95,7 +95,7 @@
             {
                 "id": 5,
                 "name": "Energy",
-                "description": "Required for fighting. A unit is 100 Kilojoules.\r\nRestore by levelling up, or travel to the *Maintenance Building* and click on the *Recharging Station*.\r\nLimit is 10 + 4 * **XL,** plus any special bonuses. Record the bonuses by editing this description:\r\n\r\n- No special bonuses yet",
+                "description": "Required for fighting. A unit is 100 Kilojoules.\r\nRestore by levelling up, or travel to the *Maintenance Building* and click on the *Recharging Station*.\r\nLimit is 10 + 4 * **XL.**",
                 "q_limit": 10.0,
                 "recipes": [
                     {
@@ -110,7 +110,8 @@
                 "id": 50,
                 "name": "Funding",
                 "description": "Required for repairs, so don't be too reckless or there might not be enough to complete the mission.",
-                "storage_type": "u"
+                "storage_type": "u",
+                "toplevel": true
             },
             {
                 "id": 34,
@@ -230,7 +231,7 @@
                     [27, 10.0],
                     [29, 2.0],
                     [30, 2.0],
-                    [33, 1.0],
+                    [33, 0.0],
                     [45, 0.0],
                     [53, 10.0]
                 ],
@@ -452,7 +453,7 @@
             {
                 "id": 46,
                 "name": "Fresh Enemy",
-                "description": "A new enemy arrives. Whether the other one was dead or wounded doesn't matter anymore — it's gone now.\r\n\r\nRun after the previous fight is over, or if you exited the area while the fight was in progress.",
+                "description": "A new enemy arrives. Whether the other one was dead or wounded doesn't matter anymore — it's gone now.\r\n\r\nDo after the previous fight is over, or if you exited the area while the fight was in progress.",
                 "outcome_type": "determined",
                 "effects": [
                     {
@@ -800,7 +801,7 @@
             {
                 "id": 52,
                 "name": "Perform Repairs",
-                "description": "Higher damage is costlier to repair.",
+                "description": "Higher damage is costlier to repair, and costs are doubled if no HP is left.",
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -808,13 +809,41 @@
                         "op_application": ">="
                     },
                     {
+                        "infield": {"role": "target char", "attrib_id": 27},
+                        "op_transform": "max",
+                        "val_transform": 0.0
+                    },
+                    {
+                        "label": "1 if HP > 0 else 0",
+                        "op_application": ":=",
+                        "op_transform": "mask"
+                    },
+                    {"op_application": "*", "op_transform": "c", "val_transform": -1.0},
+                    {"label": "0 if HP > 0 else 1", "op_transform": "c"},
+                    {
+                        "label": "Penalty for no HP",
+                        "infield": {"role": "target char", "attrib_id": 53},
+                        "op_application": "*"
+                    },
+                    {"op_application": "m:="},
+                    {"op_application": ":=", "op_transform": "c", "val_transform": 0.0},
+                    {
                         "infield": {"role": "target char", "attrib_id": 53}
                     },
                     {
+                        "label": "Basic Lost HP",
                         "infield": {"role": "target char", "attrib_id": 27},
-                        "op_application": "-"
+                        "op_application": "-",
+                        "op_transform": "max",
+                        "val_transform": 0.0
                     },
-                    {"op_application": "*", "op_transform": "c", "val_transform": 10.0}
+                    {"label": "Basic + Penalty", "op_transform": "mr"},
+                    {
+                        "label": "Price Per HP",
+                        "op_application": "*",
+                        "op_transform": "c",
+                        "val_transform": 10.0
+                    }
                 ],
                 "effects": [
                     {
@@ -1191,7 +1220,7 @@
     "general data": {
         "piles": [
             {"item_id": 48, "quantity": 5.0},
-            {"item_id": 50, "quantity": 10000000.0}
+            {"item_id": 50, "quantity": 100000.0}
         ]
     },
     "progress": []

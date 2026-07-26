@@ -8,7 +8,8 @@ from app.models import (
     AttribVal, Pile, LocDest, Recipe)
 from app.utils import maskable_name
 from app.serialization import clone_entity
-from .logic_piles import set_quantity, adjust_quantity
+from .logic_piles import (
+    adjust_quantity, get_accessible_quantity, adjust_accessible_quantity)
 from .logic_user_interaction import add_message
 from .logic_navigation import (
     get_all_valid_coords, straight_line_dist, get_default_position)
@@ -102,6 +103,8 @@ def apply_numeric_op(current_val, mod_val, op, output_range=None):
         return min(current_val, mod_val)
     if op == Operation.MAX:
         return max(current_val, mod_val)
+    if op == Operation.MASK:
+        return 1 if current_val > 0 else 0
     if op in (Operation.ROUND, Operation.FLOOR, Operation.CEIL):
         try:
             step = float(mod_val) if mod_val else 1.0
@@ -167,6 +170,7 @@ def get_inner_breakdown(val, mod_val, op):
         Operation.MOD:        f"{v} mod {m}",
         Operation.VAL_TO_POW: v if m_num == 1 else f"{v}<sup>{m}</sup>",
         Operation.POW_OF_VAL: f"{m}<sup>{v}</sup>",
+        Operation.ABS:        f"Abs({v})",
         Operation.ROUND:      f"Round({v})" if m_num == 1 \
                                   else f"Round({v}, {m})",
         Operation.FLOOR:      f"Floor({v})" if m_num == 1 \
@@ -175,8 +179,8 @@ def get_inner_breakdown(val, mod_val, op):
                                   else f"Ceiling({v}, {m})",
         Operation.MIN:        f"Min({v}, {m})",
         Operation.MAX:        f"Max({v}, {m})",
+        Operation.MASK:       f">0→1({v})",
         Operation.SOFTCAP:    f"SoftCap({v}, {m})",
-        Operation.ABS:        f"Abs({v})",
     }
     return formats.get(op, v)
 
@@ -1080,13 +1084,13 @@ def do_effect_change(eff, roll_val, role_entities):
 
     # Destination B: Item Quantities
     elif field_def.field_mode == Participant.QTY:
-        from .logic_piles import get_accessible_quantity, set_quantity
         # Items are a special case because we want to use the existing pile logic
         # that handles deleting empty piles.
         current = get_accessible_quantity(field_def.item_id, out_entity_id)
-        new_val = impact if op == Operation.ASSIGN \
+        new_qty = impact if op == Operation.ASSIGN \
             else apply_operation(current, impact, op)
-        set_quantity(field_def.item_id, out_entity_id, new_val)
+        adjust_accessible_quantity(
+            field_def.item_id, out_entity_id, new_qty - current)
 
     # Destination C: Item Limit (Blueprint)
     elif field_def.field_mode == Participant.LIMIT:
