@@ -289,10 +289,14 @@
             {% if event.effects %}
             <section id="effects-section" class="outer-border {% if not event.effects %}hidden{% endif %}">
                 <div class="flex-between align-center">
-                    <h3>Effects</h3>
                     {% set roll_title = 'Resolve' if event.outcome_type == OutcomeType.DETERMINED else 'Roll' %}
-                    {% set manual_count = event.effects | rejectattr('auto_apply') | list | length %}
-                    {% if manual_count >= 1 %}
+                    <h3>
+                        Effects
+                        {% if event.auto_apply %}
+                            <span class="auto-gear" title="Automatically applied by {{ roll_title }} button">⚙️</span>
+                        {% endif %}
+                    </h3>
+                    {% if not event.auto_apply %}
                         <div id="apply-all-container">
                             <button type="button"
                                 id="apply-all-btn"
@@ -314,7 +318,6 @@
                              data-outcome-success="{{ eff.outcome_success }}"
                              data-op-trans="{{ eff.op_transform or '' }}"
                              data-val-trans="{{ eff.val_transform }}"
-                             data-auto="{{ 'true' if eff.auto_apply else 'false' }}"
                              data-relies-on-roll="{{ 'true'
                                 if (eff.get_val_from == Participant.OUTCOME
                                 and eff.op_transform != Operation.CONST)
@@ -326,7 +329,7 @@
                                 </div>
 
                                 <div class="effect-action-area">
-                                    {% if not eff.auto_apply %}
+                                    {% if not event.auto_apply %}
                                         <button type="button" 
                                             class="btn-sm go-button apply-eff-btn" 
                                             disabled
@@ -334,8 +337,6 @@
                                             onclick="applySingleEffect({{ eff.id }})">
                                             Apply
                                         </button>
-                                    {% else %}
-                                        <span class="auto-gear" title="Automatically applied by {{ roll_title }} button">⚙️</span>
                                     {% endif %}
                                     <span class="check-mark hidden text-success">✓ Changed</span>
                                 </div>
@@ -713,8 +714,6 @@ if (rollBtn) {
     rollBtn.onclick = async () => {
         document.querySelectorAll('.check-mark').forEach(
             el => el.classList.add('hidden'));
-        document.querySelectorAll('.auto-gear').forEach(
-            el => el.classList.remove('hidden'));
         lastRollValue = null;
 
         const fd = getRoleIDs();
@@ -759,16 +758,13 @@ if (rollBtn) {
                 }
 
                 // Handle button states
-                const isAuto = row.dataset.auto === "true";
                 const btn = row.querySelector('.apply-eff-btn');
                 const checkMark = row.querySelector('.check-mark');
-                const autoGear = row.querySelector('.auto-gear');
 
-                if (isAuto) {
+                {% if event.auto_apply %}
                     row.style.opacity = "0.7";
                     if (checkMark) checkMark.classList.remove('hidden');
-                    if (autoGear) autoGear.classList.add('hidden');
-                } else {
+                {% else %}
                     row.style.opacity = "1";
                     if (btn) {
                         btn.disabled = false;
@@ -776,7 +772,7 @@ if (rollBtn) {
                         btn.title = "Apply this change";
                     }
                     if (checkMark) checkMark.classList.add('hidden');
-                }
+                {% endif %}
             } else {
                 row.classList.add('hidden');
             }

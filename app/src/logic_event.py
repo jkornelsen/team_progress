@@ -993,16 +993,11 @@ def check_outcome_success(filter_val, tier):
 
     return False
 
-def process_all_effects(
-        event, role_entities, roll_val, tier, force_auto_only=False):
-    """
-    Called by roll_event route. Scans all effects and triggers
-    automatic ones that match the success tier.
-    """
+def process_all_auto_effects(event, role_entities, roll_val, tier):
+    if not event.auto_apply:
+        return
     for eff in event.effects:
         if not check_outcome_success(eff.outcome_success, tier):
-            continue
-        if force_auto_only and not eff.auto_apply:
             continue
         do_effect_change(eff, roll_val, role_entities)
 

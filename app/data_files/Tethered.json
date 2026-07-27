@@ -2384,6 +2384,7 @@
                 "id": 233,
                 "name": "Detonated",
                 "description": "{OrangeRed|Instead of blasting through the steel doors, the dynamite breaks open a huge fissure in the earth, and unleashed currents sweep them down into unknown depths.}\r\n\r\n- {lemonchiffon|Edit **Tethered One** and mark *Show in Overview.*}\r\n- The party is now complete. Set all four to be in \"main party\" for travel convenience.\r\n- Move from the D block cells to the **Vuldelf** location: Galebane with his party (Evelyn and Suhkh), then the main party. Not Lorcan — he was cowering in a corner of cell D1 that still held.\r\n- Continue with **Convo Dulcie 3a.**",
+                "auto_apply": true,
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -2402,15 +2403,13 @@
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 232},
                         "op_application": ":=",
-                        "op_transform": "c",
-                        "auto_apply": true
+                        "op_transform": "c"
                     },
                     {
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 235},
                         "op_application": ":=",
-                        "op_transform": "c",
-                        "auto_apply": true
+                        "op_transform": "c"
                     }
                 ]
             },
@@ -2418,6 +2417,7 @@
                 "id": 201,
                 "name": "Receives a Letter",
                 "description": "While Crush is mining **Spectrum Ore,** a courier ventures into the mine to pass on an urgent letter. Resolve the event and find the letter in Lyria's inventory.",
+                "auto_apply": true,
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -2443,14 +2443,14 @@
                         "get_val_from": "outcome",
                         "outfield": {"field_mode": "qty", "item_id": 200},
                         "op_application": ":=",
-                        "op_transform": "c",
-                        "auto_apply": true
+                        "op_transform": "c"
                     }
                 ]
             },
             {
                 "id": 155,
                 "name": "Start Convo At1",
+                "auto_apply": true,
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -2472,14 +2472,14 @@
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 117},
                         "op_application": ":=",
-                        "op_transform": "c",
-                        "auto_apply": true
+                        "op_transform": "c"
                     }
                 ]
             },
             {
                 "id": 119,
                 "name": "Start Convo Cr1",
+                "auto_apply": true,
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -2505,14 +2505,14 @@
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 156},
                         "op_application": ":=",
-                        "op_transform": "c",
-                        "auto_apply": true
+                        "op_transform": "c"
                     }
                 ]
             },
             {
                 "id": 150,
                 "name": "Start Convo Cr2",
+                "auto_apply": true,
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -2538,14 +2538,14 @@
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 126},
                         "op_application": ":=",
-                        "op_transform": "c",
-                        "auto_apply": true
+                        "op_transform": "c"
                     }
                 ]
             },
             {
                 "id": 264,
                 "name": "Start Convo Dd1",
+                "auto_apply": true,
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -2571,14 +2571,14 @@
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 262},
                         "op_application": ":=",
-                        "op_transform": "c",
-                        "auto_apply": true
+                        "op_transform": "c"
                     }
                 ]
             },
             {
                 "id": 267,
                 "name": "Start Convo Dd2",
+                "auto_apply": true,
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -2609,14 +2609,14 @@
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 269},
                         "op_application": ":=",
-                        "op_transform": "c",
-                        "auto_apply": true
+                        "op_transform": "c"
                     }
                 ]
             },
             {
                 "id": 108,
                 "name": "Start Convo Dg1",
+                "auto_apply": true,
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -2638,14 +2638,14 @@
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 110},
                         "op_application": ":=",
-                        "op_transform": "c",
-                        "auto_apply": true
+                        "op_transform": "c"
                     }
                 ]
             },
             {
                 "id": 204,
                 "name": "Start Convo Dg2",
+                "auto_apply": true,
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -2671,8 +2671,7 @@
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 203},
                         "op_application": ":=",
-                        "op_transform": "c",
-                        "auto_apply": true
+                        "op_transform": "c"
                     },
                     {
                         "get_val_from": "outcome",
@@ -2692,6 +2691,7 @@
             {
                 "id": 273,
                 "name": "Start Convo Dp1",
+                "auto_apply": true,
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -2718,14 +2718,14 @@
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 271},
                         "op_application": ":=",
-                        "op_transform": "c",
-                        "auto_apply": true
+                        "op_transform": "c"
                     }
                 ]
             },
             {
                 "id": 139,
                 "name": "Start Convo Du1",
+                "auto_apply": true,
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -2751,14 +2751,14 @@
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 141},
                         "op_application": ":=",
-                        "op_transform": "c",
-                        "auto_apply": true
+                        "op_transform": "c"
                     }
                 ]
             },
             {
                 "id": 219,
                 "name": "Start Convo Du2",
+                "auto_apply": true,
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -2784,15 +2784,13 @@
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 218},
                         "op_application": ":=",
-                        "op_transform": "c",
-                        "auto_apply": true
+                        "op_transform": "c"
                     },
                     {
                         "get_val_from": "outcome",
                         "outfield": {"role": "target char", "field_mode": "qty", "item_id": 229},
                         "op_application": ":=",
-                        "op_transform": "c",
-                        "auto_apply": true
+                        "op_transform": "c"
                     }
                 ]
             },
@@ -2800,6 +2798,7 @@
                 "id": 13,
                 "name": "Start Convo Ko1",
                 "description": "Run this event once Lyria is ready to speak with Kormak, out of earshot of the guards.\r\nThen start the conversation by going to **Convo Kormak 1a.**",
+                "auto_apply": true,
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -2826,14 +2825,14 @@
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 16},
                         "op_application": ":=",
-                        "op_transform": "c",
-                        "auto_apply": true
+                        "op_transform": "c"
                     }
                 ]
             },
             {
                 "id": 249,
                 "name": "Start Convo Ly1",
+                "auto_apply": true,
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -2859,14 +2858,14 @@
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 251},
                         "op_application": ":=",
-                        "op_transform": "c",
-                        "auto_apply": true
+                        "op_transform": "c"
                     }
                 ]
             },
             {
                 "id": 293,
                 "name": "Start Convo Su1",
+                "auto_apply": true,
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -2888,14 +2887,14 @@
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 291},
                         "op_application": ":=",
-                        "op_transform": "c",
-                        "auto_apply": true
+                        "op_transform": "c"
                     }
                 ]
             },
             {
                 "id": 96,
                 "name": "Start Convo Te1",
+                "auto_apply": true,
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -2917,14 +2916,14 @@
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 97},
                         "op_application": ":=",
-                        "op_transform": "c",
-                        "auto_apply": true
+                        "op_transform": "c"
                     }
                 ]
             },
             {
                 "id": 145,
                 "name": "Start Convo Te2",
+                "auto_apply": true,
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -2950,14 +2949,14 @@
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 146},
                         "op_application": ":=",
-                        "op_transform": "c",
-                        "auto_apply": true
+                        "op_transform": "c"
                     }
                 ]
             },
             {
                 "id": 228,
                 "name": "Start Convo Te3",
+                "auto_apply": true,
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -2984,14 +2983,14 @@
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 227},
                         "op_application": ":=",
-                        "op_transform": "c",
-                        "auto_apply": true
+                        "op_transform": "c"
                     }
                 ]
             },
             {
                 "id": 161,
                 "name": "Start Convo Th1",
+                "auto_apply": true,
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -3013,8 +3012,7 @@
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 159},
                         "op_application": ":=",
-                        "op_transform": "c",
-                        "auto_apply": true
+                        "op_transform": "c"
                     }
                 ]
             },

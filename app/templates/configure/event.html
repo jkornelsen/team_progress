@@ -153,6 +153,10 @@
         <section id="effects" class="outer-border" style="background: #004422">
             <div class="flex-between sticky-header">
                 <h3>Apply Changes After Roll</h3>
+                <label class="checkbox-label"
+                        style="margin-top: 25px;">
+                    <input type="checkbox" name="auto_apply"
+                        {{ 'checked' if event.auto_apply }}> Auto Apply</label>
                 <button type="button" class="btn-sm" onclick="addFactor('eff')">+ Add Effect</button>
             </div>
             <div id="eff-list" class="spacious-top">
@@ -1132,10 +1136,6 @@ document.addEventListener('DOMContentLoaded', function() {
         <!-- 2. THE DESTINATION (The "To") -->
         <div class="flex-row align-center">
             <h5 style="margin-right: 30px;">📤 Apply Change To</h5>
-            <label class="checkbox-label"
-                    style="margin-top: 15px;">
-                <input type="checkbox" name="effs[{{ card_index }}][auto_apply]"
-                    {{ 'checked' if factor and factor.auto_apply }}> Auto Apply</label>
         </div>
         <div class="sub-section">
             {{ field_inputs(

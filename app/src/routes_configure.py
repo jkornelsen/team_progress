@@ -743,7 +743,8 @@ def edit_event(id):
 
         event.name = req.get_str('name', event.name)
         event.description = req.get_str('description')
-        event.toplevel = 'toplevel' in request.form
+        event.toplevel = req.get_bool('toplevel')
+        event.auto_apply = req.get_bool('auto_apply')
         event.outcome_type = req.get_str('outcome_type')
 
         if event.outcome_type == OutcomeType.ROLLER:
@@ -786,7 +787,6 @@ def edit_event(id):
                     get_val_from=get_val_from,
                     negate=row.get_bool('negate'),
                     outcome_success=outcome_success,
-                    auto_apply=row.get_bool('auto_apply'),
                     op_application=op_app,
                     op_transform=op_trans,
                     val_transform=row.get_float('val_transform', 1.0),

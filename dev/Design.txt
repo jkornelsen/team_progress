@@ -55,33 +55,23 @@ tethered one
         still must hear convo (branched) about atlanth's revenge plan
 
 infestation
-    combat events at different levels
+    robot abilities
         electric shock -- stun and damage
-        chainsaw -- won't work if repairs needed is too high
-        spinning arms -- multiple hits
-        machine gun
-        shotgun
-        rifle
-        grappling hook -- moves to melee distance
-        detect -- lowers enemy stealth
-    enemy attacks depend on distance
-        claw
-        jump
-        hide
-        dodge
+        machine gun -- multiple ranged hits, poor accuracy
+        rifle -- accurate
+    enemy abilities
         spit acid
         tongue lash
-        cane whack
-        cane poke
-        heal self
-    later enemies bigger than rodents e.g. alligators -- only final boss human
-    locations
-        local road, highway, intersection
-        swamp containing later enemies
-    store attrib "Boss I Defeated" in universal item "Enemies Defeated"
-        so events can check for that attrib
+        tail lash
 
 dungeon crawl
+    tables to create enemies
+        enemy species -- upper, enemy species -- lower
+        enemy class
+        notable enemy ability
+        once they're created, can choose from one of them
+        add their name to an attribute enum
+        or automate by incrementing an item qty and setting as an id attrib
     3 levels up and down of location grids -- 7 total floors
         short predefined completable game including 1-2 char classes
         try generating grid layouts and adapt any good ones

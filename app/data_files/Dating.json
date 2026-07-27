@@ -2416,6 +2416,7 @@
             {
                 "id": 66,
                 "name": "Convo Maa 1 Start",
+                "auto_apply": true,
                 "description": "Resolve and go to **Convo Maa 1a** (item).",
                 "outcome_type": "determined",
                 "determinants": [
@@ -2438,8 +2439,7 @@
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 21},
                         "op_application": ":=",
-                        "op_transform": "c",
-                        "auto_apply": true
+                        "op_transform": "c"
                     }
                 ]
             },
@@ -2818,6 +2818,7 @@
             {
                 "id": 95,
                 "name": "Job Hours",
+                "auto_apply": true,
                 "outcome_type": "numeric",
                 "numeric_range": [3, 10],
                 "determinants": [
@@ -2831,8 +2832,7 @@
                     {
                         "get_val_from": "outcome",
                         "outfield": {"attrib_id": 88},
-                        "op_application": ":=",
-                        "auto_apply": true
+                        "op_application": ":="
                     }
                 ],
                 "chained": [
@@ -2842,6 +2842,7 @@
             {
                 "id": 93,
                 "name": "Job Location",
+                "auto_apply": true,
                 "outcome_type": "selection",
                 "selection_attrib_id": 85,
                 "determinants": [
@@ -2854,15 +2855,13 @@
                     {
                         "get_val_from": "outcome",
                         "outfield": {"attrib_id": 85},
-                        "op_application": ":=",
-                        "auto_apply": true
+                        "op_application": ":="
                     },
                     {
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 82},
                         "op_application": "-",
-                        "op_transform": "c",
-                        "auto_apply": true
+                        "op_transform": "c"
                     }
                 ],
                 "chained": [
@@ -2872,6 +2871,7 @@
             {
                 "id": 96,
                 "name": "Job Pay",
+                "auto_apply": true,
                 "outcome_type": "numeric",
                 "numeric_range": [1, 7],
                 "determinants": [
@@ -2884,8 +2884,7 @@
                     {
                         "get_val_from": "outcome",
                         "outfield": {"attrib_id": 89},
-                        "op_application": ":=",
-                        "auto_apply": true
+                        "op_application": ":="
                     }
                 ]
             },
@@ -2893,6 +2892,7 @@
                 "id": 90,
                 "name": "Mark This Job Listing",
                 "description": "Use a bright colored marker to circle this job listing.",
+                "auto_apply": true,
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -2908,44 +2908,38 @@
                     {
                         "infield": {"attrib_id": 85},
                         "outfield": {"role": "universal", "item_id": 87, "attrib_id": 85},
-                        "op_application": ":=",
-                        "auto_apply": true
+                        "op_application": ":="
                     },
                     {
                         "infield": {"attrib_id": 88},
                         "outfield": {"role": "universal", "item_id": 87, "attrib_id": 88},
-                        "op_application": ":=",
-                        "auto_apply": true
+                        "op_application": ":="
                     },
                     {
                         "infield": {"attrib_id": 89},
                         "outfield": {"role": "universal", "item_id": 87, "attrib_id": 89},
-                        "op_application": ":=",
-                        "auto_apply": true
+                        "op_application": ":="
                     },
                     {
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "item_id": 87, "attrib_id": 109},
                         "op_application": ":=",
                         "op_transform": "c",
-                        "val_transform": 0.0,
-                        "auto_apply": true
+                        "val_transform": 0.0
                     },
                     {
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "item_id": 87, "attrib_id": 110},
                         "op_application": ":=",
                         "op_transform": "c",
-                        "val_transform": 0.0,
-                        "auto_apply": true
+                        "val_transform": 0.0
                     },
                     {
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 77},
                         "op_application": ":=",
                         "op_transform": "c",
-                        "val_transform": 0.0,
-                        "auto_apply": true
+                        "val_transform": 0.0
                     }
                 ]
             },
@@ -3292,14 +3286,14 @@
             {
                 "id": 133,
                 "name": "Their Attitude—Roll",
+                "auto_apply": true,
                 "outcome_type": "selection",
                 "selection_attrib_id": 132,
                 "effects": [
                     {
                         "get_val_from": "outcome",
                         "outfield": {"attrib_id": 132},
-                        "op_application": ":=",
-                        "auto_apply": true
+                        "op_application": ":="
                     }
                 ]
             },
@@ -3307,14 +3301,14 @@
                 "id": 134,
                 "name": "Their Goal—Roll",
                 "description": "When you first meet a prospective match (Claudia, Zelest, or a new character you add), roll to set their goal, then their attitude.",
+                "auto_apply": true,
                 "outcome_type": "selection",
                 "selection_attrib_id": 131,
                 "effects": [
                     {
                         "get_val_from": "outcome",
                         "outfield": {"attrib_id": 131},
-                        "op_application": ":=",
-                        "auto_apply": true
+                        "op_application": ":="
                     }
                 ],
                 "chained": [

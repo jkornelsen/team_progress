@@ -1376,6 +1376,7 @@
                 "id": 156,
                 "name": "Chopping Check — Oak",
                 "description": "- **Major Success:** Gain 50% more logs\r\n- **Any Failure:** The attempt didn't land cleanly — restores 20% **HP**\r\n- **Major Failure:** Run *Chopping Mishap Type*",
+                "auto_apply": true,
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -1397,8 +1398,7 @@
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 154},
                         "op_application": ":=",
                         "op_transform": "c",
-                        "outcome_success": "success_major",
-                        "auto_apply": true
+                        "outcome_success": "success_major"
                     },
                     {
                         "infield": {"role": "universal", "item_id": 142, "attrib_id": 60},
@@ -1419,6 +1419,7 @@
                 "id": 26,
                 "name": "Chopping Check — Pine",
                 "description": "- **Major Success:** Gain 50% more logs\r\n- **Any Failure:** The attempt didn't land cleanly — restores 20% **HP**\r\n- **Major Failure:** Run *Chopping Mishap Type*",
+                "auto_apply": true,
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -1440,8 +1441,7 @@
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 30},
                         "op_application": ":=",
                         "op_transform": "c",
-                        "outcome_success": "success_major",
-                        "auto_apply": true
+                        "outcome_success": "success_major"
                     },
                     {
                         "infield": {"role": "universal", "item_id": 15, "attrib_id": 60},
@@ -1491,6 +1491,7 @@
                 "id": 163,
                 "name": "Count Pine Boards",
                 "description": "Go to the **Warehouse** and count what is available to sell, then return to the **Office** to search for buyers.",
+                "auto_apply": true,
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -1501,8 +1502,7 @@
                     {
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 162},
-                        "op_application": ":=",
-                        "auto_apply": true
+                        "op_application": ":="
                     }
                 ]
             },
@@ -1776,6 +1776,7 @@
                 "id": 24,
                 "name": "Start Engine",
                 "description": "Start the engine after not having used the vehicle recently. Otherwise, leave it running while you work.\r\n\r\nFor example, you can get out, chop a trunk into logs, load the logs, carry the load to the sawmill, and drive back to the main plot without turning the engine off. Then, if you move on to planting, or if you simply stop chopping for awhile, you'd turn the truck off at that point.",
+                "auto_apply": true,
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -1788,16 +1789,14 @@
                         "outfield": {"attrib_id": 9},
                         "op_application": "-",
                         "op_transform": "c",
-                        "outcome_success": "failure_any",
-                        "auto_apply": true
+                        "outcome_success": "failure_any"
                     },
                     {
                         "get_val_from": "outcome",
                         "outfield": {"attrib_id": 40},
                         "op_application": "-",
                         "op_transform": "c",
-                        "outcome_success": "failure_major",
-                        "auto_apply": true
+                        "outcome_success": "failure_major"
                     }
                 ]
             },
@@ -1805,6 +1804,7 @@
                 "id": 155,
                 "name": "Swing to Chop Oak",
                 "description": "For the final blow, or after rolling a natural 1, do a **Chopping Check — Oak.**",
+                "auto_apply": true,
                 "outcome_type": "numeric",
                 "numeric_range": [1, 10],
                 "determinants": [
@@ -1825,8 +1825,7 @@
                     {
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "item_id": 142, "attrib_id": 3},
-                        "op_application": "-",
-                        "auto_apply": true
+                        "op_application": "-"
                     }
                 ],
                 "chained": [
@@ -1843,6 +1842,7 @@
                 "id": 23,
                 "name": "Swing to Chop Pine",
                 "description": "For the final blow, or after rolling a natural 1, do a **Chopping Check — Pine.**",
+                "auto_apply": true,
                 "outcome_type": "numeric",
                 "numeric_range": [1, 10],
                 "determinants": [
@@ -1863,8 +1863,7 @@
                     {
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "item_id": 15, "attrib_id": 3},
-                        "op_application": "-",
-                        "auto_apply": true
+                        "op_application": "-"
                     }
                 ],
                 "chained": [
@@ -1881,6 +1880,7 @@
                 "id": 171,
                 "name": "Take Best Offer — Pine Boards",
                 "description": "Determine the rate that the buyer agrees to. For example, an outcome of **0.5** means they agree to pay 1 cash for every 2 boards you deliver.",
+                "auto_apply": true,
                 "outcome_type": "numeric",
                 "numeric_range": [3, 10],
                 "determinants": [
@@ -1899,22 +1899,19 @@
                     {
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 169},
-                        "op_application": ":=",
-                        "auto_apply": true
+                        "op_application": ":="
                     },
                     {
                         "infield": {"role": "universal", "field_mode": "qty", "item_id": 164},
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 170},
-                        "op_application": ":=",
-                        "auto_apply": true
+                        "op_application": ":="
                     },
                     {
                         "get_val_from": "outcome",
                         "outfield": {"role": "universal", "field_mode": "qty", "item_id": 164},
                         "op_application": ":=",
                         "op_transform": "c",
-                        "val_transform": 0.0,
-                        "auto_apply": true
+                        "val_transform": 0.0
                     }
                 ]
             }

@@ -739,6 +739,7 @@ class Event(Entity):
     game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
     toplevel = db.Column(db.Boolean, default=False)
+    auto_apply = db.Column(db.Boolean, default=False)
     outcome_type = db.Column(
         db.String(20), nullable=False, default=OutcomeType.FOURWAY)
     roller_type = db.Column(db.String(20))
@@ -750,6 +751,7 @@ class Event(Entity):
         data = super().to_dict()
         data.update({
             "toplevel": self.toplevel,
+            "auto_apply": self.auto_apply,
             "outcome_type": self.outcome_type,
             "roller_type": self.roller_type \
                 if self.outcome_type == OutcomeType.ROLLER else None,
@@ -1479,7 +1481,6 @@ class EventFactor(db.Model, DictHydrator):
     # --- Filter & Workflow ---
     negate = db.Column(db.Boolean, default=False) # = not(lookup && compare)
     outcome_success = db.Column(db.String(20), default=SuccessTier.ALWAYS)
-    auto_apply = db.Column(db.Boolean, default=False)
 
     # --- Retrieval ---
     get_val_from = db.Column(db.String(15), nullable=False, default=Participant.INFIELD)
@@ -1516,7 +1517,6 @@ class EventFactor(db.Model, DictHydrator):
                 ) if self.is_comparison else None,
             "negate": self.negate,
             "outcome_success": self.outcome_success,
-            "auto_apply": self.auto_apply
         }
         return self.to_dict_sparse(data)
 

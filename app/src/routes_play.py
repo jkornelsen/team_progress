@@ -22,7 +22,8 @@ from .logic_event import (
     roll_for_outcome, roll_for_system_outcome, check_outcome_success,
     calculate_determinants, resolve_anchor_id, get_chain_results,
     preview_effects, resolve_effects, get_entity_value, is_factor_met,
-    do_effect_change, process_all_effects, format_for_display, apply_operation)
+    do_effect_change, process_all_auto_effects, format_for_display,
+    apply_operation)
 from .logic_progress import (
     tick_all_active, start_production, stop_production)
 from .logic_production import (
@@ -1050,8 +1051,7 @@ def roll_event(id):
 
     resolved_effects, ledger = resolve_effects(
         event, role_entities, result_val, tier)
-    process_all_effects(
-        event, role_entities, result_val, tier, force_auto_only=True)
+    process_all_auto_effects(event, role_entities, result_val, tier)
     db.session.commit()
     
     chain_results = get_chain_results(
