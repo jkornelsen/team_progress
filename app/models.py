@@ -1511,7 +1511,9 @@ class EventFactor(db.Model, DictHydrator):
             "outfield": self.outfield.to_dict() if self.outfield else None,
             "op_application": self.op_application,
             "op_transform": self.op_transform,
-            "val_transform": self.val_transform,
+            "val_transform": attrib_val_to_json(
+                self.game_token, attrib_id, self.val_transform
+                ) if self.val_transform != 1 else 1,
             "val_required": attrib_val_to_json(
                 self.game_token, attrib_id, self.val_required
                 ) if self.is_comparison else None,
@@ -1527,6 +1529,9 @@ class EventFactor(db.Model, DictHydrator):
         out_data = data.get('outfield', {})
         attrib_id = in_data.get('attrib_id') or out_data.get('attrib_id')
         if attrib_id:
+            if 'val_transform' in data:
+                updates['val_transform'] = attrib_val_from_json(
+                    game_token, attrib_id, data.pop('val_transform'))
             if 'val_required' in data:
                 updates['val_required'] = attrib_val_from_json(
                     game_token, attrib_id, data.pop('val_required'))

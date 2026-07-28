@@ -8,7 +8,7 @@
             {"item_id": 83, "quantity": 1.0}
         ],
         "tag_introduce_order": 30,
-        "tag_best_order": 30,
+        "tag_best_order": 20,
         "tag_progress_type": "RPG",
         "tag_complete": "07 Playable / Under Construction"
     },
@@ -41,7 +41,15 @@
                 "id": 95,
                 "name": "Action — Gator",
                 "description": "selection list for event",
-                "enum_list": ["Chomp", "Tail Lash", "Surge"]
+                "enum_list": [
+                    "Tail Lash",
+                    "Tail Lash",
+                    "Chomp (Bite)",
+                    "Chomp (Bite)",
+                    "Rush",
+                    "Rush",
+                    "Surge"
+                ]
             },
             {
                 "id": 66,
@@ -52,7 +60,7 @@
             {
                 "id": 45,
                 "name": "Boost",
-                "description": "Gets set by **Surge** for 1 round. It goes away even if the enemy doesn't choose to attack in that round."
+                "description": "Gets set by **Dodge** or **Surge** for 1 round. Set to 0 after that, even if the opponent doesn't choose to attack."
             },
             {
                 "id": 56,
@@ -83,6 +91,12 @@
                 "id": 31,
                 "name": "Movement Speed",
                 "description": "How fast to reposition in the room."
+            },
+            {
+                "id": 101,
+                "name": "Range Band",
+                "description": "- *Engaged:* standard melee weapons\r\n- *Short:* spear reach, throwing\r\n- *Long:* ranged weapons, gun",
+                "enum_list": ["Engaged", "Short", "Long"]
             },
             {
                 "id": 33,
@@ -123,7 +137,10 @@
             {
                 "id": 48,
                 "name": "Distance",
-                "description": "Measure of how far away the combatants are, *Theater of the Mind* (no tactical grid). Melee distance is 1 unless there's e.g. a long spear with reach 2.",
+                "description": "The current range band to indicate how far away the combatants are, *Theater of the Mind* style.",
+                "attribs": [
+                    [101, "Long"]
+                ],
                 "storage_type": "u",
                 "toplevel": true
             },
@@ -131,7 +148,7 @@
                 "id": 5,
                 "name": "Energy",
                 "description": "Required for fighting. A unit is 100 Kilojoules.\r\nRestore by levelling up, or travel to the *Maintenance Building* and click on the *Recharging Station*.\r\nLimit is 5 + (5 per **XL**).",
-                "q_limit": 50.0,
+                "q_limit": 10.0,
                 "recipes": [
                     {
                         "id": 21,
@@ -148,6 +165,12 @@
                 "description": "Required for repairs, so don't be too reckless or there might not be enough to complete the mission.",
                 "storage_type": "u",
                 "toplevel": true
+            },
+            {
+                "id": 102,
+                "name": "Multi Hits",
+                "description": "How many attacks are left for the multiple hit ability in this round.",
+                "storage_type": "u"
             },
             {
                 "id": 34,
@@ -172,15 +195,7 @@
             }
         ],
         "locations": [
-            {
-                "id": 10,
-                "name": "Baby Mice Area",
-                "description": "The weakest of the rodents can be found here, but the area is alarmingly close to the maintenance building. Populations must be controlled so they don't spread further.",
-                "destinations": [
-                    {"loc2_id": 7}
-                ]
-            },
-            {"id": 7, "name": "Grown Mice Area", "masked": true},
+            {"id": 11, "name": "Field", "masked": true},
             {
                 "id": 8,
                 "name": "Highway",
@@ -193,6 +208,14 @@
                 ],
                 "entrance_reqs": [
                     {"attrib_id": 4, "val_required": 3.0}
+                ]
+            },
+            {
+                "id": 7,
+                "name": "Hillside",
+                "masked": true,
+                "destinations": [
+                    {"loc2_id": 10}
                 ]
             },
             {
@@ -211,8 +234,7 @@
                     {"item_id": 51, "quantity": 1.0}
                 ],
                 "destinations": [
-                    {"loc2_id": 8},
-                    {"loc2_id": 10}
+                    {"loc2_id": 8}
                 ]
             },
             {
@@ -256,19 +278,26 @@
                     {"item_id": 71, "val_required": 1.0}
                 ]
             },
-            {"id": 11, "name": "Tainted Bunny Area", "masked": true},
             {
                 "id": 89,
                 "name": "Trees",
                 "description": "Their base is in the water but they still tower far above.",
                 "masked": true
+            },
+            {
+                "id": 10,
+                "name": "Valley",
+                "description": "The weakest of the rodents can be found here, but the area is alarmingly close to the maintenance building. Populations must be controlled so they don't spread further.",
+                "destinations": [
+                    {"loc2_id": 12}
+                ]
             }
         ],
         "characters": [
             {
                 "id": 73,
                 "name": "🦔Armadillo",
-                "description": "Wanders around aimlessly looking for insects to catch with its tongue. Not the most threatening enemy, but a nuisance nonetheless.",
+                "description": "Wanders around aimlessly looking for insects to catch with its tongue. Not the most threatening enemy, but a nuisance.",
                 "attribs": [
                     [27, 70.0],
                     [29, 5.0],
@@ -277,7 +306,7 @@
                     [53, 70.0],
                     [56, 0.0],
                     [57, 0.0],
-                    [60, 30.0]
+                    [60, 25.0]
                 ],
                 "abilities": [36, 43, 46, 47, 49, 58, 91, 94],
                 "location_id": 72
@@ -328,9 +357,9 @@
                     [53, 40.0],
                     [56, 0.0],
                     [57, 0.0],
-                    [60, 45.0]
+                    [60, 40.0]
                 ],
-                "abilities": [36, 43, 46, 58, 85, 93],
+                "abilities": [36, 43, 46, 49, 58, 85, 93],
                 "location_id": 89
             },
             {
@@ -353,18 +382,18 @@
             {
                 "id": 68,
                 "name": "🐊Gator",
-                "description": "Glowing bright green with visible toxic liquid dripping down its natural armor.\r\n\r\nPure melee aggressor.\r\n- high force for bite\r\n- generally not high speed but tail lash is notably harder to avoid and range 2\r\n- has no withdraw to range ability, although tail lash ends at range 2",
+                "description": "Glowing bright green with toxic liquid visibly dripping down its heavy natural armor.",
                 "attribs": [
                     [27, 80.0],
-                    [29, 8.0],
+                    [29, 11.0],
                     [30, 3.0],
                     [45, 0.0],
                     [53, 80.0],
                     [56, 0.0],
                     [57, 0.0],
-                    [60, 80.0]
+                    [60, 60.0]
                 ],
-                "abilities": [39, 44, 46, 47, 49, 58, 97],
+                "abilities": [39, 44, 46, 47, 49, 58, 96, 97],
                 "location_id": 90
             },
             {
@@ -425,9 +454,9 @@
                 "determinants": [
                     {
                         "label": "Melee Range",
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
-                        "op_application": "<",
-                        "val_required": 2.0
+                        "infield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "op_application": "==",
+                        "val_required": "Engaged"
                     },
                     {
                         "label": "Can Fight",
@@ -460,7 +489,7 @@
                     {
                         "label": "Evasion Bonus",
                         "infield": {"role": "target char", "attrib_id": 45},
-                        "op_application": "*"
+                        "op_application": "-"
                     }
                 ],
                 "chained": [
@@ -492,7 +521,7 @@
             {
                 "id": 94,
                 "name": "Choose Armadillo Action",
-                "description": "This enemy might not always act sensibly. After all, their eyesight and hearing is poor.",
+                "description": "This enemy might not always act sensibly. Their eyesight and hearing is poor.",
                 "outcome_type": "selection",
                 "selection_attrib_id": 92
             },
@@ -513,9 +542,9 @@
             {
                 "id": 96,
                 "name": "Choose Gator Action",
-                "description": "Pretty much always goes forward unless pausing to **Surge.**",
+                "description": "Pretty much always goes forward. From distance, **Rush** unless there's a particular situation where it might make sense to **Surge,** such as the opponent missing their attacks or themselves surging.",
                 "outcome_type": "selection",
-                "selection_attrib_id": 88
+                "selection_attrib_id": 95
             },
             {
                 "id": 41,
@@ -618,9 +647,9 @@
                 "determinants": [
                     {
                         "label": "Melee Range",
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
-                        "op_application": "<",
-                        "val_required": 2.0
+                        "infield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "op_application": "==",
+                        "val_required": "Engaged"
                     },
                     {
                         "label": "Can Operate",
@@ -740,10 +769,10 @@
                 "effects": [
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "outfield": {"role": "universal", "item_id": 48, "attrib_id": 101},
                         "op_application": ":=",
                         "op_transform": "c",
-                        "val_transform": 5.0
+                        "val_transform": "Long"
                     },
                     {
                         "infield": {"attrib_id": 53},
@@ -782,9 +811,9 @@
                 "determinants": [
                     {
                         "label": "Melee Range",
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
-                        "op_application": "<",
-                        "val_required": 2.0
+                        "infield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "op_application": "==",
+                        "val_required": "Engaged"
                     },
                     {
                         "label": "Can Fight",
@@ -809,18 +838,18 @@
                 "effects": [
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "outfield": {"role": "universal", "item_id": 48, "attrib_id": 101},
                         "op_application": ":=",
                         "op_transform": "c",
-                        "val_transform": 5.0,
+                        "val_transform": "Long",
                         "outcome_success": "success_any"
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "outfield": {"role": "universal", "item_id": 48, "attrib_id": 101},
                         "op_application": ":=",
                         "op_transform": "c",
-                        "val_transform": 5.0,
+                        "val_transform": "Long",
                         "outcome_success": "failure_minor"
                     }
                 ],
@@ -961,9 +990,9 @@
                 "determinants": [
                     {
                         "label": "Melee Range",
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
-                        "op_application": "<",
-                        "val_required": 2.0
+                        "infield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "op_application": "==",
+                        "val_required": "Engaged"
                     },
                     {
                         "label": "Can Fight",
@@ -996,7 +1025,7 @@
                     {
                         "label": "Evasion Bonus",
                         "infield": {"role": "target char", "attrib_id": 45},
-                        "op_application": "*"
+                        "op_application": "-"
                     }
                 ],
                 "chained": [
@@ -1009,16 +1038,22 @@
             {
                 "id": 99,
                 "name": "Machine Gun Dmg",
-                "description": "Roll again for each shot.",
+                "description": "50% chance of hitting, roll again for each shot.",
+                "auto_apply": true,
                 "outcome_type": "numeric",
                 "numeric_range": [0, 1],
                 "determinants": [
+                    {
+                        "label": "Shots Remaining",
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "op_application": ">="
+                    },
                     {"label": "On Target", "op_application": "m:="},
                     {
                         "label": "Base Dmg",
                         "op_application": ":=",
                         "op_transform": "c",
-                        "val_transform": 4.0
+                        "val_transform": 3.0
                     },
                     {
                         "infield": {"attrib_id": 29},
@@ -1034,6 +1069,12 @@
                     {"label": "On Target", "op_application": "*", "op_transform": "mr"}
                 ],
                 "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "op_application": "-",
+                        "op_transform": "c"
+                    },
                     {
                         "get_val_from": "outcome",
                         "outfield": {"role": "target char", "attrib_id": 27},
@@ -1096,10 +1137,10 @@
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
-                        "label": "Melee Range",
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "label": "Close Range",
+                        "infield": {"role": "universal", "item_id": 48, "attrib_id": 101},
                         "op_application": "<",
-                        "val_required": 2.0
+                        "val_required": "Long"
                     },
                     {
                         "label": "Can Fight",
@@ -1124,18 +1165,18 @@
                 "effects": [
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "outfield": {"role": "universal", "item_id": 48, "attrib_id": 101},
                         "op_application": ":=",
                         "op_transform": "c",
-                        "val_transform": 5.0,
+                        "val_transform": "Long",
                         "outcome_success": "success_any"
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "outfield": {"role": "universal", "item_id": 48, "attrib_id": 101},
                         "op_application": ":=",
                         "op_transform": "c",
-                        "val_transform": 5.0,
+                        "val_transform": "Long",
                         "outcome_success": "failure_minor"
                     }
                 ]
@@ -1165,7 +1206,8 @@
                     {
                         "label": "Penalty for no HP",
                         "infield": {"role": "target char", "attrib_id": 53},
-                        "op_application": "*"
+                        "op_application": "*",
+                        "op_transform": "*"
                     },
                     {"op_application": "m:="},
                     {"op_application": ":=", "op_transform": "c", "val_transform": 0.0},
@@ -1207,10 +1249,10 @@
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
-                        "label": "Ranged Dist",
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "label": "Throwing Distance",
+                        "infield": {"role": "universal", "item_id": 48, "attrib_id": 101},
                         "op_application": ">=",
-                        "val_required": 3.0
+                        "val_required": "Short"
                     },
                     {
                         "label": "Can Fight",
@@ -1304,10 +1346,10 @@
                 "effects": [
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "outfield": {"role": "universal", "item_id": 48, "attrib_id": 101},
                         "op_application": ":=",
                         "op_transform": "c",
-                        "val_transform": 5.0
+                        "val_transform": "Long"
                     },
                     {
                         "infield": {"attrib_id": 53},
@@ -1353,9 +1395,9 @@
                 "determinants": [
                     {
                         "label": "Not Melee Range",
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "infield": {"role": "universal", "item_id": 48, "attrib_id": 101},
                         "op_application": ">=",
-                        "val_required": 2.0
+                        "val_required": "Short"
                     },
                     {
                         "label": "Can Fight",
@@ -1380,16 +1422,18 @@
                 "effects": [
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "outfield": {"role": "universal", "item_id": 48, "attrib_id": 101},
                         "op_application": ":=",
                         "op_transform": "c",
+                        "val_transform": "Engaged",
                         "outcome_success": "success_any"
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "outfield": {"role": "universal", "item_id": 48, "attrib_id": 101},
                         "op_application": ":=",
                         "op_transform": "c",
+                        "val_transform": "Engaged",
                         "outcome_success": "failure_minor"
                     },
                     {
@@ -1448,9 +1492,15 @@
                 "id": 81,
                 "name": "Spinning Arms Dmg",
                 "description": "Roll again for each rotation.",
+                "auto_apply": true,
                 "outcome_type": "numeric",
                 "numeric_range": [-4, 5],
                 "determinants": [
+                    {
+                        "label": "Attacks Remaining",
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "op_application": ">="
+                    },
                     {
                         "infield": {"attrib_id": 29},
                         "op_transform": "*",
@@ -1464,6 +1514,12 @@
                     {"op_application": ":=", "op_transform": "floor"}
                 ],
                 "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "op_application": "-",
+                        "op_transform": "c"
+                    },
                     {
                         "get_val_from": "outcome",
                         "outfield": {"role": "target char", "attrib_id": 27},
@@ -1522,18 +1578,13 @@
                 "numeric_range": [-1, 4],
                 "determinants": [
                     {
-                        "infield": {"field_mode": "qty", "item_id": 5},
-                        "op_application": ">=",
-                        "val_required": 4.0
+                        "infield": {"attrib_id": 45},
+                        "op_application": "<"
                     },
                     {
                         "label": "Can Fight",
                         "infield": {"attrib_id": 27},
                         "op_application": ">="
-                    },
-                    {
-                        "infield": {"attrib_id": 45},
-                        "op_application": "<"
                     },
                     {
                         "label": "Target Can Fight",
@@ -1564,9 +1615,9 @@
                 "determinants": [
                     {
                         "label": "Near Melee Range",
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "infield": {"role": "universal", "item_id": 48, "attrib_id": 101},
                         "op_application": "<",
-                        "val_required": 3.0
+                        "val_required": "Long"
                     },
                     {
                         "label": "Can Fight",
@@ -1586,7 +1637,9 @@
                     },
                     {
                         "label": "Accuracy Bonus",
-                        "infield": {"attrib_id": 45}
+                        "infield": {"attrib_id": 45},
+                        "op_transform": "*",
+                        "val_transform": 0.8
                     },
                     {
                         "label": "Extra To-Hit Bonus",
@@ -1596,12 +1649,34 @@
                     {
                         "label": "Evasion",
                         "infield": {"role": "target char", "attrib_id": 30},
-                        "op_application": "-"
+                        "op_application": "-",
+                        "op_transform": "/",
+                        "val_transform": 2.0
                     },
                     {
                         "label": "Evasion Bonus",
                         "infield": {"role": "target char", "attrib_id": 45},
-                        "op_application": "*"
+                        "op_application": "-",
+                        "op_transform": "*",
+                        "val_transform": 0.8
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": "Short",
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": "Short",
+                        "outcome_success": "failure_minor"
                     }
                 ],
                 "chained": [
@@ -1614,15 +1689,16 @@
             {
                 "id": 87,
                 "name": "Tongue Dmg",
-                "description": "Some impact damage but the main threat is acid-eating metal.",
+                "description": "Some impact damage but the main threat is metal-eating acid.",
                 "outcome_type": "numeric",
                 "numeric_range": [1, 5],
                 "determinants": [
                     {
                         "infield": {"attrib_id": 29},
                         "op_transform": "/",
-                        "val_transform": 3.0
-                    }
+                        "val_transform": 2.0
+                    },
+                    {"op_application": ":=", "op_transform": "round"}
                 ],
                 "effects": [
                     {
@@ -1639,15 +1715,10 @@
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
-                        "label": "Not Melee Range",
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
-                        "op_application": ">=",
-                        "val_required": 3.0
-                    },
-                    {
-                        "label": "Can Operate",
-                        "infield": {"field_mode": "qty", "item_id": 5},
-                        "op_application": ">="
+                        "label": "Outside Melee Range",
+                        "infield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "op_application": "==",
+                        "val_required": "Long"
                     },
                     {
                         "label": "Can Fight",
@@ -1739,14 +1810,15 @@
                 "determinants": [
                     {
                         "label": "Extended Melee Range",
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "infield": {"role": "universal", "item_id": 48, "attrib_id": 101},
                         "op_application": "<",
-                        "val_required": 3.0
+                        "val_required": "Long"
                     },
                     {
                         "label": "Can Operate",
                         "infield": {"field_mode": "qty", "item_id": 5},
-                        "op_application": ">="
+                        "op_application": ">=",
+                        "val_required": 3.0
                     },
                     {
                         "label": "Advanced Enough",
@@ -1804,7 +1876,7 @@
                         "outfield": {"role": "target char", "attrib_id": 56},
                         "op_application": ":=",
                         "op_transform": "/",
-                        "val_transform": 2.0,
+                        "val_transform": 3.0,
                         "outcome_success": "success_any"
                     },
                     {
@@ -1833,19 +1905,20 @@
             {
                 "id": 69,
                 "name": "🚫XL 4 Shotgun",
-                "description": "Powerful ranged attack with average accuracy.\r\n\r\n- **Any Success:** If the attack hits then roll **Shotgun Dmg.**\r\n- **Major Success:** (Nat 20) Two damage rolls instead of one.\r\n- **Major Failure:** Consumes double **Energy.**",
+                "description": "Powerful ranged attack with average accuracy.\r\n\r\n- **Any Success:** The attack hits so roll **Shotgun Dmg.**\r\n- **Major Success:** (Nat 20) Two damage rolls instead of one.\r\n- **Major Failure:** Consumes double **Energy.**",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
-                        "label": "Not Melee Range",
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
-                        "op_application": ">=",
-                        "val_required": 3.0
+                        "label": "Outside Melee Range",
+                        "infield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "op_application": "==",
+                        "val_required": "Long"
                     },
                     {
                         "label": "Can Operate",
                         "infield": {"field_mode": "qty", "item_id": 5},
-                        "op_application": ">="
+                        "op_application": ">=",
+                        "val_required": 3.0
                     },
                     {
                         "label": "Advanced Enough",
@@ -1905,6 +1978,21 @@
                     },
                     {
                         "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 0.0,
+                        "outcome_success": "failure_any"
+                    },
+                    {
+                        "get_val_from": "outcome",
                         "outfield": {"attrib_id": 45},
                         "op_application": ":=",
                         "op_transform": "c",
@@ -1927,14 +2015,15 @@
                 "determinants": [
                     {
                         "label": "Melee Range",
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
-                        "op_application": "<",
-                        "val_required": 2.0
+                        "infield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "op_application": "==",
+                        "val_required": "Engaged"
                     },
                     {
                         "label": "Can Operate",
                         "infield": {"field_mode": "qty", "item_id": 5},
-                        "op_application": ">="
+                        "op_application": ">=",
+                        "val_required": 6.0
                     },
                     {
                         "label": "Advanced Enough",
@@ -1985,6 +2074,37 @@
                         "op_application": "-",
                         "op_transform": "c",
                         "val_transform": 6.0
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 4.0,
+                        "outcome_success": "success_major"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 3.0,
+                        "outcome_success": "success_minor"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "outcome_success": "failure_minor"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 0.0,
+                        "outcome_success": "failure_major"
                     }
                 ],
                 "chained": [
@@ -2006,14 +2126,15 @@
                 "determinants": [
                     {
                         "label": "Not Melee Range",
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "infield": {"role": "universal", "item_id": 48, "attrib_id": 101},
                         "op_application": ">=",
-                        "val_required": 2.0
+                        "val_required": "Short"
                     },
                     {
                         "label": "Can Operate",
                         "infield": {"field_mode": "qty", "item_id": 5},
-                        "op_application": ">="
+                        "op_application": ">=",
+                        "val_required": 4.0
                     },
                     {
                         "label": "Advanced Enough",
@@ -2062,16 +2183,18 @@
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "outfield": {"role": "universal", "item_id": 48, "attrib_id": 101},
                         "op_application": ":=",
                         "op_transform": "c",
+                        "val_transform": "Engaged",
                         "outcome_success": "success_any"
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "outfield": {"role": "universal", "item_id": 48, "attrib_id": 101},
                         "op_application": ":=",
                         "op_transform": "c",
+                        "val_transform": "Engaged",
                         "outcome_success": "failure_minor"
                     },
                     {
@@ -2108,19 +2231,20 @@
             {
                 "id": 98,
                 "name": "🚫XL10 Machine Gun",
-                "description": "Multi-hit ranged attack with poor accuracy.\r\n\r\n- **Major Success:** 4 shots\r\n- **Minor Success:** 3 shots\r\n- **Minor Failure:** 1 shot\r\n- **Major Failure:** 0 shots",
+                "description": "Multi-hit ranged attack with poor accuracy.\r\n\r\n- **Major Success:** 6 shots\r\n- **Minor Success:** 4 shots\r\n- **Minor Failure:** 2 shot\r\n- **Major Failure:** 0 shots",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
-                        "label": "Not Melee Range",
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
-                        "op_application": ">=",
-                        "val_required": 3.0
+                        "label": "Outside Melee Range",
+                        "infield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "op_application": "==",
+                        "val_required": "Long"
                     },
                     {
                         "label": "Can Operate",
                         "infield": {"field_mode": "qty", "item_id": 5},
-                        "op_application": ">="
+                        "op_application": ">=",
+                        "val_required": 8.0
                     },
                     {
                         "label": "Advanced Enough",
@@ -2169,12 +2293,48 @@
                         "op_application": "-",
                         "op_transform": "c",
                         "val_transform": 8.0
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 6.0,
+                        "outcome_success": "success_major"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 4.0,
+                        "outcome_success": "success_minor"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 2.0,
+                        "outcome_success": "failure_minor"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 0.0,
+                        "outcome_success": "failure_major"
                     }
                 ],
                 "chained": [
                     {
-                        "child_id": 70,
+                        "child_id": 99,
                         "req": {"outcome_success": "success_any"}
+                    },
+                    {
+                        "child_id": 99,
+                        "req": {"outcome_success": "failure_minor"}
                     }
                 ]
             },
@@ -2186,14 +2346,15 @@
                 "determinants": [
                     {
                         "label": "Melee Range",
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
-                        "op_application": "<",
-                        "val_required": 2.0
+                        "infield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "op_application": "==",
+                        "val_required": "Engaged"
                     },
                     {
                         "label": "Can Operate",
                         "infield": {"field_mode": "qty", "item_id": 5},
-                        "op_application": ">="
+                        "op_application": ">=",
+                        "val_required": 8.0
                     },
                     {
                         "label": "Advanced Enough",
@@ -2315,7 +2476,7 @@
     "general data": {
         "piles": [
             {"item_id": 48, "quantity": 5.0},
-            {"item_id": 50, "quantity": 2000.0}
+            {"item_id": 50, "quantity": 4000.0}
         ]
     },
     "progress": []
