@@ -20,10 +20,28 @@
                 "description": "Higher numbers increase your chance of landing hits before they can move out of the way. This equates to **accuracy/evasion** (not how many moves).\r\n\r\nThe robot has ⌊2.0 + 0.3 × XL⌋."
             },
             {
+                "id": 92,
+                "name": "Action — Armadillo",
+                "description": "selection list for event",
+                "enum_list": ["Lick", "Dodge", "Move Away", "Rush"]
+            },
+            {
                 "id": 76,
                 "name": "Action — Bunny",
                 "description": "selection list for event",
                 "enum_list": ["Attack", "Hop Away", "Rush", "Dodge", "Double Hop"]
+            },
+            {
+                "id": 88,
+                "name": "Action — Chameleon",
+                "description": "selection list for event",
+                "enum_list": ["Distance Attack", "Dodge", "Move Away"]
+            },
+            {
+                "id": 95,
+                "name": "Action — Gator",
+                "description": "selection list for event",
+                "enum_list": ["Chomp", "Tail Lash", "Surge"]
             },
             {
                 "id": 66,
@@ -162,12 +180,6 @@
                     {"loc2_id": 7}
                 ]
             },
-            {
-                "id": 9,
-                "name": "Bad Hare Area",
-                "masked": true,
-                "item_refs": [71]
-            },
             {"id": 7, "name": "Grown Mice Area", "masked": true},
             {
                 "id": 8,
@@ -184,6 +196,13 @@
                 ]
             },
             {
+                "id": 9,
+                "name": "Intersection",
+                "description": "Some roads and ramps come together here, but they're so broken and winding that it's hard to get an idea of which direction they go.",
+                "masked": true,
+                "item_refs": [71]
+            },
+            {
                 "id": 12,
                 "name": "Maintenance Building",
                 "description": "An outpost in northern Florida set up to contain the infestation. Engineers assess intel and perform upgrades and repairs.",
@@ -194,6 +213,15 @@
                 "destinations": [
                     {"loc2_id": 8},
                     {"loc2_id": 10}
+                ]
+            },
+            {
+                "id": 90,
+                "name": "Pond",
+                "description": "The low wet ground turns into deeper water here.",
+                "masked": true,
+                "entrance_reqs": [
+                    {"attrib_id": 4, "val_required": 10.0}
                 ]
             },
             {
@@ -209,7 +237,10 @@
                 "id": 79,
                 "name": "Retirement Home",
                 "description": "Anyone can look forward to living here when they're old. Inside is an empty front desk, and a sign on the wall: \"Live every day as if it were your last (which is not unlikely).\"\r\n\r\nThere is someone in the room, still kicking.",
-                "masked": true
+                "masked": true,
+                "entrance_reqs": [
+                    {"attrib_id": 4, "val_required": 12.0}
+                ]
             },
             {
                 "id": 72,
@@ -217,24 +248,40 @@
                 "description": "Low ground swarming with mosquitoes. Mud and water make movement slow and treacherous.",
                 "masked": true,
                 "destinations": [
-                    {"loc2_id": 78}
+                    {"loc2_id": 78},
+                    {"loc2_id": 89},
+                    {"loc2_id": 90}
                 ],
                 "entrance_reqs": [
                     {"item_id": 71, "val_required": 1.0}
                 ]
             },
-            {"id": 11, "name": "Tainted Bunny Area", "masked": true}
+            {"id": 11, "name": "Tainted Bunny Area", "masked": true},
+            {
+                "id": 89,
+                "name": "Trees",
+                "description": "Their base is in the water but they still tower far above.",
+                "masked": true
+            }
         ],
         "characters": [
             {
-                "id": 68,
-                "name": "🐊Alligator",
-                "description": "Glowing bright green with visible toxic liquid dripping down its natural armor.\r\nPure melee aggressors.",
+                "id": 73,
+                "name": "🦔Armadillo",
+                "description": "Wanders around aimlessly looking for insects to catch with its tongue. Not the most threatening enemy, but a nuisance nonetheless.",
                 "attribs": [
-                    [60, 40.0]
-                ]
+                    [27, 70.0],
+                    [29, 5.0],
+                    [30, 3.0],
+                    [45, 0.0],
+                    [53, 70.0],
+                    [56, 0.0],
+                    [57, 0.0],
+                    [60, 30.0]
+                ],
+                "abilities": [36, 43, 46, 47, 49, 58, 91, 94],
+                "location_id": 72
             },
-            {"id": 73, "name": "🦔Armadillo", "description": "Tanky"},
             {
                 "id": 16,
                 "name": "🐁Baby Mouse",
@@ -270,6 +317,23 @@
                 "location_id": 9
             },
             {
+                "id": 84,
+                "name": "🦎Chameleon",
+                "description": "Not only is the swampy ground below a threat, but these enemies shoot acidic tongues at you from the safe distance of trees above. Camouflage makes them hard to see well enough to hit.",
+                "attribs": [
+                    [27, 40.0],
+                    [29, 2.0],
+                    [30, 7.0],
+                    [45, 0.0],
+                    [53, 40.0],
+                    [56, 0.0],
+                    [57, 0.0],
+                    [60, 45.0]
+                ],
+                "abilities": [36, 43, 46, 58, 85, 93],
+                "location_id": 89
+            },
+            {
                 "id": 15,
                 "name": "🐭Full-grown Mouse",
                 "description": "Okay, it's still kind of cute, despite the toxic green eyes.",
@@ -287,6 +351,23 @@
                 "location_id": 7
             },
             {
+                "id": 68,
+                "name": "🐊Gator",
+                "description": "Glowing bright green with visible toxic liquid dripping down its natural armor.\r\n\r\nPure melee aggressor.\r\n- high force for bite\r\n- generally not high speed but tail lash is notably harder to avoid and range 2\r\n- has no withdraw to range ability, although tail lash ends at range 2",
+                "attribs": [
+                    [27, 80.0],
+                    [29, 8.0],
+                    [30, 3.0],
+                    [45, 0.0],
+                    [53, 80.0],
+                    [56, 0.0],
+                    [57, 0.0],
+                    [60, 80.0]
+                ],
+                "abilities": [39, 44, 46, 47, 49, 58, 97],
+                "location_id": 90
+            },
+            {
                 "id": 13,
                 "name": "🤖 Herbert 2100B",
                 "description": "Semi-autonomous robot, the player character.\r\nFight initiator—always gets the first turn.\r\nDoes not get diseases from being bitten, but has a limited amount of power.\r\nBattle testing allows engineers to improve the technology.",
@@ -300,7 +381,7 @@
                     [45, 0.0],
                     [53, 10.0]
                 ],
-                "abilities": [28, 35, 36, 43, 44, 47, 64, 67, 69, 80],
+                "abilities": [28, 35, 36, 43, 44, 47, 64, 67, 69, 80, 98, 100],
                 "toplevel": true,
                 "location_id": 12,
                 "items": [
@@ -337,27 +418,8 @@
         ],
         "events": [
             {
-                "id": 40,
-                "name": "Bite Dmg",
-                "description": "Roll, then apply that amount of damage.",
-                "outcome_type": "numeric",
-                "numeric_range": [1, 4],
-                "determinants": [
-                    {
-                        "infield": {"attrib_id": 29}
-                    }
-                ],
-                "effects": [
-                    {
-                        "get_val_from": "outcome",
-                        "outfield": {"role": "target char", "attrib_id": 27},
-                        "op_application": "-"
-                    }
-                ]
-            },
-            {
                 "id": 39,
-                "name": "Bite To-Hit",
+                "name": "Bite",
                 "description": "Use teeth for a basic melee attack.\r\n\r\n- **Damage:** If the attack hits then roll **Bite Dmg.**\r\n- **Major Success:** (Nat 20) Enemy gets two damage rolls instead of one.\r\n- **Major Failure:** Wild lunge—enemy cannot reposition on the next turn.",
                 "numeric_range": [1, 20],
                 "determinants": [
@@ -409,11 +471,51 @@
                 ]
             },
             {
+                "id": 40,
+                "name": "Bite Dmg",
+                "description": "Roll, then apply that amount of damage.",
+                "outcome_type": "numeric",
+                "numeric_range": [1, 4],
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 29}
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 27},
+                        "op_application": "-"
+                    }
+                ]
+            },
+            {
+                "id": 94,
+                "name": "Choose Armadillo Action",
+                "description": "This enemy might not always act sensibly. After all, their eyesight and hearing is poor.",
+                "outcome_type": "selection",
+                "selection_attrib_id": 92
+            },
+            {
                 "id": 77,
                 "name": "Choose Bunny Action",
                 "description": "Bunnies that get shot at from range are usually going to rush and then bite. But if they have just hopped away then they may dodge for a turn.",
                 "outcome_type": "selection",
                 "selection_attrib_id": 76
+            },
+            {
+                "id": 93,
+                "name": "Choose Chameleon Action",
+                "description": "Pretty simple — attack from range and dodge.",
+                "outcome_type": "selection",
+                "selection_attrib_id": 88
+            },
+            {
+                "id": 96,
+                "name": "Choose Gator Action",
+                "description": "Pretty much always goes forward unless pausing to **Surge.**",
+                "outcome_type": "selection",
+                "selection_attrib_id": 88
             },
             {
                 "id": 41,
@@ -509,48 +611,8 @@
                 ]
             },
             {
-                "id": 38,
-                "name": "Fist Pummel Dmg",
-                "description": "Roll and apply the damage. If Enemy HP is reduced below 1 then do **XP Gain.**",
-                "outcome_type": "numeric",
-                "numeric_range": [1, 6],
-                "determinants": [
-                    {
-                        "infield": {"attrib_id": 29}
-                    },
-                    {
-                        "infield": {"attrib_id": 45},
-                        "op_transform": "*",
-                        "val_transform": 0.5
-                    }
-                ],
-                "effects": [
-                    {
-                        "get_val_from": "outcome",
-                        "outfield": {"role": "target char", "attrib_id": 27},
-                        "op_application": "-"
-                    },
-                    {
-                        "get_val_from": "outcome",
-                        "outfield": {"attrib_id": 45},
-                        "op_application": ":=",
-                        "op_transform": "c",
-                        "val_transform": 0.0
-                    }
-                ],
-                "chained": [
-                    {
-                        "child_id": 18,
-                        "req": {
-                            "infield": {"role": "target char", "attrib_id": 27},
-                            "op_application": "<"
-                        }
-                    }
-                ]
-            },
-            {
                 "id": 28,
-                "name": "Fist Pummel To-Hit",
+                "name": "Fist Pummel",
                 "description": "Close grasping digits and swing robotic arm forward. Basic melee attack.\r\n\r\n- **Any Success:** If the attack hits then roll **Fist Pummel Dmg.**\r\n- **Major Success:** (Nat 20) Two damage rolls instead of one.\r\n- **Major Failure:** Consumes 2 **Energy** instead of 1.\r\n\r\nAfter swinging, the enemy gets a turn.",
                 "numeric_range": [1, 20],
                 "determinants": [
@@ -626,6 +688,46 @@
                     {
                         "child_id": 38,
                         "req": {"outcome_success": "success_any"}
+                    }
+                ]
+            },
+            {
+                "id": 38,
+                "name": "Fist Pummel Dmg",
+                "description": "Roll and apply the damage. If Enemy HP is reduced below 1 then do **XP Gain.**",
+                "outcome_type": "numeric",
+                "numeric_range": [1, 6],
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 29}
+                    },
+                    {
+                        "infield": {"attrib_id": 45},
+                        "op_transform": "*",
+                        "val_transform": 0.5
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 27},
+                        "op_application": "-"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 45},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 0.0
+                    }
+                ],
+                "chained": [
+                    {
+                        "child_id": 18,
+                        "req": {
+                            "infield": {"role": "target char", "attrib_id": 27},
+                            "op_application": "<"
+                        }
                     }
                 ]
             },
@@ -852,6 +954,103 @@
                 ]
             },
             {
+                "id": 91,
+                "name": "Lick",
+                "description": "Use tongue for a basic melee attack.\r\n\r\n- **Major Success:** (Nat 20) Enemy gets two damage rolls instead of one.\r\n- **Major Failure:** Wild lunge—enemy cannot reposition on the next turn.",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "label": "Melee Range",
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "op_application": "<",
+                        "val_required": 2.0
+                    },
+                    {
+                        "label": "Can Fight",
+                        "infield": {"attrib_id": 27},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Target Can Fight",
+                        "infield": {"role": "target char", "attrib_id": 27},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Chance to Hit",
+                        "infield": {"attrib_id": 30}
+                    },
+                    {
+                        "label": "Accuracy Bonus",
+                        "infield": {"attrib_id": 45}
+                    },
+                    {
+                        "label": "Standard To-Hit Bonus",
+                        "op_transform": "c",
+                        "val_transform": 3.0
+                    },
+                    {
+                        "label": "Evasion",
+                        "infield": {"role": "target char", "attrib_id": 30},
+                        "op_application": "-"
+                    },
+                    {
+                        "label": "Evasion Bonus",
+                        "infield": {"role": "target char", "attrib_id": 45},
+                        "op_application": "*"
+                    }
+                ],
+                "chained": [
+                    {
+                        "child_id": 87,
+                        "req": {"outcome_success": "success_any"}
+                    }
+                ]
+            },
+            {
+                "id": 99,
+                "name": "Machine Gun Dmg",
+                "description": "Roll again for each shot.",
+                "outcome_type": "numeric",
+                "numeric_range": [0, 1],
+                "determinants": [
+                    {"label": "On Target", "op_application": "m:="},
+                    {
+                        "label": "Base Dmg",
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 4.0
+                    },
+                    {
+                        "infield": {"attrib_id": 29},
+                        "op_transform": "*",
+                        "val_transform": 0.7
+                    },
+                    {
+                        "infield": {"attrib_id": 45},
+                        "op_transform": "*",
+                        "val_transform": 0.5
+                    },
+                    {"op_application": ":=", "op_transform": "floor"},
+                    {"label": "On Target", "op_application": "*", "op_transform": "mr"}
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 27},
+                        "op_application": "-"
+                    }
+                ],
+                "chained": [
+                    {
+                        "child_id": 18,
+                        "req": {
+                            "infield": {"role": "target char", "attrib_id": 27},
+                            "op_application": "<"
+                        }
+                    }
+                ]
+            },
+            {
                 "id": 64,
                 "name": "Maintenance Self",
                 "description": "Restore **HP** by consuming remaining **Energy.**\r\nUse instead of returning to the **Maintenance Building,** either after the enemy is defeated or by travelling to a safe area.",
@@ -1002,27 +1201,8 @@
                 ]
             },
             {
-                "id": 63,
-                "name": "Project Fur Dmg",
-                "description": "Damage applies to the target, not self-inflicted.",
-                "outcome_type": "numeric",
-                "numeric_range": [1, 2],
-                "determinants": [
-                    {
-                        "infield": {"attrib_id": 29}
-                    }
-                ],
-                "effects": [
-                    {
-                        "get_val_from": "outcome",
-                        "outfield": {"role": "target char", "attrib_id": 27},
-                        "op_application": "-"
-                    }
-                ]
-            },
-            {
                 "id": 62,
-                "name": "Project Fur To-Hit",
+                "name": "Project Fur",
                 "description": "The creature goes wild and tears off some of its own corrupted fur to throw at you from distance.\r\n\r\n- **Damage:** If the attack hits then roll **Project Fur Dmg.**\r\n- **Major Failure:** More self-inflicted **HP** loss.\r\n- This attack cannot crit—*Major Success* has no additional effect.",
                 "numeric_range": [1, 20],
                 "determinants": [
@@ -1091,6 +1271,25 @@
                 ]
             },
             {
+                "id": 63,
+                "name": "Project Fur Dmg",
+                "description": "Damage applies to the target, not self-inflicted.",
+                "outcome_type": "numeric",
+                "numeric_range": [1, 2],
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 29}
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 27},
+                        "op_application": "-"
+                    }
+                ]
+            },
+            {
                 "id": 65,
                 "name": "Refresh Boss",
                 "description": "Run when you exit the area while the fight is in progress.",
@@ -1148,7 +1347,7 @@
             {
                 "id": 47,
                 "name": "Rush to Melee Dist",
-                "description": "Rush into melee range, repositioning to 1 tile away.\r\n\r\n- **Success:** The action is free—no loss of turn.\r\n- **Minor Failure:** Close gap but turn ends and (if robot) consumes 1 **Energy.**\r\n- **Major Failure:** Fail to close gap.",
+                "description": "Rush into melee range, repositioning to 1 tile away. From distance 2, use *Easy* difficulty.\r\n\r\n- **Success:** The action is free—no loss of turn.\r\n- **Minor Failure:** Close gap but turn ends and (if robot) consumes 1 **Energy.**\r\n- **Major Failure:** Fail to close gap.",
                 "auto_apply": true,
                 "numeric_range": [1, 20],
                 "determinants": [
@@ -1358,6 +1557,150 @@
                 ]
             },
             {
+                "id": 97,
+                "name": "Tail Lash",
+                "description": "Swing around and lash out at the target with chemical-covered tail. Reaches from distance 2.\r\n\r\n- **Major Success:** (Nat 20) Enemy gets two damage rolls instead of one.\r\n- **Major Failure:** Wild rotation—enemy cannot reposition on the next turn.",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "label": "Near Melee Range",
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "op_application": "<",
+                        "val_required": 3.0
+                    },
+                    {
+                        "label": "Can Fight",
+                        "infield": {"attrib_id": 27},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Target Can Fight",
+                        "infield": {"role": "target char", "attrib_id": 27},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Chance to Hit",
+                        "infield": {"attrib_id": 30},
+                        "op_transform": "/",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "label": "Accuracy Bonus",
+                        "infield": {"attrib_id": 45}
+                    },
+                    {
+                        "label": "Extra To-Hit Bonus",
+                        "op_transform": "c",
+                        "val_transform": 5.0
+                    },
+                    {
+                        "label": "Evasion",
+                        "infield": {"role": "target char", "attrib_id": 30},
+                        "op_application": "-"
+                    },
+                    {
+                        "label": "Evasion Bonus",
+                        "infield": {"role": "target char", "attrib_id": 45},
+                        "op_application": "*"
+                    }
+                ],
+                "chained": [
+                    {
+                        "child_id": 87,
+                        "req": {"outcome_success": "success_any"}
+                    }
+                ]
+            },
+            {
+                "id": 87,
+                "name": "Tongue Dmg",
+                "description": "Some impact damage but the main threat is acid-eating metal.",
+                "outcome_type": "numeric",
+                "numeric_range": [1, 5],
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 29},
+                        "op_transform": "/",
+                        "val_transform": 3.0
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 27},
+                        "op_application": "-"
+                    }
+                ]
+            },
+            {
+                "id": 85,
+                "name": "Tongue Projectile",
+                "description": "Accurate ranged attack.\r\n\r\n- **Any Success:** If the attack hits then roll **Shotgun Dmg.**\r\n- **Major Success:** (Nat 20) Two damage rolls instead of one.\r\n- **Major Failure:** Consumes double **Energy.**",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "label": "Not Melee Range",
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "op_application": ">=",
+                        "val_required": 3.0
+                    },
+                    {
+                        "label": "Can Operate",
+                        "infield": {"field_mode": "qty", "item_id": 5},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Can Fight",
+                        "infield": {"attrib_id": 27},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Enemy Can Fight",
+                        "infield": {"role": "target char", "attrib_id": 27},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Chance to Hit",
+                        "infield": {"attrib_id": 30}
+                    },
+                    {
+                        "label": "Accuracy Bonus",
+                        "infield": {"attrib_id": 45}
+                    },
+                    {
+                        "label": "Standard To-Hit Bonus",
+                        "op_transform": "c",
+                        "val_transform": 3.0
+                    },
+                    {
+                        "label": "Evasion",
+                        "infield": {"role": "target char", "attrib_id": 30},
+                        "op_application": "-"
+                    },
+                    {
+                        "label": "Evasion Bonus",
+                        "infield": {"role": "target char", "attrib_id": 45},
+                        "op_application": "-"
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 45},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 0.0,
+                        "outcome_success": "failure_any"
+                    }
+                ],
+                "chained": [
+                    {
+                        "child_id": 87,
+                        "req": {"outcome_success": "success_any"}
+                    }
+                ]
+            },
+            {
                 "id": 58,
                 "name": "Waste Away",
                 "description": "All enemies in this scenario are wasting away from toxins within. If they have under 5% HP remaining, or only 1 HP, then roll to see if they fully succumb.\r\n\r\nLook in the modifiers section to verify that HP is low enough.",
@@ -1390,7 +1733,7 @@
             },
             {
                 "id": 35,
-                "name": "🚫XL3 Ignite",
+                "name": "🚫XL 3 Ignite",
                 "description": "Shoot flames out of a nozzle that can reach up to 2 distance. Hard to dodge, but the flame doesn't always take.\r\n\r\n- **Major Success:** 50% more damage\r\n- Burning enemies must **Suffer DoT** for 3 turns\r\n- **Any Failure:** lose energy, no damage\r\n\r\n*This event becomes available when you reach level 3, so delete the letters in front.*",
                 "numeric_range": [1, 20],
                 "determinants": [
@@ -1489,7 +1832,7 @@
             },
             {
                 "id": 69,
-                "name": "🚫XL4 Shotgun To-Hit",
+                "name": "🚫XL 4 Shotgun",
                 "description": "Powerful ranged attack with average accuracy.\r\n\r\n- **Any Success:** If the attack hits then roll **Shotgun Dmg.**\r\n- **Major Success:** (Nat 20) Two damage rolls instead of one.\r\n- **Major Failure:** Consumes double **Energy.**",
                 "numeric_range": [1, 20],
                 "determinants": [
@@ -1497,7 +1840,7 @@
                         "label": "Not Melee Range",
                         "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
                         "op_application": ">=",
-                        "val_required": 2.0
+                        "val_required": 3.0
                     },
                     {
                         "label": "Can Operate",
@@ -1578,7 +1921,7 @@
             },
             {
                 "id": 80,
-                "name": "🚫XL7 Spinning Arms To-Hit",
+                "name": "🚫XL 7 Spinning Arms",
                 "description": "Rotate torso rapidly to get in multiple inaccurate melee hits.\r\n\r\n- **Major Success:** 4 rotations\r\n- **Minor Success:** 3 rotations\r\n- **Minor Failure:** 1 rotation\r\n- **Major Failure:** 0 rotations",
                 "numeric_range": [1, 20],
                 "determinants": [
@@ -1641,7 +1984,7 @@
                         "outfield": {"field_mode": "qty", "item_id": 5},
                         "op_application": "-",
                         "op_transform": "c",
-                        "val_transform": 5.0
+                        "val_transform": 6.0
                     }
                 ],
                 "chained": [
@@ -1657,7 +2000,7 @@
             },
             {
                 "id": 67,
-                "name": "🚫XL8 Harpoon",
+                "name": "🚫XL 8 Harpoon",
                 "description": "Shoot a triangle-tipped spear into an enemy and pull them into melee range.\r\nPrevents any enemy actions that disengage such as hopping.\r\n\r\n- **Any Success:** Bleeding enemies must **Suffer DoT** for 2 turns\r\n- **Major Success:** Held for 2 turns instead of 1\r\n- **Major Failure:** Fail to move the enemy into melee range\r\n\r\nIf you want to disengage while your own harpoon is successfully hooked, you'd have to roll with disadvantage (worse of 2 attempts).",
                 "numeric_range": [1, 20],
                 "determinants": [
@@ -1759,6 +2102,155 @@
                         "op_application": ":=",
                         "op_transform": "round",
                         "outcome_success": "success_any"
+                    }
+                ]
+            },
+            {
+                "id": 98,
+                "name": "🚫XL10 Machine Gun",
+                "description": "Multi-hit ranged attack with poor accuracy.\r\n\r\n- **Major Success:** 4 shots\r\n- **Minor Success:** 3 shots\r\n- **Minor Failure:** 1 shot\r\n- **Major Failure:** 0 shots",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "label": "Not Melee Range",
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "op_application": ">=",
+                        "val_required": 3.0
+                    },
+                    {
+                        "label": "Can Operate",
+                        "infield": {"field_mode": "qty", "item_id": 5},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Advanced Enough",
+                        "infield": {"attrib_id": 4},
+                        "op_application": ">=",
+                        "val_required": 10.0
+                    },
+                    {
+                        "label": "Can Fight",
+                        "infield": {"attrib_id": 27},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Enemy Can Fight",
+                        "infield": {"role": "target char", "attrib_id": 27},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Chance to Hit",
+                        "infield": {"attrib_id": 30}
+                    },
+                    {
+                        "label": "Accuracy Bonus",
+                        "infield": {"attrib_id": 45}
+                    },
+                    {
+                        "label": "Standard To-Hit Bonus",
+                        "op_transform": "c",
+                        "val_transform": 3.0
+                    },
+                    {
+                        "label": "Evasion",
+                        "infield": {"role": "target char", "attrib_id": 30},
+                        "op_application": "-"
+                    },
+                    {
+                        "label": "Evasion Bonus",
+                        "infield": {"role": "target char", "attrib_id": 45},
+                        "op_application": "-"
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"field_mode": "qty", "item_id": 5},
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "val_transform": 8.0
+                    }
+                ],
+                "chained": [
+                    {
+                        "child_id": 70,
+                        "req": {"outcome_success": "success_any"}
+                    }
+                ]
+            },
+            {
+                "id": 100,
+                "name": "🚫XL11 Stunning Bonk",
+                "description": "Send an electric current through an arm and slam it bluntly against the enemy.\r\n\r\n- **Major Success:** enemy loses 2 turns\r\n- **Minor Success:** enemy loses 1 turn\r\n- **Minor Failure:** enemy does not lose a turn\r\n- **Major Failure:** no damage",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "label": "Melee Range",
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "op_application": "<",
+                        "val_required": 2.0
+                    },
+                    {
+                        "label": "Can Operate",
+                        "infield": {"field_mode": "qty", "item_id": 5},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Advanced Enough",
+                        "infield": {"attrib_id": 4},
+                        "op_application": ">=",
+                        "val_required": 11.0
+                    },
+                    {
+                        "label": "Can Fight",
+                        "infield": {"attrib_id": 27},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Enemy Can Fight",
+                        "infield": {"role": "target char", "attrib_id": 27},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Chance to Hit",
+                        "infield": {"attrib_id": 30},
+                        "op_transform": "*",
+                        "val_transform": 0.5
+                    },
+                    {
+                        "label": "Chance to Stun",
+                        "infield": {"attrib_id": 33}
+                    },
+                    {
+                        "label": "Standard To-Hit Bonus",
+                        "op_transform": "c",
+                        "val_transform": 3.0
+                    },
+                    {
+                        "label": "Evasion",
+                        "infield": {"role": "target char", "attrib_id": 30},
+                        "op_application": "-",
+                        "op_transform": "*",
+                        "val_transform": 0.5
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"field_mode": "qty", "item_id": 5},
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "val_transform": 8.0
+                    }
+                ],
+                "chained": [
+                    {
+                        "child_id": 38,
+                        "req": {"outcome_success": "success_any"}
+                    },
+                    {
+                        "child_id": 38,
+                        "req": {"outcome_success": "failure_minor"}
                     }
                 ]
             },
