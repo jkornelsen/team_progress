@@ -3,7 +3,7 @@
         "title": "Infestation",
         "description": "After a disastrous lab experiment, Florida has been overrun with mutant rodents. Especially dangerous ones are further south. Vacationers and residents have fled. Many retired folks are missing.\r\n\r\nHack 'n slash dueling where you {lime|level up}.",
         "win_reqs": [
-            {"char_id": 13, "attrib_id": 4, "attrib_value": 10.0},
+            {"char_id": 13, "attrib_id": 4, "attrib_value": 12.0},
             {"item_id": 71, "quantity": 1.0},
             {"item_id": 83, "quantity": 1.0}
         ],
@@ -17,7 +17,7 @@
             {
                 "id": 30,
                 "name": "Action Speed",
-                "description": "Higher numbers increase your chance of landing hits before they can move out of the way. This equates to **accuracy/evasion** (not how many moves).\r\n\r\nThe robot has ⌊2.0 + 0.3 × XL⌋."
+                "description": "Higher numbers increase your chance of landing hits before they can move out of the way. This equates to *accuracy/evasion* or *dexterity* (not how many moves).\r\n\r\nThe robot has ⌊2.0 + 0.3 × XL⌋."
             },
             {
                 "id": 92,
@@ -58,6 +58,22 @@
                 "enum_list": ["Attack", "Wait — End Turn", "Move Away"]
             },
             {
+                "id": 108,
+                "name": "Action — Supreme",
+                "description": "selection list for event",
+                "enum_list": [
+                    "Cane Whack",
+                    "Cane Whack",
+                    "Cane Whack",
+                    "Tell Joke",
+                    "Tell Joke",
+                    "Tell Joke",
+                    "Tell Joke",
+                    "Rush",
+                    "Move Away"
+                ]
+            },
+            {
                 "id": 45,
                 "name": "Boost",
                 "description": "Gets set by **Dodge** or **Surge** for 1 round. Set to 0 after that, even if the opponent doesn't choose to attack."
@@ -75,7 +91,7 @@
             {
                 "id": 29,
                 "name": "Force",
-                "description": "How much power is available to hit or move things. Equates to Strength for living beings.\r\nThe robot has ⌊2.5 + 0.5 × XL⌋."
+                "description": "How much power is available to hit or move things. Equates to *strength* for living beings.\r\nThe robot has ⌊2.5 + 0.5 × XL⌋."
             },
             {
                 "id": 27,
@@ -88,11 +104,6 @@
                 "description": "Determined by 6 + (4 × XL)."
             },
             {
-                "id": 31,
-                "name": "Movement Speed",
-                "description": "How fast to reposition in the room."
-            },
-            {
                 "id": 101,
                 "name": "Range Band",
                 "description": "- *Engaged:* standard melee weapons\r\n- *Short:* spear reach, throwing\r\n- *Long:* ranged weapons, gun",
@@ -101,7 +112,7 @@
             {
                 "id": 33,
                 "name": "Voltage",
-                "description": "Determines electrical damage of an attack as well as how much energy is consumed.\r\nThe robot has ⌊0.5 + 0.7 × XL⌋."
+                "description": "Electrical or fire damage, similar to *intelligence* and *willpower.*\r\n\r\nThe robot has ⌊0.5 + 0.7 × XL⌋."
             },
             {
                 "id": 4,
@@ -164,7 +175,8 @@
                 "name": "Funding",
                 "description": "Required for repairs, so don't be too reckless or there might not be enough to complete the mission.",
                 "storage_type": "u",
-                "toplevel": true
+                "toplevel": true,
+                "q_limit": 3000.0
             },
             {
                 "id": 102,
@@ -420,11 +432,19 @@
             {
                 "id": 25,
                 "name": "👴Old Fart Supreme",
-                "description": "Wearing a nametag with \"Gerry\" written on it.\r\n\r\ncane whack, cane poke\r\n\r\n- On victory, mark the boss as [Defeated](/configure/item/83)\r\n\r\nAfter his defeat, he can be restored to normal through medical procedures. Whether the process improves cantankerousness is doubtful though.",
+                "description": "Wearing a nametag with \"Gerry\" written on it.\r\n\r\n**{lemonchiffon|On victory, mark the boss as [Defeated.](/configure/item/83)}**\r\n\r\n----\r\n\r\nAfter his defeat, he can be restored through medical procedures. Whether the process improves cantankerousness is doubtful though.\r\n\r\nThen, the rest of the infested area can be restored safely.",
                 "attribs": [
+                    [27, 120.0],
+                    [29, 8.0],
+                    [30, 4.0],
+                    [33, 0.0],
+                    [45, 0.0],
+                    [53, 120.0],
+                    [56, 0.0],
+                    [57, 0.0],
                     [60, 200.0]
                 ],
-                "abilities": [65],
+                "abilities": [43, 47, 49, 58, 65, 104, 106, 109],
                 "location_id": 79
             },
             {
@@ -449,7 +469,7 @@
             {
                 "id": 39,
                 "name": "Bite",
-                "description": "Use teeth for a basic melee attack.\r\n\r\n- **Damage:** If the attack hits then roll **Bite Dmg.**\r\n- **Major Success:** (Nat 20) Enemy gets two damage rolls instead of one.\r\n- **Major Failure:** Wild lunge—enemy cannot reposition on the next turn.",
+                "description": "Use teeth for a basic melee attack.\r\n\r\n- **Damage:** If the attack hits then roll **Bite Dmg.**\r\n- **Major Success:** Enemy gets two damage rolls instead of one.\r\n- **Major Failure:** Wild lunge—enemy cannot reposition on the next turn.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -519,6 +539,115 @@
                 ]
             },
             {
+                "id": 107,
+                "name": "Cane Dmg",
+                "outcome_type": "numeric",
+                "numeric_range": [0, 2],
+                "determinants": [
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "op_application": ">="
+                    },
+                    {
+                        "infield": {"attrib_id": 29}
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "op_application": "-",
+                        "op_transform": "c"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 27},
+                        "op_application": "-"
+                    }
+                ]
+            },
+            {
+                "id": 104,
+                "name": "Cane Whack",
+                "description": "Getting poked and **THEN** whacked is highly annoying.\r\n\r\n- **Any Success:** Enemy gets two damage rolls instead of one.\r\n- **Major Failure:** Neither attack lands.",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "label": "Melee Range",
+                        "infield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "op_application": "==",
+                        "val_required": "Engaged"
+                    },
+                    {
+                        "label": "Can Fight",
+                        "infield": {"attrib_id": 27},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Target Can Fight",
+                        "infield": {"role": "target char", "attrib_id": 27},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Chance to Hit",
+                        "infield": {"attrib_id": 30}
+                    },
+                    {
+                        "label": "Accuracy Bonus",
+                        "infield": {"attrib_id": 45}
+                    },
+                    {
+                        "label": "Standard To-Hit Bonus",
+                        "op_transform": "c",
+                        "val_transform": 3.0
+                    },
+                    {
+                        "label": "Evasion",
+                        "infield": {"role": "target char", "attrib_id": 30},
+                        "op_application": "-"
+                    },
+                    {
+                        "label": "Evasion Bonus",
+                        "infield": {"role": "target char", "attrib_id": 45},
+                        "op_application": "-"
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 2.0,
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "outcome_success": "failure_minor"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 0.0
+                    }
+                ],
+                "chained": [
+                    {
+                        "child_id": 107,
+                        "req": {"outcome_success": "success_any"}
+                    },
+                    {
+                        "child_id": 107,
+                        "req": {"outcome_success": "failure_minor"}
+                    }
+                ]
+            },
+            {
                 "id": 94,
                 "name": "Choose Armadillo Action",
                 "description": "This enemy might not always act sensibly. Their eyesight and hearing is poor.",
@@ -552,6 +681,13 @@
                 "description": "Roll to determine what the mouse does next. If the outcome does not make sense, then roll again. Mice aren't really fighters and often freeze (wait) at inopportune times.\r\n\r\nFrom range, Baby Mice typically wait, unless they're getting blasted. Adult Mice won't use their ranged fur attack if they have too little **HP.**",
                 "outcome_type": "selection",
                 "selection_attrib_id": 66
+            },
+            {
+                "id": 109,
+                "name": "Choose Supreme Action",
+                "description": "Likes to tell unfunny jokes first and foremost. At close range, keeps opponents in line with the cane. If the last move was a change of position, then attack this time.",
+                "outcome_type": "selection",
+                "selection_attrib_id": 108
             },
             {
                 "id": 36,
@@ -592,7 +728,7 @@
             {
                 "id": 82,
                 "name": "Double Hop",
-                "description": "Hops there and back all in one turn, ending up at the original position but attempting to claw (bite) twice. Can be used from melee or range.\r\n\r\n- **Any Success:** Roll twice for damage.\r\n- **Major Success:** (Nat 20) Also roll **Dodge.**\r\n- **Minor Failure:** Only one attack lands.\r\n- **Major Failure:** Neither attack lands.",
+                "description": "Hops there and back all in one turn, ending up at the original position but attempting to claw (bite) twice. Can be used from melee or range.\r\n\r\n- **Any Success:** Roll twice for damage.\r\n- **Major Success:** Also roll **Dodge.**\r\n- **Minor Failure:** Only one attack lands.\r\n- **Major Failure:** Neither attack lands.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -642,7 +778,7 @@
             {
                 "id": 28,
                 "name": "Fist Pummel",
-                "description": "Close grasping digits and swing robotic arm forward. Basic melee attack.\r\n\r\n- **Any Success:** If the attack hits then roll **Fist Pummel Dmg.**\r\n- **Major Success:** (Nat 20) Two damage rolls instead of one.\r\n- **Major Failure:** Consumes 2 **Energy** instead of 1.\r\n\r\nAfter swinging, the enemy gets a turn.",
+                "description": "Close grasping digits and swing robotic arm forward. Basic melee attack.\r\n\r\n- **Any Success:** If the attack hits then roll **Fist Pummel Dmg.**\r\n- **Major Success:** Two damage rolls instead of one.\r\n- **Major Failure:** Consumes 2 **Energy** instead of 1.\r\n\r\nAfter swinging, the enemy gets a turn.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -806,7 +942,7 @@
             {
                 "id": 74,
                 "name": "Hop Away",
-                "description": "Attempts to make a melee hit before repositioning to 5 tiles away.\r\n\r\n- **Any Success:** Roll for damage.\r\n- **Major Success:** (Nat 20) No loss of turn—they can immediately rush and hope to get a second melee hit in.\r\n- **Minor Success:** Move away and turn ends.\r\n- **Minor Failure:** Disengage but the attack does not land. (No AOO because hops are always quick).\r\n- **Major Failure:** Still in melee range.",
+                "description": "Attempts to make a melee hit before repositioning to 5 tiles away.\r\n\r\n- **Any Success:** Roll for damage.\r\n- **Major Success:** No loss of turn—they can immediately rush and hope to get a second melee hit in.\r\n- **Minor Success:** Move away and turn ends.\r\n- **Minor Failure:** Disengage but the attack does not land. (No AOO because hops are always quick).\r\n- **Major Failure:** Still in melee range.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -985,7 +1121,7 @@
             {
                 "id": 91,
                 "name": "Lick",
-                "description": "Use tongue for a basic melee attack.\r\n\r\n- **Major Success:** (Nat 20) Enemy gets two damage rolls instead of one.\r\n- **Major Failure:** Wild lunge—enemy cannot reposition on the next turn.",
+                "description": "Use tongue for a basic melee attack.\r\n\r\n- **Major Success:** Enemy gets two damage rolls instead of one.\r\n- **Major Failure:** Wild lunge—enemy cannot reposition on the next turn.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -1133,7 +1269,7 @@
             {
                 "id": 43,
                 "name": "Move Away",
-                "description": "Step out of melee range, repositioning to 5 tiles away.\r\n\r\n- **Major Success:** (Nat 20) No loss of turn—the action is free.\r\n- **Minor Success:** Move away and turn ends.\r\n- **Minor Failure:** Disengage but allow an *Attack of Opportunity* (wait to apply distance).\r\n- **Major Failure:** Still in melee range.",
+                "description": "Step out of melee range, repositioning to 5 tiles away.\r\n\r\n- **Major Success:** No loss of turn—the action is free.\r\n- **Minor Success:** Move away and turn ends.\r\n- **Minor Failure:** Disengage but allow an *Attack of Opportunity* (wait to apply distance).\r\n- **Major Failure:** Still in melee range.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -1610,7 +1746,7 @@
             {
                 "id": 97,
                 "name": "Tail Lash",
-                "description": "Swing around and lash out at the target with chemical-covered tail. Reaches from distance 2.\r\n\r\n- **Major Success:** (Nat 20) Enemy gets two damage rolls instead of one.\r\n- **Major Failure:** Wild rotation—enemy cannot reposition on the next turn.",
+                "description": "Swing around and lash out at the target with chemical-covered tail. Reaches from distance 2.\r\n\r\n- **Major Success:** Enemy gets two damage rolls instead of one.\r\n- **Major Failure:** Wild rotation—enemy cannot reposition on the next turn.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -1687,6 +1823,92 @@
                 ]
             },
             {
+                "id": 106,
+                "name": "Tell Joke",
+                "description": "Distraction as well as literal pain from psychological distress.\r\n\r\n- **Any Success:** Basic amount of damage\r\n- **Minor Success** or **Minor Failure:** Inflicts debuff for 1 turn\r\n- **Major Success:** Bigger debuff for 1 turn",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "label": "Outside Melee Range",
+                        "infield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "op_application": "==",
+                        "val_required": "Long"
+                    },
+                    {
+                        "label": "Can Fight",
+                        "infield": {"attrib_id": 27},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Enemy Can Fight",
+                        "infield": {"role": "target char", "attrib_id": 27},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Chance to Cause Distress",
+                        "infield": {"attrib_id": 33}
+                    },
+                    {
+                        "label": "Distress Bonus",
+                        "infield": {"attrib_id": 45}
+                    },
+                    {
+                        "label": "Standard To-Hit Bonus",
+                        "op_transform": "c",
+                        "val_transform": 3.0
+                    },
+                    {
+                        "label": "Resistance",
+                        "infield": {"role": "target char", "attrib_id": 33},
+                        "op_application": "-"
+                    },
+                    {
+                        "label": "Resistance Bonus",
+                        "infield": {"role": "target char", "attrib_id": 45},
+                        "op_application": "-"
+                    }
+                ],
+                "effects": [
+                    {
+                        "infield": {"attrib_id": 33},
+                        "outfield": {"role": "target char", "attrib_id": 27},
+                        "op_application": "-",
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 45},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": -3.0,
+                        "outcome_success": "success_major"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 45},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": -2.0,
+                        "outcome_success": "success_minor"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 45},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": -2.0,
+                        "outcome_success": "failure_minor"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 45},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 0.0
+                    }
+                ]
+            },
+            {
                 "id": 87,
                 "name": "Tongue Dmg",
                 "description": "Some impact damage but the main threat is metal-eating acid.",
@@ -1711,7 +1933,7 @@
             {
                 "id": 85,
                 "name": "Tongue Projectile",
-                "description": "Accurate ranged attack.\r\n\r\n- **Any Success:** If the attack hits then roll **Shotgun Dmg.**\r\n- **Major Success:** (Nat 20) Two damage rolls instead of one.\r\n- **Major Failure:** Consumes double **Energy.**",
+                "description": "Accurate ranged attack.\r\n\r\n- **Any Success:** If the attack hits then roll **Shotgun Dmg.**\r\n- **Major Success:** Two damage rolls instead of one.\r\n- **Major Failure:** Consumes double **Energy.**",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -1905,7 +2127,7 @@
             {
                 "id": 69,
                 "name": "🚫XL 4 Shotgun",
-                "description": "Powerful ranged attack with average accuracy.\r\n\r\n- **Any Success:** The attack hits so roll **Shotgun Dmg.**\r\n- **Major Success:** (Nat 20) Two damage rolls instead of one.\r\n- **Major Failure:** Consumes double **Energy.**",
+                "description": "Powerful ranged attack with average accuracy.\r\n\r\n- **Any Success:** The attack hits so roll **Shotgun Dmg.**\r\n- **Major Success:** Two damage rolls instead of one.\r\n- **Major Failure:** Consumes double **Energy.**",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -2476,7 +2698,7 @@
     "general data": {
         "piles": [
             {"item_id": 48, "quantity": 5.0},
-            {"item_id": 50, "quantity": 4000.0}
+            {"item_id": 50, "quantity": 3000.0}
         ]
     },
     "progress": []
