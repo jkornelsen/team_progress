@@ -492,7 +492,7 @@ def calculate_determinants(event, role_entities):
             if det.op_transform:
                 breakdown_text = get_inner_breakdown(
                     "total", det.val_transform, det.op_transform)
-        elif det.get_val_from == Participant.INFIELD and infield:
+        elif infield:
             anchor_id = resolve_anchor_id(infield.role, role_entities)
             if anchor_id is None and infield.role != Participant.BLUEPRINT:
                 continue
@@ -1079,8 +1079,6 @@ def do_effect_change(eff, roll_val, role_entities):
 
     # Destination B: Item Quantities
     elif field_def.field_mode == Participant.QTY:
-        # Items are a special case because we want to use the existing pile logic
-        # that handles deleting empty piles.
         current = get_accessible_quantity(field_def.item_id, out_entity_id)
         new_qty = impact if op == Operation.ASSIGN \
             else apply_operation(current, impact, op)
@@ -1144,22 +1142,19 @@ def do_effect_change(eff, roll_val, role_entities):
 
     # Destination E: Physical Placement
     elif field_def.field_mode == Participant.PLACE:
-        
-        # 1. Target must be a location
         loc_id = get_loc(field_def, role_entities)
         if not loc_id:
             return False, "No location (At) for placement."
+        position = roll_val \
+            if isinstance(roll_val, list) and len(roll_val) == 2 \
+            else get_default_position(loc)
 
-        # 2. Extract position from the roll result
-        if not isinstance(roll_val, list) or len(roll_val) != 2:
-            return False, "Expected a Coordinate outcome."
-
-        # 3. Create or increment the pile
+        # Create or increment the pile
         adjust_quantity(
             field_def.item_id, 
             loc_id, 
             delta=1.0, 
-            position=roll_val
+            position=position
         )
         
         item = db.session.get(Item, (game_token, field_def.item_id))
@@ -1180,9 +1175,8 @@ def do_effect_change(eff, roll_val, role_entities):
             # Determine Position
             loc = db.session.get(Location, (game_token, loc_id))
             char.location_id = loc_id
-            char.position = list(roll_val) \
-                if isinstance(roll_val, (list, tuple)) \
-                    and len(roll_val) == 2 \
+            char.position = roll_val \
+                if isinstance(roll_val, list) and len(roll_val) == 2 \
                 else get_default_position(loc)
             add_message(
                 f"Positioned {char.name} at {maskable_name(loc)} {char.position}")

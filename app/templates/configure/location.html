@@ -435,7 +435,7 @@ function adjustZone(method, ...args) {
     </div>
     
     <button type="button" class="btn-sm dangerous-button"
-        onclick="ConfigEditor.removeRow(this, 'entrance-req-list')">×</button>
+        onclick="ConfigEditor.removeRow(this, 'entrance-req-list', {rowSelector: '.entrance-req-row'})">×</button>
 </div>
 {% endmacro %}
 
@@ -450,7 +450,7 @@ function adjustZone(method, ...args) {
         {% endfor %}
     </select>
     <button type="button" class="btn-sm dangerous-button" 
-            onclick="ConfigEditor.removeRow(this, 'event-list')">×</button>
+            onclick="ConfigEditor.removeRow(this, 'event-list', {rowSelector: '.event-row'})">×</button>
 </div>
 {% endmacro %}
 

@@ -1239,14 +1239,12 @@ class ItemRef(db.Model):
 class Participant:
     """References a field to fetch or target for an event factor."""
 
-    # --- Context-Driven Roles of the Anchor Entity ---
+    # --- Context Roles of the Anchor Entity ---
     SUBJECT = 'subject'     # Entity that triggered the event
     TARGET = 'target char'  # Nearby or explicitly chosen other char
     AT = 'at'               # Current location
-    OWNER = 'owner'         # Entity holding the item
-    UNIVERSAL = 'universal' # Global items
-    BLUEPRINT = 'blueprint' # Item blueprint (not pile) e.g. Recipes
-    CONTEXT_ROLES = [SUBJECT, TARGET, AT, OWNER, UNIVERSAL, BLUEPRINT]
+    UNIVERSAL = 'universal' #TODO: DELETEME
+    BLUEPRINT = 'blueprint' # Universal items, recipes, preselected char
 
     ROLE_SUFFIX = '_role_id'
 
@@ -1271,7 +1269,7 @@ class Participant:
     ChildItem = False
 
     # --- Get Value From ---
-    INFIELD = 'infield'   # Standard EventField setup
+    INFIELD = 'infield'   # Standard field setup
     OUTFIELD = 'outfield' # Treat infield and outfield the same
     OUTCOME = 'outcome'   # Read the roll result
     CONST = 'const'       # Treat val_transform as the input
@@ -1506,17 +1504,20 @@ class EventFactor(db.Model, DictHydrator):
                     (self.outfield.attrib_id if self.outfield else None)
         data = {
             "label": self.label,
-            "get_val_from": self.get_val_from,
+            "get_val_from": self.get_val_from \
+                if self.usage_type == Participant.EFF else None,
             "infield": self.infield.to_dict() if self.infield else None,
             "outfield": self.outfield.to_dict() if self.outfield else None,
             "op_application": self.op_application,
             "op_transform": self.op_transform,
             "val_transform": attrib_val_to_json(
                 self.game_token, attrib_id, self.val_transform
-                ) if self.val_transform != 1 else 1,
+                ) if self.op_transform == Operation.CONST
+                else self.val_transform,
             "val_required": attrib_val_to_json(
                 self.game_token, attrib_id, self.val_required
-                ) if self.is_comparison else None,
+                ) if self.is_comparison
+                else None,
             "negate": self.negate,
             "outcome_success": self.outcome_success,
         }

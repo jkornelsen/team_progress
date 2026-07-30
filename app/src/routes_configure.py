@@ -426,17 +426,24 @@ def edit_location(id):
 
             db.session.flush()
 
-            d1_tuple = tuple(route.door1) if route.door1 else None
-            if d1_tuple and d1_tuple in new_coords:
-                route.door1 = None
+            coords = route.door_at(loc.id)
+            door_tuple = tuple(coords) if coords else None
+            if door_tuple and door_tuple in new_coords:
+                # Clear the door field that belongs to this location
+                if route.loc1_id == loc.id:
+                    route.door1 = None
+                else:
+                    route.door2 = None
+
                 target_loc = db.session.get(Location, (game_token, target_id))
-                target_name = target_loc.name if target_loc else "other location"
+                target_name = target_loc.name if target_loc \
+                              else "other location"
                 flash(
-                    f"Entrance at {target_name} was reset"
-                    " because there is another door at that position.",
+                    f"The exit to {target_name} was reset because there is"
+                    f" another door at {door_tuple} in this room.",
                     "warning")
-            elif d1_tuple:
-                new_coords.add(d1_tuple)
+            elif door_tuple:
+                new_coords.add(door_tuple)
 
             submitted_ids.append(route.id)
 

@@ -19,6 +19,31 @@ old_loc_id doesn't always get set when going to loc page
 applying a long list of effects sometimes causes one or more to mess up
     maybe wait until each response returns before sending the next request
 
+events should have the capability of preselecting a specific character
+    like universal items
+    for attribute or positioning mode
+    so we can place a specific character or check their attribute
+    what would the role be called though because if "character" then what is "subject"
+"Context Role" versus preselected entity
+    for a lot of event aspects we may want to have the event work based on either
+    preselection list: characters + items + locations
+"Universal" versus another role only makes sense for quantity mode
+    because it's really the owner that we're talking about
+    for attribute mode, blueprint would be more accurate,
+    and that would make sense for characters and locations as well
+    show "Universal" in role list for qty mode and "Preselected" for attribute mode
+rename "Position Char" to "Move Char"
+    should work like "Place Item" -- configure preselected char and preselected loc
+add "(None)" for source
+    constants, move char to loc but not to coordinates
+    make it the default because constants are common and "outcome" source is meaningful
+    Participant.CONST is no longer used
+maybe another role option is "Select"
+    location to choose random coordinate for
+    char to spawn at location
+
+empty zone label and color are getting saved as literal string "None" in json
+
 don't show duplicate destinations in play location
     same door positions (null in the example)
     maybe shouldn't allow in database
@@ -37,8 +62,7 @@ CONTEXT:  while updating tuple (0,46) in relation "characters"
 
 constants in effects show `"get_val_from": "outcome",`
     should probably be blank for default
-
-deleting an extra empty event entrance requirement row deleted both
+for randomly placing an item, hide calculation section and lock (require) roll result
 
 ---- scenario ----
 
@@ -60,20 +84,17 @@ tethered one
         still must hear convo (branched) about atlanth's revenge plan
 
 dungeon crawl
-    tables to create enemies
-        enemy species -- upper, enemy species -- lower
-        enemy class
-        notable enemy ability
-        once they're created, can choose from one of them
-        add their name to an attribute enum
-        or automate by incrementing an item qty and setting as an id attrib
-    3 levels up and down of location grids -- 7 total floors
-        short predefined completable game including 1-2 char classes
-        try generating grid layouts and adapt any good ones
-    event with a chance of dropping rare loot
-    fireball
-        one aoe damage roll
-        dmg/save roll once for each individual target
+    event with a chance of dropping rare loot after a kill
+    is the event "spawn" function useful?
+        rolling on tables and doing what it says seems much more creative
+        how would it work to automatically choose a character randomly?
+        to input, spawn reads field_def.char_id,
+            whereas pos reads out_entity_id which is from the role?
+        code reads either the location configured from list or from the At role
+    "pos" would be useful to move a preselected char to a location in tethered scenario
+    hide enemies with no hp
+        "Finish Fight"
+        sets location to none using "move to" event effect
 
 mine helium-3 with location production
     then char converts to cannisters

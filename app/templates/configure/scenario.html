@@ -171,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <button type="button" class="btn-sm btn-winreq-down"
                 onclick="adjustWinReq('moveRow', this, 1)">↓</button>
             <button type="button" class="btn-sm dangerous-button"
-                onclick="ConfigEditor.removeRow(this, 'winreq-list'); adjustWinReq('renumberRows')">Remove</button>
+                onclick="ConfigEditor.removeRow(this, 'winreq-list', {rowSelector: '.winreq-card'}); adjustWinReq('renumberRows')">Remove</button>
         </div>
     </div>
     

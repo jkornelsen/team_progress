@@ -32,7 +32,7 @@ def validate_requirements(scenario):
                 ).first()
                 current_qty = pile.quantity if pile else 0
                 is_fulfilled = current_qty >= r.quantity
-                desc = f"🌐 {q_required} {maskable_name(r.item)}"
+                desc = f"🌐 {maskable_name(r.item)} {q_required}"
 
             # B. Item at a specific Location
             elif r.loc_id:

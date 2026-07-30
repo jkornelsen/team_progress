@@ -30,12 +30,28 @@ const ConfigEditor = {
     /**
      * Removes a row and shows the 'empty' message if no rows remain.
      */
-    removeRow: function(btn, containerId) {
-        const row = btn.closest('.col-row') || btn.parentElement;
+    removeRow: function(btn, containerId, options = {}) {
+        const rowSelector = options.rowSelector || '.col-row';
+        // Find the actual row. We check the provided selector, 
+        // then fall back to the standard .col-row, then the factor-card style.
+        const row = btn.closest(rowSelector) || 
+                    btn.closest('.col-row') || 
+                    btn.closest('.factor-card') || 
+                    btn.closest('.entrance-req-row');
+        if (!row) return;
         row.remove();
         
         const list = document.getElementById(containerId);
-        const remainingRows = list.querySelectorAll('.col-row:not(.header-style)');
+        if (!list) return;
+
+        // Count remaining visible rows. 
+        // We count children that aren't templates, scripts, or headers.
+        const remainingRows = Array.from(list.children).filter(c => 
+            !['TEMPLATE', 'SCRIPT'].includes(c.tagName) && 
+            !c.classList.contains('header-style') &&
+            !c.classList.contains('no-entities')
+        );
+
         if (remainingRows.length === 0) {
             list.classList.add('hidden');
             const emptyMsg = document.getElementById(containerId + '-empty');

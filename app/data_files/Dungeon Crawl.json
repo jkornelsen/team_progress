@@ -1,8 +1,11 @@
 {
     "overall settings": {
         "title": "Dungeon Crawl",
-        "description": "Your party was responding to a distress signal when suddenly, the ground below collapsed, and all fell down a nearly vertical shaft. No one seems to be injured *(yet)*. Doubtless there are {lightcoral|enemies} in the surrounding caverns — good source of {lightcoral|XP}, an optimist would say.\r\n\r\nStart by adding a set of 1-4 characters to play based on templates for species and class. Then craft rudimentary supplies before embarking on an escape to the surface or delving deeper.",
-        "win_reqs": [],
+        "description": "Your party was responding to a distress signal when suddenly, the ground below collapsed, and all fell down a nearly vertical shaft. No one seems to be injured *(yet)*. Doubtless there are {lightcoral|enemies} in the surrounding caverns — good source of {lightcoral|XP}, an optimist would say.\r\n\r\nStart by adding a set of 1-4 characters to play based on species and class. Then craft rudimentary supplies before embarking on an escape to the surface or delving deeper.",
+        "win_reqs": [
+            {"item_id": 91, "quantity": 6.0},
+            {"item_id": 29, "quantity": 6.0}
+        ],
         "tag_introduce_order": 54,
         "tag_best_order": 57,
         "tag_progress_type": "RPG",
@@ -36,11 +39,6 @@
                 "description": "Harder is better quality but more difficult to craft."
             },
             {
-                "id": 20,
-                "name": "Depth",
-                "description": "Dungeon level. Could be specified in feet or meters, but it's simpler to use the number of floors. Determines chance of encountering higher level monsters and better items."
-            },
-            {
                 "id": 12,
                 "name": "Dex",
                 "description": "Dexterity increases accuracy, evasion, and ranged damage dealt.\r\n\r\nChoosing the Thief class grants 3 Dex.\r\n\r\nChoosing the Archer class grants 2 Dex and 1 Str."
@@ -69,7 +67,7 @@
             {
                 "id": 8,
                 "name": "Max HP",
-                "description": "Amount when fully healthy. Also determines HP regen rate.\r\n\r\nTo calculate, add the base species and class stat and multiply the result by XP Level."
+                "description": "Amount when fully healthy. Also determines HP regen rate.\r\n\r\nTo calculate, add the base species and class stat and multiply the result by XP Level.\r\n50% more for enemies — players have more burst dmg and better tactical abilities."
             },
             {
                 "id": 4,
@@ -102,9 +100,76 @@
                 "description": "Strength increases melee damage dealt.\r\n\r\nChoosing the Melee class grants 2 Str, 1 Dex, and 2 Max HP."
             },
             {
+                "id": 81,
+                "name": "Which Ability",
+                "description": "Take this result as a suggestion to consider how it fits with the character's class.",
+                "enum_list": [
+                    "Rush",
+                    "Weapon Spin",
+                    "Weapon Cleave",
+                    "Shield Bash",
+                    "Adrenaline",
+                    "Punch",
+                    "Foot Sweep",
+                    "Grapple",
+                    "Push Away",
+                    "Drain",
+                    "Fireball",
+                    "Freeze",
+                    "Poison Sinkhole",
+                    "Stunning Lightning Bolt",
+                    "Magic Missile",
+                    "Confuse",
+                    "Frighten",
+                    "Reflect",
+                    "Cause Self Attack",
+                    "Discord",
+                    "Thorn Wall",
+                    "Vines",
+                    "Raise As Skeleton",
+                    "Teleport",
+                    "Duplicate"
+                ]
+            },
+            {
+                "id": 80,
+                "name": "Which Class",
+                "enum_list": [
+                    "Fighter: shield",
+                    "Barbarian: two-handed melee",
+                    "Archer: ranged with ammo",
+                    "Rogue: evasion, stealth, stabbing",
+                    "Mage: elemental energy",
+                    "Druid: vines, animal aspects"
+                ]
+            },
+            {
+                "id": 82,
+                "name": "Which Damage Type",
+                "enum_list": [
+                    "Sharp (Weapon)",
+                    "Piercing (Weapon)",
+                    "Blunt (Weapon)",
+                    "Ice",
+                    "Fire",
+                    "Lightning",
+                    "Acid",
+                    "Poison",
+                    "Light",
+                    "Dark",
+                    "Necrotic",
+                    "Sickness",
+                    "Stone (Magic)",
+                    "Arcane",
+                    "Vines",
+                    "Mind"
+                ]
+            },
+            {
                 "id": 61,
                 "name": "Which Enemy",
-                "enum_list": ["(none)", "rat", "skeleton rat", "moss", "spore colony"]
+                "description": "Edit this list as you go through the dungeon to include all of your new enemy characters except bosses.",
+                "enum_list": ["rat", "skeleton rat", "moss", "spore colony"]
             },
             {
                 "id": 62,
@@ -123,6 +188,47 @@
                 ]
             },
             {
+                "id": 79,
+                "name": "Which Species Type — Deeper",
+                "description": "The deeper dungeon floors, diving.",
+                "enum_list": [
+                    "Undead Rodent",
+                    "Undead Humanoid",
+                    "Vampire",
+                    "Werebeast",
+                    "Elemental Drake",
+                    "Elemental Dragon",
+                    "Great Wyrm",
+                    "Imp",
+                    "Gremlin",
+                    "Succubus",
+                    "Incubus",
+                    "Greater Demon",
+                    "Demon Lord"
+                ]
+            },
+            {
+                "id": 78,
+                "name": "Which Species Type — Upper",
+                "description": "The upper area of the dungeon, en route to the surface.",
+                "enum_list": [
+                    "Rodent",
+                    "Reptile",
+                    "Insect",
+                    "Bird",
+                    "Pack e.g. Wolf",
+                    "Natural Large Predator e.g. Bear",
+                    "Natural Large Non Predator e.g. Elephant",
+                    "Plant",
+                    "Golem",
+                    "Elemental",
+                    "Goblin",
+                    "Troll",
+                    "Kobold",
+                    "Pixie"
+                ]
+            },
+            {
                 "id": 17,
                 "name": "XP",
                 "description": "Experience Points are gained through combat. Defeating an enemy yields 10 × the enemy's XP level to each party member.\r\n\r\nWhen high enough, increase XP Level."
@@ -136,11 +242,16 @@
         "items": [
             {
                 "id": 29,
-                "name": "🛠️Barometer",
-                "description": "Keep track of what floor the party is on or going to, relative to the entry floor where the danger is least. Useful for generating new rooms.",
+                "name": "🛠️Barometer Depth",
+                "description": "Update this quantity to whatever floor the party is on, relative to the entry floor (0) where the danger is least. It's the same whether going up or down (U1 or D1).\r\n\r\nDetermines the chance of encountering higher level monsters and better items.",
                 "storage_type": "u",
-                "q_limit": 1.0,
                 "toplevel": true
+            },
+            {
+                "id": 88,
+                "name": "Base Damage",
+                "description": "Set by an event for follow-up events.",
+                "storage_type": "u"
             },
             {"id": 21, "name": "🪵Bowstring"},
             {
@@ -235,6 +346,14 @@
                 "description": "Can be carved into weapons or torches or burned for fuel."
             },
             {
+                "id": 91,
+                "name": "@Player Level",
+                "description": "Highest floor boss defeated + 1 (milestone leveling, not xp). So, typically matches the floor your party is currently on.",
+                "storage_type": "u",
+                "q_limit": 6.0,
+                "toplevel": true
+            },
+            {
                 "id": 22,
                 "name": "🧰Woodworking Table",
                 "description": "For carving. Includes shelves to hold a selection of wood.",
@@ -254,6 +373,11 @@
                         "loc2_id": 34,
                         "door1": [1, 2],
                         "door2": [5, 5]
+                    },
+                    {
+                        "loc2_id": 35,
+                        "door1": [3, 6],
+                        "door2": [5, 4]
                     }
                 ],
                 "zones": [
@@ -265,7 +389,7 @@
             {
                 "id": 34,
                 "name": "D1R2",
-                "description": "Second room on the first floor down from entry floor. From here on, your group will have to decide what items, enemies and rooms are found.",
+                "description": "From here on, your group will have to decide what enemies, items and rooms are found.",
                 "dimensions": [5, 6],
                 "masked": true,
                 "zones": [
@@ -294,6 +418,13 @@
                         "item_id": 28,
                         "quantity": 10.0,
                         "position": [7, 5]
+                    }
+                ],
+                "destinations": [
+                    {
+                        "loc2_id": 35,
+                        "door1": [7, 2],
+                        "door2": [1, 2]
                     }
                 ],
                 "zones": [
@@ -332,16 +463,14 @@
                 "description": "Staircase up, leading to earthbound enemies that get stronger nearer the surface: animals, plants, humanoid races, constructs.",
                 "dimensions": [5, 8],
                 "masked": true,
-                "destinations": [
-                    {
-                        "loc2_id": 33,
-                        "door1": [4, 2],
-                        "door2": [2, 7]
-                    }
-                ],
                 "zones": [
                     {
                         "coords": [3, 4, 5, 7]
+                    },
+                    {
+                        "coords": [4, 1, 5, 3],
+                        "color": "#232",
+                        "prevents_travel": false
                     }
                 ]
             },
@@ -353,16 +482,6 @@
                 "masked": true,
                 "destinations": [
                     {
-                        "loc2_id": 30,
-                        "door1": [1, 2],
-                        "door2": [7, 2]
-                    },
-                    {
-                        "loc2_id": 31,
-                        "door1": [5, 4],
-                        "door2": [3, 6]
-                    },
-                    {
                         "loc2_id": 37,
                         "door1": [4, 1],
                         "door2": [5, 8]
@@ -371,6 +490,54 @@
                 "zones": [
                     {
                         "coords": [2, 1, 3, 5]
+                    },
+                    {
+                        "coords": [4, 4, 6, 5],
+                        "color": "#322",
+                        "prevents_travel": false
+                    }
+                ]
+            },
+            {
+                "id": 76,
+                "name": "GM Tools",
+                "abilities": [49, 58, 77, 86],
+                "toplevel": true
+            },
+            {
+                "id": 96,
+                "name": "Surface",
+                "description": "You've escaped the dungeon! Breathe fresh air and remember the sight of green grass and trees.",
+                "dimensions": [4, 4],
+                "masked": true,
+                "destinations": [
+                    {
+                        "loc2_id": 101,
+                        "door1": [2, 4],
+                        "door2": [2, 1]
+                    }
+                ],
+                "entrance_reqs": [
+                    {"item_id": 91, "val_required": 6.0}
+                ],
+                "zones": [
+                    {
+                        "coords": [1, 1, 4, 4],
+                        "label": "Grass",
+                        "color": "green",
+                        "prevents_travel": false
+                    }
+                ]
+            },
+            {
+                "id": 97,
+                "name": "U1Boss",
+                "description": "Defeat the boss to gain access to the next floor.",
+                "dimensions": [5, 5],
+                "masked": true,
+                "zones": [
+                    {
+                        "coords": [3, 1, 5, 2]
                     }
                 ]
             },
@@ -385,6 +552,11 @@
                         "loc2_id": 36,
                         "door1": [1, 1],
                         "door2": [2, 5]
+                    },
+                    {
+                        "loc2_id": 37,
+                        "door1": [2, 7],
+                        "door2": [4, 2]
                     }
                 ],
                 "zones": [
@@ -396,13 +568,142 @@
             {
                 "id": 36,
                 "name": "U1R2",
-                "description": "Second room on the first floor up from entry floor. From here on, your group will have to decide what items, enemies and rooms are found.",
+                "description": "From here on, your group will have to decide what enemies, items and rooms are found.",
                 "dimensions": [5, 5],
                 "masked": true,
+                "destinations": [
+                    {
+                        "loc2_id": 97,
+                        "door1": [2, 1],
+                        "door2": [2, 5]
+                    }
+                ],
                 "zones": [
                     {
                         "coords": [3, 1, 5, 2]
                     }
+                ]
+            },
+            {
+                "id": 98,
+                "name": "U2Boss",
+                "dimensions": [4, 4],
+                "masked": true,
+                "entrance_reqs": [
+                    {"item_id": 91, "val_required": 2.0}
+                ]
+            },
+            {
+                "id": 92,
+                "name": "U2R1",
+                "description": "Congratulations, you've made it to the second floor! Don't get your hopes up yet, though, there's still a long way to reach the surface.",
+                "dimensions": [4, 4],
+                "masked": true,
+                "destinations": [
+                    {
+                        "loc2_id": 97,
+                        "door1": [2, 4],
+                        "door2": [2, 1]
+                    },
+                    {
+                        "loc2_id": 98,
+                        "door1": [2, 1],
+                        "door2": [2, 4]
+                    }
+                ],
+                "entrance_reqs": [
+                    {"item_id": 91, "val_required": 2.0}
+                ]
+            },
+            {
+                "id": 93,
+                "name": "U3R1",
+                "description": "Third floor.",
+                "dimensions": [4, 4],
+                "masked": true,
+                "destinations": [
+                    {
+                        "loc2_id": 98,
+                        "door1": [2, 4],
+                        "door2": [2, 1]
+                    },
+                    {
+                        "loc2_id": 99,
+                        "door1": [2, 1],
+                        "door2": [2, 4]
+                    }
+                ],
+                "entrance_reqs": [
+                    {"item_id": 91, "val_required": 3.0}
+                ]
+            },
+            {
+                "id": 99,
+                "name": "U3RBoss",
+                "dimensions": [4, 4],
+                "masked": true
+            },
+            {
+                "id": 94,
+                "name": "U4R1",
+                "description": "Fourth floor.",
+                "dimensions": [4, 4],
+                "masked": true,
+                "destinations": [
+                    {
+                        "loc2_id": 99,
+                        "door1": [2, 4],
+                        "door2": [2, 1]
+                    },
+                    {
+                        "loc2_id": 100,
+                        "door1": [2, 1],
+                        "door2": [2, 4]
+                    }
+                ],
+                "entrance_reqs": [
+                    {"item_id": 91, "val_required": 4.0}
+                ]
+            },
+            {
+                "id": 100,
+                "name": "U4RBoss",
+                "dimensions": [4, 4],
+                "masked": true,
+                "entrance_reqs": [
+                    {"item_id": 91, "val_required": 4.0}
+                ]
+            },
+            {
+                "id": 95,
+                "name": "U5R1",
+                "description": "Final floor to clear.",
+                "dimensions": [4, 4],
+                "masked": true,
+                "destinations": [
+                    {
+                        "loc2_id": 100,
+                        "door1": [2, 4],
+                        "door2": [2, 1]
+                    },
+                    {
+                        "loc2_id": 101,
+                        "door1": [2, 1],
+                        "door2": [2, 4]
+                    }
+                ],
+                "entrance_reqs": [
+                    {"item_id": 91, "val_required": 5.0}
+                ]
+            },
+            {
+                "id": 101,
+                "name": "U5RBoss",
+                "description": "Final boss.",
+                "dimensions": [4, 4],
+                "masked": true,
+                "entrance_reqs": [
+                    {"item_id": 91, "val_required": 5.0}
                 ]
             }
         ],
@@ -551,10 +852,10 @@
                 "location_id": 30,
                 "position": [6, 5],
                 "items": [
-                    {"item_id": 23, "quantity": 1.0},
-                    {"item_id": 24, "quantity": 15.0},
+                    {"item_id": 23, "quantity": 1.0, "slot": "Light Source"},
+                    {"item_id": 24, "quantity": 15.0, "slot": "Quiver"},
                     {"item_id": 25, "quantity": 1.0},
-                    {"item_id": 27, "quantity": 1.0}
+                    {"item_id": 27, "quantity": 1.0, "slot": "Main Hand"}
                 ]
             }
         ],
@@ -566,6 +867,50 @@
                 "numeric_range": [1, 20]
             },
             {
+                "id": 85,
+                "name": "Create Enemy  — Ability",
+                "description": "Take the outcome as a suggestion to consider how it fits with the character's class and damage type. Make character follow a theme rather than being mismatched.",
+                "outcome_type": "selection",
+                "selection_attrib_id": 81
+            },
+            {
+                "id": 83,
+                "name": "Create Enemy  — Class",
+                "description": "Decide on a class based on the selected archetype.",
+                "outcome_type": "selection",
+                "selection_attrib_id": 80
+            },
+            {
+                "id": 84,
+                "name": "Create Enemy  — Damage Type",
+                "outcome_type": "selection",
+                "selection_attrib_id": 82
+            },
+            {
+                "id": 86,
+                "name": "Create Enemy  — Deeper",
+                "description": "- Start by deciding on a deeper dungeon species inspired by the roll outcome.\r\n- Also roll for **Class,** **Damage Type,** and a notable **Ability.**\r\n- Include your new enemy in the [spawnable enemies list](/configure/attrib/61).",
+                "outcome_type": "selection",
+                "selection_attrib_id": 79,
+                "chained": [
+                    {"child_id": 83},
+                    {"child_id": 84},
+                    {"child_id": 85}
+                ]
+            },
+            {
+                "id": 77,
+                "name": "Create Enemy  — Upper",
+                "description": "- Start by deciding on an upper level species inspired by the roll outcome.\r\n- Also roll for **Class,** **Damage Type,** and a notable **Ability.**\r\n- Include your new enemy in the [spawnable enemies list](/configure/attrib/61).",
+                "outcome_type": "selection",
+                "selection_attrib_id": 78,
+                "chained": [
+                    {"child_id": 83},
+                    {"child_id": 84},
+                    {"child_id": 85}
+                ]
+            },
+            {
                 "id": 59,
                 "name": "Drops",
                 "description": "Number of items dropped by an enemy on death. Add their XP level to max die.\r\n\r\nIf result is greater than 0, then roll for [which item](/play/event/12).",
@@ -574,10 +919,47 @@
                 "numeric_range": [-10, 0]
             },
             {
+                "id": 87,
+                "name": "@Fireball",
+                "description": "8d6 base fire damage in a radius 4 circle (20 ft). For each enemy in the area, roll **@Fireball Damage.**",
+                "outcome_type": "numeric",
+                "numeric_range": [6, 48],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 88},
+                        "op_application": ":="
+                    }
+                ],
+                "chained": [
+                    {"child_id": 89}
+                ]
+            },
+            {
+                "id": 89,
+                "name": "@Fireball Damage",
+                "description": "Each enemy has a chance to save half of the damage.",
+                "numeric_range": [1, 20],
+                "effects": [
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 88},
+                        "outfield": {"role": "target char", "attrib_id": 3},
+                        "op_application": "-",
+                        "outcome_success": "failure_any"
+                    },
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 88},
+                        "outfield": {"role": "target char", "attrib_id": 3},
+                        "op_application": ":=",
+                        "op_transform": "/",
+                        "val_transform": 2.0
+                    }
+                ]
+            },
+            {
                 "id": 50,
                 "name": "Grid Coordinates",
-                "description": "Find out where something is placed.",
-                "toplevel": true,
+                "description": "Find out where something is placed in a room.\r\nBefore rolling, in the URL, change the subject id to the id of the room. (That's probably easier than adding this event as an ability by configuring each location).",
                 "outcome_type": "coordinates"
             },
             {
@@ -592,7 +974,7 @@
                 "name": "@Magic Missile",
                 "description": "Magical attack that does physical damage similar to shooting an arrow. Cannot miss but may do 0 damage. Consumes MP.",
                 "outcome_type": "numeric",
-                "numeric_range": [0, -2]
+                "numeric_range": [0, 2]
             },
             {
                 "id": 55,
@@ -616,24 +998,50 @@
             },
             {
                 "id": 49,
-                "name": "Populate Room — Number of Enemies",
-                "description": "Higher XP level means that more enemies may spawn. Also roll for:\r\n• [Which Enemy](/play/event/7)\r\n• [Grid Coordinates](/play/event/9)",
-                "toplevel": true,
+                "name": "Populate Room — Enemies",
+                "description": "- First, roll to determine how many enemies. Higher XP level means that more enemies may spawn.\r\n- Also, roll for **Which Enemy,** **Enemy Level,** and **Grid Coordinates.**\r\n- For multiple enemies of the same type, duplicate the character, then delete all but the original after they're destroyed.",
                 "outcome_type": "numeric",
-                "numeric_range": [0, 2]
+                "numeric_range": [0, 2],
+                "chained": [
+                    {"child_id": 50},
+                    {"child_id": 56},
+                    {"child_id": 90}
+                ]
+            },
+            {
+                "id": 90,
+                "name": "Populate Room — Enemy Level",
+                "description": "Determine the enemy's power level. In the final room of each floor, fight a level +2 boss (for example level 3 at depth 1) instead of rolling.",
+                "outcome_type": "numeric",
+                "numeric_range": [-1, 1],
+                "determinants": [
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 29}
+                    },
+                    {"op_application": ":=", "op_transform": "min"}
+                ]
             },
             {
                 "id": 58,
-                "name": "Populate Room — Number of Items",
-                "description": "After leaving the entry floor, divide die min by depth, giving a better chance for items.\r\n\r\nIf outcome is more than 0, then also roll for:\r\n• [Which Item](/play/event/12)\r\n• [Grid Coordinates](/play/event/9)",
-                "toplevel": true,
+                "name": "Populate Room — Items",
+                "description": "- Roll for how many items. After leaving the entry floor, divide die min by depth, giving a better chance for items.\r\n- If outcome is more than 0, then roll for **Which Item** and  **Grid Coordinates.**",
                 "outcome_type": "numeric",
-                "numeric_range": [-10, 2]
+                "numeric_range": [-10, 2],
+                "determinants": [
+                    {
+                        "infield": {"role": "universal", "item_id": 29, "attrib_id": 20}
+                    },
+                    {"op_application": ":=", "op_transform": "min", "val_transform": 0.0}
+                ],
+                "chained": [
+                    {"child_id": 50},
+                    {"child_id": 57}
+                ]
             },
             {
                 "id": 56,
                 "name": "Populate Room — Which Enemy",
-                "description": "Roll after [Number of Enemies](/play/event/8).",
+                "description": "Select from the enemies already available. To add a different one instead, run **Create Enemy** (either upper or lower).",
                 "outcome_type": "selection",
                 "selection_attrib_id": 61
             },
@@ -661,7 +1069,8 @@
     },
     "general data": {
         "piles": [
-            {"item_id": 29, "quantity": 1.0}
+            {"item_id": 29, "quantity": 0.0},
+            {"item_id": 91, "quantity": 1.0}
         ]
     },
     "progress": []

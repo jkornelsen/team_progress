@@ -488,8 +488,8 @@ def check_location_access(party, loc):
             ).first()
             current_qty = pile.quantity if pile else 0
             if current_qty < req.val_required:
-                return False, f"Requires {format_num(req.val_required)}" \
-                              f" {maskable_name(req.item)}"
+                return False, f"Requires {maskable_name(req.item)}" \
+                              f" {format_num(req.val_required)}"
             continue
 
         satisfied = False

@@ -891,8 +891,6 @@ def play_event(id):
             search_pool= [db.session.get(Entity, (game_token, GENERAL_ID))]
         elif role == Participant.SUBJECT:
             search_pool = [subject] if subject else other_entities_here
-        elif role == Participant.OWNER:
-            search_pool = [owner] if owner else other_entities_here
         elif role == Participant.AT:
             search_pool = [ctx_loc] if ctx_loc else other_entities_here
         else:

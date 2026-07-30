@@ -945,7 +945,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <!-- Role -->
     <div class="flex-row align-center gap-10 role-row">
-        <span>Participant:</span>
+        <span>Context:</span>
         <input type="hidden" 
                name="{{ prefix }}[role]" 
                class="role-hidden-input" 
@@ -958,7 +958,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 {{ 'selected' if role == Participant.SUBJECT }}>Subject</option>
 
             <option value="{{ Participant.TARGET }}"
-                title="Another nearby or selected entity involved"
+                title="Another nearby or selected character involved"
                 {{ 'selected' if role == Participant.TARGET }}>Target Char</option>
 
             <option value="{{ Participant.AT }}"
