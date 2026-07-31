@@ -15,11 +15,14 @@
         {{ hk.fixed_text(
             forms.edit_url(entity.entity_type, entity.id),
             hk.bracket('e') ~ "dit " ~ entity.entity_type, 'e') }}
-        {% if entity.entity_type != 'attrib' %}
-            <span class="separator">|</span>
-            {% set id_args = {'id': entity.id} %}
+        <span class="separator">|</span>
+        {% if entity.entity_type == 'attrib' %}
+            <a href="{{ url_for('play.play_' + entity.entity_type, attrib_id=entity.id, subject_id=1) }}">
+                view {{ entity.entity_type }}
+            </a>
+        {% else %}
             <a href="{{ url_for('play.play_' + entity.entity_type, id=entity.id) }}">
-                Play {{ entity.entity_type }}
+                play {{ entity.entity_type }}
             </a>
         {% endif %}
     </nav>

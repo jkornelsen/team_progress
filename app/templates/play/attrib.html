@@ -3,6 +3,8 @@
 {% import 'macros/render.html' as render %}
 {% import 'macros/config_forms.html' as forms %}
 
+{% set has_subject = subject.entity_type != 'entity' %}
+
 {% block upper_left %}
     <nav class="nav-container">
         {{ hk.page_overview() }}
@@ -12,10 +14,12 @@
         {{ hk.fixed_text(
             forms.edit_url('attrib', attribute.id),
             hk.bracket('e') ~ "dit attrib", 'e') }}
-        <span class="separator">|</span>
-        {% set target_url = forms.edit_url(subject.entity_type, subject.id) %}
-        {% set text = "e" ~ hk.bracket('d') ~ "it " ~ subject.SHORT %}
-        {{ hk.fixed_text(target_url, text, 'd') }}
+        {% if has_subject %}
+            <span class="separator">|</span>
+            {% set target_url = forms.edit_url(subject.entity_type, subject.id) %}
+            {% set text = "e" ~ hk.bracket('d') ~ "it " ~ subject.SHORT %}
+            {{ hk.fixed_text(target_url, text, 'd') }}
+        {% endif %}
         <span class="separator">|</span>
         <a href="{{ url_for('configure.lookup', ent_type='attrib', id=attribute.id) }}">lookup</a>
     </nav>
@@ -25,18 +29,22 @@
 <div class="attrib-play-container">
     <header class="entity-header">
         <span class="label-like">
+            {% if has_subject %}
             Attribute of 
             {{ '👤' if subject.entity_type == 'character' else '📍' if subject.entity_type == 'location' else '📦' }} 
             {% set target_url = url_for('play.play_' + subject.entity_type, id=subject.id) %}
             {% call hk.hotlink(target_url, link_letters) %}
                 {{ subject.name }}
             {% endcall %}
+            {% endif %}
         </span>
         <h1>
             {{ attribute.name }}
+            {% if has_subject %}
             <span class="text-accent" id="current-val-display">
                 {{ attrib_value.display }}
             </span>
+            {% endif %}
         </h1>
 
         {% if attribute.description %}
@@ -48,6 +56,7 @@
         <!-- Current Value -->
         <div>
             <section class="outer-border">
+                {% if has_subject %}
                 <h3>Adjust Value</h3>
                 <form method="POST" class="calculator-form">
                     {# 1. Binary Toggle #}
@@ -91,6 +100,17 @@
                         </div>
                     {% endif %}
                 </form>
+                {% else %}
+                    <!-- Read-only -->
+                    {% if attribute.enum_entries %}
+                        <h3>Possible Values</h3>
+                        <ul>
+                        {% for entry in attribute.enum_entries %}
+                            <b>{{ entry.order_index }}:</b> {{ entry.label }}<br/>
+                        {% endfor %}
+                        </ul>
+                    {% endif %}
+                {% endif %}
             </section>
         </div>
         <div>

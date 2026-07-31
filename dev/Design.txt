@@ -23,7 +23,6 @@ events should have the capability of preselecting a specific character
     like universal items
     for attribute or positioning mode
     so we can place a specific character or check their attribute
-    what would the role be called though because if "character" then what is "subject"
 "Context Role" versus preselected entity
     for a lot of event aspects we may want to have the event work based on either
     preselection list: characters + items + locations
@@ -41,6 +40,18 @@ add "(None)" for source
 maybe another role option is "Select"
     location to choose random coordinate for
     char to spawn at location
+spawn effect should place characters in two rows starting from parent char pos
+    1 3 5 7
+    2 4 6 8
+    so that they aren't all in the same tile
+but we are often spawning different characters for example two goblins and a wolf
+    duplicating should be fine for that
+    should only take a few seconds to select on play loc screen and reposition,
+    and would almost always need to do that anyway
+so a spawn effect doesn't get us anything that couldn't be done better without it
+
+corpse was dropped at 1,1 instead of subject's coordinates
+    also when subject is at 1,1 it avoids the subject which it shouldn't do
 
 empty zone label and color are getting saved as literal string "None" in json
 
@@ -84,6 +95,7 @@ tethered one
         still must hear convo (branched) about atlanth's revenge plan
 
 dungeon crawl
+    mask all locations other than the Entry Cavern
     event with a chance of dropping rare loot after a kill
     is the event "spawn" function useful?
         rolling on tables and doing what it says seems much more creative
@@ -92,9 +104,14 @@ dungeon crawl
             whereas pos reads out_entity_id which is from the role?
         code reads either the location configured from list or from the At role
     "pos" would be useful to move a preselected char to a location in tethered scenario
-    hide enemies with no hp
-        "Finish Fight"
-        sets location to none using "move to" event effect
+    generating enemies and items seems doable but asking users to
+        create grid layouts and destination networks seems like too much
+        make pre-built ones and they can always change them if they want
+    room layout with a narrow wall blocking an inner room
+        the door could be a zone, possibly blocked with instructions to unblock
+        or a local item -- bars or something
+    room layout where enemies are on the other side of a u-shaped corridor
+    room layout with shallow and deep water
 
 mine helium-3 with location production
     then char converts to cannisters

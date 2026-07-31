@@ -1,7 +1,7 @@
 {
     "overall settings": {
         "title": "Dungeon Crawl",
-        "description": "Your party was responding to a distress signal when suddenly, the ground below collapsed, and all fell down a nearly vertical shaft. No one seems to be injured *(yet)*. Doubtless there are {lightcoral|enemies} in the surrounding caverns — good source of {lightcoral|XP}, an optimist would say.\r\n\r\nStart by adding a set of 1-4 characters to play based on species and class. Then craft rudimentary supplies before embarking on an escape to the surface or delving deeper.",
+        "description": "Your party was responding to a distress signal when suddenly, the ground below collapsed, and all fell down a nearly vertical shaft. No one seems to be injured *(yet)*. Doubtless there are {lightcoral|enemies} in the surrounding caverns — good source of {lightcoral|XP}, an optimist would say.\r\n\r\nStart by adding a set of 1-4 characters to play based on a [species template](/configure/character/38) and a [class](/play/attrib/80/subject/1). Then craft rudimentary supplies before embarking on an escape to the surface or delving deeper.",
         "win_reqs": [
             {"item_id": 91, "quantity": 6.0},
             {"item_id": 29, "quantity": 6.0}
@@ -16,7 +16,17 @@
             {
                 "id": 14,
                 "name": "Accuracy",
-                "description": "Equipped weapons can increase chance to hit. Combines with character's Dex."
+                "description": "Equipped weapons can increase chance to hit, although basic weapons do not. Combines with character's Dex."
+            },
+            {
+                "id": 63,
+                "name": "Armour",
+                "description": "Reduces damage depending on the type of attack. Good against bladed weapons."
+            },
+            {
+                "id": 104,
+                "name": "Bleeding",
+                "description": "Turns remaining for the negative status to last."
             },
             {
                 "id": 15,
@@ -28,15 +38,11 @@
                 "name": "Burning",
                 "description": "Turns remaining for the negative status to last. Fire does extra damage to undead."
             },
+            {"id": 110, "name": "Can Drop Corpse", "is_binary": true},
             {
                 "id": 16,
                 "name": "Damage",
                 "description": "Equipped weapons can increase damage. Combines with character's Dex or Str."
-            },
-            {
-                "id": 9,
-                "name": "Density",
-                "description": "Harder is better quality but more difficult to craft."
             },
             {
                 "id": 12,
@@ -60,34 +66,44 @@
                 "description": "Hit Points — current health of a character."
             },
             {
+                "id": 106,
+                "name": "HP Initial",
+                "description": "The **HP Max** at level 1, higher than **HP Per Level.**"
+            },
+            {
+                "id": 8,
+                "name": "HP Max",
+                "description": "Amount when fully healthy. Also determines HP regen rate.\r\nCalculated by **Max HP Per Level** × **XP Level.**\r\nAdd 50% more for enemies — player characters have better burst dmg and tactical abilities."
+            },
+            {
+                "id": 105,
+                "name": "HP Per Level",
+                "description": "To calculate, add the base species and class stat, plus any adjustment from unique character traits."
+            },
+            {
                 "id": 7,
                 "name": "Int",
                 "description": "Intelligence increases magic success, reserves (MP), and damage.\r\n\r\nChoosing the Mage class grants 2 Int, 1 Dex, and 1 Max MP.\r\n\r\nChoosing the Priest class grants 1 Int, 1 Max HP, and 2 Max MP."
             },
             {
-                "id": 8,
-                "name": "Max HP",
-                "description": "Amount when fully healthy. Also determines HP regen rate.\r\n\r\nTo calculate, add the base species and class stat and multiply the result by XP Level.\r\n50% more for enemies — players have more burst dmg and better tactical abilities."
+                "id": 10,
+                "name": "MP",
+                "description": "Reserves of magical energy needed for casting complex spells. Restore by levelling up or with a long rest."
             },
             {
                 "id": 4,
-                "name": "Max MP",
+                "name": "MP Max",
                 "description": "How full magic reserves can be for a character. Also determines MP regen rate."
-            },
-            {
-                "id": 10,
-                "name": "MP",
-                "description": "Magic Points — reserves of magical energy used for casting."
-            },
-            {
-                "id": 63,
-                "name": "Phys Dmg Reduction",
-                "description": "Equipped or natural armour can reduce damage."
             },
             {
                 "id": 18,
                 "name": "Poisoned",
                 "description": "Turns remaining for the negative status to last."
+            },
+            {
+                "id": 9,
+                "name": "Quality",
+                "description": "Higher quality gives better bonuses and is more difficult to craft."
             },
             {
                 "id": 11,
@@ -111,8 +127,9 @@
                     "Adrenaline",
                     "Punch",
                     "Foot Sweep",
-                    "Grapple",
                     "Push Away",
+                    "Grapple",
+                    "Stealth",
                     "Drain",
                     "Fireball",
                     "Freeze",
@@ -134,13 +151,14 @@
             {
                 "id": 80,
                 "name": "Which Class",
+                "description": "Add these class bonuses to the species modifiers, and link the ability events.\r\n\r\n- **Fighter:** +2 HP/Lvl, +3 Str, +2 Dex; Charge\r\n- **Barbarian:** +3 HP/Lvl, +3 Str, +2 Dex; Charge\r\n- **Archer:** +3 Dex; Shoot\r\n- **Rogue:** +4 Dex; Stealth\r\n- **Druid:** +2 Int, +1 Str, +1 Dex\r\n- **Mage:** -2 HP/Lvl, +4 Int, -1 Str; Magic Missile, Fireball\r\n\r\nFor some types of species such as animals, the specific kind of animal *is* the class. For example, elephants have more hit points and less dexterity than rats, and they can grab or spray water with their trunks.",
                 "enum_list": [
                     "Fighter: shield",
                     "Barbarian: two-handed melee",
                     "Archer: ranged with ammo",
                     "Rogue: evasion, stealth, stabbing",
-                    "Mage: elemental energy",
-                    "Druid: vines, animal aspects"
+                    "Druid: vines, animal aspects",
+                    "Mage: elemental energy"
                 ]
             },
             {
@@ -229,17 +247,29 @@
                 ]
             },
             {
-                "id": 17,
-                "name": "XP",
-                "description": "Experience Points are gained through combat. Defeating an enemy yields 10 × the enemy's XP level to each party member.\r\n\r\nWhen high enough, increase XP Level."
-            },
-            {
                 "id": 5,
                 "name": "XP Level",
-                "description": "Level that indicates how powerful and advanced a character is. Increment when enough XP is gained.\r\n<pre>\r\n+-----------+------------+\r\n| XP Level  | XP Required|\r\n+-----------+------------+\r\n|    1      |     0      |\r\n|    2      |    20      |\r\n|    3      |    60      |\r\n|    4      |   120      |\r\n|    5      |   200      |\r\n|    6      |   300      |\r\n|    7      |   420      |\r\n|    8      |   560      |\r\n|    9      |   720      |\r\n|   10      |   900      |\r\n|   11      |  1100      |\r\n|   12      |  1320      |\r\n|   13      |  1560      |\r\n|   14      |  1820      |\r\n|   15      |  2100      |\r\n|   16      |  2400      |\r\n|   17      |  2720      |\r\n|   18      |  3060      |\r\n|   19      |  3420      |\r\n|   20      |  3800      |\r\n+-----------+------------+\r\n</pre>"
+                "description": "How powerful and advanced a character is. Increment when the floor boss is defeated."
             }
         ],
         "items": [
+            {
+                "id": 24,
+                "name": "➶Arrows",
+                "description": "Arrows are picked up after using unless they break.\r\nBefore attempting to craft, run the *Carve or Fletch* event.",
+                "slot": "Quiver",
+                "recipes": [
+                    {
+                        "id": 73,
+                        "rate_amount": 10.0,
+                        "rate_duration": 8,
+                        "sources": [
+                            {"item_id": 22, "q_required": 1.0, "preserve": true},
+                            {"item_id": 28, "q_required": 1.0}
+                        ]
+                    }
+                ]
+            },
             {
                 "id": 29,
                 "name": "🛠️Barometer Depth",
@@ -255,26 +285,18 @@
             },
             {"id": 21, "name": "🪵Bowstring"},
             {
-                "id": 24,
-                "name": "➶Pine Arrow",
-                "description": "The most basic arrow. Before attempting to craft, run the *Carve or Fletch* event from a *Woodworking Table*.",
-                "slot": "Quiver",
-                "recipes": [
-                    {
-                        "id": 73,
-                        "rate_amount": 10.0,
-                        "rate_duration": 8,
-                        "sources": [
-                            {"item_id": 22, "q_required": 1.0, "preserve": true},
-                            {"item_id": 28, "q_required": 1.0}
-                        ]
-                    }
-                ]
+                "id": 116,
+                "name": "💀Corpse",
+                "description": "Can be used for necromancy. Then it turns into an unusable tombstone."
             },
             {
                 "id": 26,
                 "name": "🏹Pine Bow",
-                "description": "The most basic bow. Before attempting to craft, run the *Carve or Fletch* event from a *Woodworking Table*.",
+                "description": "The most basic bow. Bows can have stat bonuses, while arrows do not.\r\nBefore attempting to craft, run the *Carve or Fletch* event from a *Woodworking Table*.",
+                "attribs": [
+                    [14, 0.0],
+                    [16, 0.0]
+                ],
                 "q_limit": 1.0,
                 "slot": "Main Hand",
                 "recipes": [
@@ -292,7 +314,11 @@
             {
                 "id": 27,
                 "name": "🏹Pine Bow Improved",
-                "description": "Crafted if major success, or perhaps found.",
+                "description": "Crafted on major success. Could also be obtained from loot.",
+                "attribs": [
+                    [14, 1.0],
+                    [16, 0.0]
+                ],
                 "q_limit": 1.0,
                 "slot": "Main Hand",
                 "recipes": [
@@ -309,7 +335,11 @@
             {
                 "id": 25,
                 "name": "🗡️Pine Stick",
-                "description": "The most basic weapon, slightly better than fighting unarmed for those who can wield it. You'll generally aim to craft something better, but this may be the result of a minor crafting failure.",
+                "description": "Poor, improvised weapon, only slightly better than fighting unarmed. Melee fighters should craft something else to start with.",
+                "attribs": [
+                    [14, -1.0],
+                    [16, -1.0]
+                ],
                 "q_limit": 1.0,
                 "slot": "Main Hand",
                 "recipes": [
@@ -326,7 +356,7 @@
             {
                 "id": 23,
                 "name": "🛠️Pine Torch",
-                "description": "Standard torch, not particularly bright, but functional enough unless it gets too wet. Before attempting to craft, run the *Carve or Fletch* event from a *Woodworking Table*.",
+                "description": "Standard torch, not particularly bright, but functional enough unless it gets too wet.\r\nBefore attempting to craft, run the *Carve or Fletch* event from a *Woodworking Table*.",
                 "q_limit": 1.0,
                 "slot": "Light Source",
                 "recipes": [
@@ -354,6 +384,36 @@
                 "toplevel": true
             },
             {
+                "id": 113,
+                "name": "Restarts",
+                "description": "Divide by XL, so a level 5 character could restart up to 4 times. Lower level restarts are significantly more forgiving.",
+                "storage_type": "u",
+                "q_limit": 20.0
+            },
+            {"id": 111, "name": "🪦Tomb"},
+            {
+                "id": 103,
+                "name": "🗡️Unarmed",
+                "description": "Fighting without weapons is a disadvantage for most classes. For classes that *do* make good use of unarmed fighting, use a specialized unarmed weapon instead.",
+                "attribs": [
+                    [14, -1.0],
+                    [16, -2.0]
+                ],
+                "q_limit": 1.0,
+                "slot": "Main Hand"
+            },
+            {
+                "id": 114,
+                "name": "🗡️Unarmed Beast",
+                "description": "The way animals normally fight, with teeth or claws.",
+                "attribs": [
+                    [14, 0.0],
+                    [16, 0.0]
+                ],
+                "q_limit": 1.0,
+                "slot": "Main Hand"
+            },
+            {
                 "id": 22,
                 "name": "🧰Woodworking Table",
                 "description": "For carving. Includes shelves to hold a selection of wood.",
@@ -365,9 +425,8 @@
             {
                 "id": 31,
                 "name": "D1R1",
-                "description": "The first room down from the entry floor. Again, there is a skittering in the shadows. Probably a rat like last time, although the squeaking noises feel thinner, grating.",
+                "description": "The first room down from the entry floor, where the main dive begins. Again, there is a skittering in the shadows. Probably a rat like last time, although the squeaking noises feel thinner, grating.",
                 "dimensions": [4, 7],
-                "masked": true,
                 "destinations": [
                     {
                         "loc2_id": 34,
@@ -389,9 +448,8 @@
             {
                 "id": 34,
                 "name": "D1R2",
-                "description": "From here on, your group will have to decide what enemies, items and rooms are found.",
+                "description": "From here on, your group will have to decide what enemies and items are found. There are [GM Tools](/play/location/76) available.\r\nPre-built room layouts have not yet been done for the deep side, so you'll need to add those too.",
                 "dimensions": [5, 6],
-                "masked": true,
                 "zones": [
                     {
                         "coords": [1, 1, 3, 3]
@@ -422,6 +480,11 @@
                 ],
                 "destinations": [
                     {
+                        "loc2_id": 32,
+                        "door1": [3, 1],
+                        "door2": [1, 6]
+                    },
+                    {
                         "loc2_id": 35,
                         "door1": [7, 2],
                         "door2": [1, 2]
@@ -438,13 +501,14 @@
                 "name": "Entry Floor Room 2",
                 "description": "North of Entry Cavern. There is a skittering noise in the shadows.",
                 "dimensions": [3, 6],
-                "masked": true,
-                "destinations": [
+                "items": [
                     {
-                        "loc2_id": 30,
-                        "door1": [1, 6],
-                        "door2": [3, 1]
-                    },
+                        "item_id": 116,
+                        "quantity": 1.0,
+                        "position": [2, 1]
+                    }
+                ],
+                "destinations": [
                     {
                         "loc2_id": 37,
                         "door1": [3, 2],
@@ -462,13 +526,13 @@
                 "name": "Entry Floor Room 3",
                 "description": "Staircase up, leading to earthbound enemies that get stronger nearer the surface: animals, plants, humanoid races, constructs.",
                 "dimensions": [5, 8],
-                "masked": true,
                 "zones": [
                     {
                         "coords": [3, 4, 5, 7]
                     },
                     {
                         "coords": [4, 1, 5, 3],
+                        "label": "Pretty Carpet",
                         "color": "#232",
                         "prevents_travel": false
                     }
@@ -479,7 +543,6 @@
                 "name": "Entry Floor Room 4",
                 "description": "Staircase down, leading to otherworldly enemies that get stronger in the depths: undead, dragons, and demons.",
                 "dimensions": [6, 5],
-                "masked": true,
                 "destinations": [
                     {
                         "loc2_id": 37,
@@ -493,6 +556,7 @@
                     },
                     {
                         "coords": [4, 4, 6, 5],
+                        "label": "Foreboding Carpet",
                         "color": "#322",
                         "prevents_travel": false
                     }
@@ -509,7 +573,6 @@
                 "name": "Surface",
                 "description": "You've escaped the dungeon! Breathe fresh air and remember the sight of green grass and trees.",
                 "dimensions": [4, 4],
-                "masked": true,
                 "destinations": [
                     {
                         "loc2_id": 101,
@@ -534,7 +597,6 @@
                 "name": "U1Boss",
                 "description": "Defeat the boss to gain access to the next floor.",
                 "dimensions": [5, 5],
-                "masked": true,
                 "zones": [
                     {
                         "coords": [3, 1, 5, 2]
@@ -544,9 +606,8 @@
             {
                 "id": 33,
                 "name": "U1R1",
-                "description": "The first room up from the entry floor. There is a narrow passage, with a suspicious-looking moss all but blocking the middle, and spores are being shot at you from the far end.",
+                "description": "The first room up from the entry floor, where the main journey begins. There is a narrow passage, with a suspicious-looking moss all but blocking the middle, and spores are being shot at you from the far end.",
                 "dimensions": [3, 8],
-                "masked": true,
                 "destinations": [
                     {
                         "loc2_id": 36,
@@ -568,9 +629,8 @@
             {
                 "id": 36,
                 "name": "U1R2",
-                "description": "From here on, your group will have to decide what enemies, items and rooms are found.",
+                "description": "From here on, your group will have to decide what enemies and items are found. There are [GM Tools](/play/location/76) available.",
                 "dimensions": [5, 5],
-                "masked": true,
                 "destinations": [
                     {
                         "loc2_id": 97,
@@ -588,7 +648,6 @@
                 "id": 98,
                 "name": "U2Boss",
                 "dimensions": [4, 4],
-                "masked": true,
                 "entrance_reqs": [
                     {"item_id": 91, "val_required": 2.0}
                 ]
@@ -598,7 +657,6 @@
                 "name": "U2R1",
                 "description": "Congratulations, you've made it to the second floor! Don't get your hopes up yet, though, there's still a long way to reach the surface.",
                 "dimensions": [4, 4],
-                "masked": true,
                 "destinations": [
                     {
                         "loc2_id": 97,
@@ -620,7 +678,6 @@
                 "name": "U3R1",
                 "description": "Third floor.",
                 "dimensions": [4, 4],
-                "masked": true,
                 "destinations": [
                     {
                         "loc2_id": 98,
@@ -640,15 +697,13 @@
             {
                 "id": 99,
                 "name": "U3RBoss",
-                "dimensions": [4, 4],
-                "masked": true
+                "dimensions": [4, 4]
             },
             {
                 "id": 94,
                 "name": "U4R1",
                 "description": "Fourth floor.",
                 "dimensions": [4, 4],
-                "masked": true,
                 "destinations": [
                     {
                         "loc2_id": 99,
@@ -669,7 +724,6 @@
                 "id": 100,
                 "name": "U4RBoss",
                 "dimensions": [4, 4],
-                "masked": true,
                 "entrance_reqs": [
                     {"item_id": 91, "val_required": 4.0}
                 ]
@@ -679,7 +733,6 @@
                 "name": "U5R1",
                 "description": "Final floor to clear.",
                 "dimensions": [4, 4],
-                "masked": true,
                 "destinations": [
                     {
                         "loc2_id": 100,
@@ -701,7 +754,6 @@
                 "name": "U5RBoss",
                 "description": "Final boss.",
                 "dimensions": [4, 4],
-                "masked": true,
                 "entrance_reqs": [
                     {"item_id": 91, "val_required": 5.0}
                 ]
@@ -710,64 +762,74 @@
         "characters": [
             {
                 "id": 43,
-                "name": "Animal Template",
-                "description": "Animals rely on natural skills and do not use equipment.\r\n\r\nDuplicate to create enemies.",
+                "name": "_Template Animal",
+                "description": "Animals rely on natural abilities and attributes and do not use equipment.\r\n\r\nDuplicate to create enemies or possibly to play as an animal character.",
                 "attribs": [
-                    [3, 10.0],
+                    [3, 9.0],
                     [5, 1.0],
-                    [6, 5.0],
-                    [7, 1.0],
-                    [8, 10.0],
-                    [12, 5.0]
-                ]
+                    [6, 8.0],
+                    [7, 4.0],
+                    [8, 9.0],
+                    [12, 8.0],
+                    [105, 6.0],
+                    [106, 9.0],
+                    [110, true]
+                ],
+                "abilities": [53, 59, 108, 115]
             },
             {
                 "id": 39,
-                "name": "Dwarf Template",
+                "name": "_Template Dwarf",
                 "description": "Dwarves are strong and tough, natural Melee Fighters, but clumsy and poor at magic.\r\n\r\nDuplicate to create either a player char or NPC.",
                 "attribs": [
-                    [3, 12.0],
+                    [3, 10.0],
                     [4, 1.0],
                     [5, 1.0],
-                    [6, 5.0],
-                    [7, 1.0],
-                    [8, 12.0],
+                    [6, 9.0],
+                    [7, 5.0],
+                    [8, 10.0],
                     [10, 1.0],
-                    [12, 1.0],
-                    [17, 0.0]
-                ]
+                    [12, 6.0],
+                    [105, 6.0],
+                    [106, 10.0]
+                ],
+                "abilities": [53, 108]
             },
             {
                 "id": 38,
-                "name": "Elf Template",
+                "name": "_Template Elf",
                 "description": "Elves are intelligent and light on their feet, known especially for their Mages.\r\n\r\nDuplicate to create either a player char or NPC.",
                 "attribs": [
-                    [3, 7.0],
-                    [4, 3.0],
-                    [5, 1.0],
-                    [6, 1.0],
-                    [7, 5.0],
-                    [8, 7.0],
-                    [10, 3.0],
-                    [12, 3.0],
-                    [17, 0.0]
-                ]
+                    [3, 8.0],
+                    [4, 4.0],
+                    [5, 2.0],
+                    [6, 4.0],
+                    [7, 9.0],
+                    [8, 8.0],
+                    [10, 4.0],
+                    [12, 7.0],
+                    [105, 5.0],
+                    [106, 8.0]
+                ],
+                "abilities": [108]
             },
             {
                 "id": 40,
-                "name": "Halfling Template",
-                "description": "Halflings are highly nimble, master Thieves and good with ranged weapons.\r\n\r\nDuplicate to create either a player char or NPC.",
+                "name": "_Template Halfling",
+                "description": "Halflings are highly nimble, master Thieves and good with ranged weapons.\r\n\r\nDuplicate to create either a player char or enemy.",
                 "attribs": [
-                    [3, 9.0],
+                    [3, 8.0],
                     [4, 1.0],
                     [5, 1.0],
-                    [6, 1.0],
-                    [7, 2.0],
-                    [8, 9.0],
+                    [6, 5.0],
+                    [7, 5.0],
+                    [8, 8.0],
                     [10, 1.0],
-                    [12, 4.0],
-                    [17, 0.0]
-                ]
+                    [12, 10.0],
+                    [105, 5.0],
+                    [106, 8.0]
+                ],
+                "abilities": [53, 108]
             },
             {
                 "id": 42,
@@ -781,29 +843,36 @@
                     [7, 1.0],
                     [8, 15.0],
                     [10, 0.0],
-                    [12, 1.0]
+                    [12, 1.0],
+                    [110, false]
                 ],
+                "abilities": [53, 108, 109],
                 "location_id": 33,
                 "position": [3, 3]
             },
             {
                 "id": 44,
-                "name": "rat",
-                "description": "Somehow they're always bigger when they're coming out of the shadows in an unexplored room.",
+                "name": "rat sickly",
+                "description": "Somehow they're always bigger emerging from the shadows. With sharp teeth.\r\nAt least this one is sickly though (**-1 Dex, -1 Str**).\r\n\r\nPlayers always go first when entering a room, except for enemies that can roll **Stealth** (which this one cannot).",
                 "attribs": [
-                    [3, 10.0],
+                    [3, 15.0],
                     [5, 1.0],
-                    [6, 1.0],
-                    [7, 1.0],
-                    [8, 10.0],
-                    [12, 6.0]
+                    [6, 5.0],
+                    [7, 2.0],
+                    [8, 15.0],
+                    [12, 7.0],
+                    [110, true]
                 ],
-                "location_id": 32,
-                "position": [2, 1]
+                "abilities": [53, 107, 108, 109, 115],
+                "location": 32,
+                "position": [2, 1],
+                "items": [
+                    {"item_id": 114, "quantity": 1.0, "slot": "Main Hand"}
+                ]
             },
             {
                 "id": 45,
-                "name": "skeleton rat",
+                "name": "rat skeletal",
                 "description": "Well, that's not something you'd find in sunlit lands. An underworld force binds and animates its bones.",
                 "attribs": [
                     [3, 6.0],
@@ -812,10 +881,15 @@
                     [7, 1.0],
                     [8, 6.0],
                     [12, 5.0],
-                    [63, 2.0]
+                    [63, 2.0],
+                    [110, false]
                 ],
+                "abilities": [53, 59, 107, 108],
                 "location_id": 31,
-                "position": [2, 1]
+                "position": [2, 1],
+                "items": [
+                    {"item_id": 114, "quantity": 1.0, "slot": "Main Hand"}
+                ]
             },
             {
                 "id": 41,
@@ -828,26 +902,30 @@
                     [7, 1.0],
                     [8, 11.0],
                     [10, 0.0],
-                    [12, 2.0]
+                    [12, 2.0],
+                    [110, false]
                 ],
+                "abilities": [52, 59, 108],
                 "location_id": 33,
                 "position": [2, 1]
             },
             {
                 "id": 46,
                 "name": "@Thornwick",
-                "description": "Elf Archer, an example player character. A patch over his left eye has left him slower to react (-1 Dex), but his battle scars have made him resilient (+2 Max HP).",
+                "description": "Elf Archer, an example player character. A patch over his left eye has left him slower to react (-1 **Dex**), but his battle scars have made him resilient (+1 to **HP/Lvl** and +2 to **HP Initial**).",
                 "attribs": [
-                    [3, 9.0],
+                    [3, 10.0],
                     [4, 3.0],
                     [5, 1.0],
-                    [6, 2.0],
-                    [7, 5.0],
-                    [8, 9.0],
+                    [6, 4.0],
+                    [7, 9.0],
+                    [8, 10.0],
                     [10, 3.0],
-                    [12, 4.0],
-                    [17, 0.0]
+                    [12, 9.0],
+                    [105, 6.0],
+                    [106, 10.0]
                 ],
+                "abilities": [51, 52, 53, 108, 112],
                 "toplevel": true,
                 "location_id": 30,
                 "position": [6, 5],
@@ -865,6 +943,47 @@
                 "name": "Carve or Fletch",
                 "description": "Shape bow and attach string. Success requires dexterity. Fletching arrows is similar.\r\n\r\n• Major success produces a bow with improved stats.\r\n• Minor success results in a standard bow.\r\n• Minor failure produces a bow with poor stats, or fewer arrows.\r\n• Major failure consumes resources and may cause injury.",
                 "numeric_range": [1, 20]
+            },
+            {
+                "id": 107,
+                "name": "✦Charge",
+                "description": "A common way to start a melee fight.\r\n\r\n- **On Any Success:** move into melee range and strike\r\n- **On Nat 20:** strike an additional time\r\n- **On Failure:** do not strike\r\n- **On Major Failure:** do not move",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "label": "Can Fight",
+                        "infield": {"attrib_id": 3},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Opponent Can Fight",
+                        "infield": {"role": "target char", "attrib_id": 3},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Standard Stat Impact",
+                        "infield": {"attrib_id": 12},
+                        "op_transform": "/",
+                        "val_transform": 4.0
+                    },
+                    {
+                        "label": "Standard XL Impact",
+                        "infield": {"attrib_id": 5},
+                        "op_transform": "/",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "label": "Standard Item Impact",
+                        "infield": {"child_of_anchor": true, "attrib_id": 14}
+                    },
+                    {"op_application": ":=", "op_transform": "floor"}
+                ],
+                "chained": [
+                    {
+                        "child_id": 55,
+                        "req": {"outcome_success": "success_any"}
+                    }
+                ]
             },
             {
                 "id": 85,
@@ -911,19 +1030,87 @@
                 ]
             },
             {
+                "id": 109,
+                "name": "Die",
+                "description": "Do when an enemy has no HP left. Success determines whether a corpse is dropped.\r\n\r\n*{lemonchiffon|TO DO: add effect to move to Inactive location.}*",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 3},
+                        "op_application": "<"
+                    },
+                    {
+                        "infield": {"attrib_id": 110},
+                        "op_application": "*"
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "at", "field_mode": "qty", "item_id": 116},
+                        "op_transform": "c",
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "at", "field_mode": "qty", "item_id": 111},
+                        "op_transform": "c",
+                        "outcome_success": "failure_any"
+                    }
+                ]
+            },
+            {
                 "id": 59,
                 "name": "Drops",
-                "description": "Number of items dropped by an enemy on death. Add their XP level to max die.\r\n\r\nIf result is greater than 0, then roll for [which item](/play/event/12).",
-                "toplevel": true,
+                "description": "Number of items dropped by an enemy on death.\r\n1/8 chance that at least something will be dropped.",
                 "outcome_type": "numeric",
-                "numeric_range": [-10, 0]
+                "numeric_range": [-13, 2],
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 3},
+                        "op_application": "<"
+                    },
+                    {"op_application": ":=", "op_transform": "max", "val_transform": 0.0}
+                ],
+                "chained": [
+                    {
+                        "child_id": 57,
+                        "req": {"op_application": ">="}
+                    },
+                    {"child_id": 109}
+                ]
             },
             {
                 "id": 87,
-                "name": "@Fireball",
+                "name": "✦Fireball",
                 "description": "8d6 base fire damage in a radius 4 circle (20 ft). For each enemy in the area, roll **@Fireball Damage.**",
                 "outcome_type": "numeric",
                 "numeric_range": [6, 48],
+                "determinants": [
+                    {
+                        "label": "Experienced Enough",
+                        "infield": {"attrib_id": 5},
+                        "op_application": ">=",
+                        "val_required": 3.0
+                    },
+                    {
+                        "label": "Can Fight",
+                        "infield": {"attrib_id": 3},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Standard Stat Impact",
+                        "infield": {"attrib_id": 7},
+                        "op_transform": "/",
+                        "val_transform": 4.0
+                    },
+                    {
+                        "label": "Standard XL Impact",
+                        "infield": {"attrib_id": 5},
+                        "op_transform": "/",
+                        "val_transform": 2.0
+                    }
+                ],
                 "effects": [
                     {
                         "get_val_from": "outcome",
@@ -937,7 +1124,7 @@
             },
             {
                 "id": 89,
-                "name": "@Fireball Damage",
+                "name": "Fireball Damage",
                 "description": "Each enemy has a chance to save half of the damage.",
                 "numeric_range": [1, 20],
                 "effects": [
@@ -963,38 +1150,50 @@
                 "outcome_type": "coordinates"
             },
             {
-                "id": 48,
-                "name": "Initiative",
-                "description": "Determine who goes first in combat.\r\n\r\nHowever, this roll may not be needed if there is another way to determine who goes first. For example, if one party is stealthed and not detected, then they go first.",
-                "toplevel": true,
-                "numeric_range": [1, 20]
-            },
-            {
                 "id": 60,
-                "name": "@Magic Missile",
-                "description": "Magical attack that does physical damage similar to shooting an arrow. Cannot miss but may do 0 damage. Consumes MP.",
+                "name": "✦Magic Missile",
+                "description": "Magical attack that does physical damage similar to shooting an arrow. Cannot miss but may do 0 damage. Cantrip — does not require MP.",
                 "outcome_type": "numeric",
-                "numeric_range": [0, 2]
+                "numeric_range": [0, 2],
+                "determinants": [
+                    {
+                        "label": "Experienced Enough (Cantrip)",
+                        "infield": {"attrib_id": 5},
+                        "op_application": ">="
+                    }
+                ]
             },
             {
-                "id": 55,
-                "name": "Melee — Dmg",
-                "description": "Str increases both die min and max, while damage from gear increases die max only.\r\n\r\nFirst roll [Melee — Success](/play/event/14) to determine if the attack hits.",
-                "outcome_type": "numeric",
-                "numeric_range": [-1, -2]
-            },
-            {
-                "id": 53,
-                "name": "Melee — Success",
-                "description": "Determines whether a melee attack hits. Dexterity increases accuracy, while evasion decreases it.\r\n\r\nIf successful, also roll [Melee — Dmg](/play/event/13) to determine how much damage is done and apply to a target.",
-                "numeric_range": [1, 20]
-            },
-            {
-                "id": 47,
-                "name": "Perception",
-                "description": "Chance to detect items or stealthy characters, or avoid detection.\r\n\r\n• Int and Dex increase detection.\r\n• Dex increases stealth.",
-                "toplevel": true,
-                "numeric_range": [1, 20]
+                "id": 115,
+                "name": "Panic",
+                "description": "Roll to save when a living enemy takes unusually high damage, or health is very low. If the enemy fails to save:\r\n\r\n- **Within melee range:** They attack wildly, making all attack rolls at *Disadvantage*\r\n- **Outside of melee range:** They Dodge, or freeze in place if they can't.",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {"op_application": "m:="},
+                    {"op_application": ":=", "op_transform": "c", "val_transform": 0.0},
+                    {
+                        "infield": {"attrib_id": 8},
+                        "val_transform": 10.0
+                    },
+                    {
+                        "infield": {"attrib_id": 3},
+                        "op_application": "-",
+                        "val_transform": 10.0
+                    },
+                    {
+                        "label": "% Missing HP",
+                        "infield": {"attrib_id": 8},
+                        "op_application": "/"
+                    },
+                    {
+                        "label": "Multiply by possible impact",
+                        "op_application": "*",
+                        "op_transform": "c",
+                        "val_transform": -5.0
+                    },
+                    {"label": "Threshold", "op_transform": "c", "val_transform": 6.0},
+                    {"op_application": ":=", "op_transform": "floor"}
+                ]
             },
             {
                 "id": 49,
@@ -1053,24 +1252,235 @@
                 "selection_attrib_id": 62
             },
             {
-                "id": 54,
-                "name": "Shoot — Dmg",
-                "description": "Dex increases both die min and max, while Str and damage from gear increase die max only.\r\n\r\nFirst roll [Shoot — Success](/play/event/5) to determine if the attack hits.",
-                "outcome_type": "numeric",
-                "numeric_range": [-1, -2]
+                "id": 112,
+                "name": "Restart in Entry Cavern",
+                "description": "Player characters can do this instead of die, but only for a limited number of times, especially at higher levels.\r\n\r\nUnable to fight anymore, you manage to drag your body into a hidden shaft and scramble back through it to the **Entry Cavern.**",
+                "outcome_type": "determined",
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 3},
+                        "op_application": "<"
+                    },
+                    {
+                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 113},
+                        "op_application": ">="
+                    }
+                ],
+                "effects": [
+                    {
+                        "infield": {"attrib_id": 5},
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 113},
+                        "op_application": "-"
+                    },
+                    {
+                        "get_val_from": "outfield",
+                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 113},
+                        "op_application": ":=",
+                        "op_transform": "max",
+                        "val_transform": 0.0
+                    }
+                ]
             },
             {
                 "id": 52,
-                "name": "Shoot — Success",
-                "description": "Determines whether a ranged attack hits. Dexterity increases accuracy, while evasion decreases it.\r\n\r\nIf successful, also roll [Shoot — Dmg](/play/event/6) to determine how much damage is done and apply to a target.\r\n\r\nMajor failures cause destruction of ammo and may give the enemy a chance to counterattack.",
+                "name": "✦Shoot",
+                "description": "- **On Major Success:** shoot an additional arrow\r\n- **On Major Failure:** arrow breaks",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "label": "At Range",
+                        "infield": {"role": "target char", "field_mode": "dist"},
+                        "op_application": ">=",
+                        "val_required": 3.0
+                    },
+                    {
+                        "label": "Can Fight",
+                        "infield": {"attrib_id": 3},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Opponent Can Fight",
+                        "infield": {"role": "target char", "attrib_id": 3},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Has Ammo",
+                        "infield": {"field_mode": "qty", "item_id": 24},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Standard Stat Impact",
+                        "infield": {"attrib_id": 12},
+                        "op_transform": "/",
+                        "val_transform": 4.0
+                    },
+                    {
+                        "label": "Standard XL Impact",
+                        "infield": {"attrib_id": 5},
+                        "op_transform": "/",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "label": "Standard Item Impact",
+                        "infield": {"child_of_anchor": true, "attrib_id": 14}
+                    },
+                    {"op_application": ":=", "op_transform": "floor"}
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"field_mode": "qty", "item_id": 24},
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "outcome_success": "failure_major"
+                    }
+                ],
+                "chained": [
+                    {
+                        "child_id": 54,
+                        "req": {"outcome_success": "success_any"}
+                    }
+                ]
+            },
+            {
+                "id": 54,
+                "name": "Shoot — Dmg",
+                "outcome_type": "numeric",
+                "numeric_range": [1, 4],
+                "determinants": [
+                    {
+                        "label": "Somewhat Smaller Impact",
+                        "infield": {"attrib_id": 12},
+                        "op_transform": "/",
+                        "val_transform": 6.0
+                    },
+                    {
+                        "label": "Much Smaller Impact",
+                        "infield": {"attrib_id": 6},
+                        "op_transform": "/",
+                        "val_transform": 12.0
+                    },
+                    {
+                        "label": "Standard XL Impact",
+                        "infield": {"attrib_id": 5},
+                        "op_transform": "/",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "label": "Standard Item Impact",
+                        "infield": {"child_of_anchor": true, "attrib_id": 16}
+                    },
+                    {"op_application": ":=", "op_transform": "floor"}
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 3},
+                        "op_application": "-"
+                    }
+                ]
+            },
+            {
+                "id": 47,
+                "name": "Stealth",
+                "description": "Chance to avoid detection.\r\nPlayers always go first when entering a room unless the enemy can do a successful stealth roll.\r\n\r\n• Int and Dex increase detection.\r\n• Dex increases stealth.",
                 "numeric_range": [1, 20]
+            },
+            {
+                "id": 53,
+                "name": "✦Strike",
+                "description": "Determines whether a melee attack hits. Dexterity increases accuracy, while evasion decreases it.\r\n\r\n- If successful, roll **@Strike — Dmg.**\r\n- **Nat 20:** critical strike — roll damage twice (convenient), or roll only once and edit enemy hp to add the damage again (more correct)",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "label": "Can Fight",
+                        "infield": {"attrib_id": 3},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Opponent Can Fight",
+                        "infield": {"role": "target char", "attrib_id": 3},
+                        "op_application": ">="
+                    }
+                ],
+                "chained": [
+                    {
+                        "child_id": 55,
+                        "req": {"outcome_success": "success_any"}
+                    }
+                ]
+            },
+            {
+                "id": 55,
+                "name": "Strike Dmg",
+                "outcome_type": "numeric",
+                "numeric_range": [1, 6],
+                "determinants": [
+                    {
+                        "label": "Standard Stat Impact",
+                        "infield": {"attrib_id": 6},
+                        "op_transform": "/",
+                        "val_transform": 4.0
+                    },
+                    {
+                        "label": "Standard XL Impact",
+                        "infield": {"attrib_id": 5},
+                        "op_transform": "/",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "label": "Standard Item Impact",
+                        "infield": {"child_of_anchor": true, "attrib_id": 16}
+                    },
+                    {"op_application": ":=", "op_transform": "floor"}
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 3},
+                        "op_application": "-"
+                    }
+                ]
+            },
+            {
+                "id": 108,
+                "name": "Update for XL",
+                "description": "Sets HP and Max HP. If you're not levelling up then apply the changes to **HP Max** but not the change to **HP.**",
+                "outcome_type": "determined",
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 5}
+                    }
+                ],
+                "effects": [
+                    {
+                        "infield": {"attrib_id": 105},
+                        "outfield": {"attrib_id": 8},
+                        "op_application": ":="
+                    },
+                    {
+                        "infield": {"attrib_id": 5},
+                        "outfield": {"attrib_id": 8},
+                        "op_application": "*",
+                        "op_transform": "-"
+                    },
+                    {
+                        "infield": {"attrib_id": 106},
+                        "outfield": {"attrib_id": 8}
+                    },
+                    {
+                        "infield": {"attrib_id": 8},
+                        "outfield": {"attrib_id": 3},
+                        "op_application": ":="
+                    }
+                ]
             }
         ]
     },
     "general data": {
         "piles": [
-            {"item_id": 29, "quantity": 0.0},
-            {"item_id": 91, "quantity": 1.0}
+            {"item_id": 91, "quantity": 1.0},
+            {"item_id": 113, "quantity": 20.0}
         ]
     },
     "progress": []

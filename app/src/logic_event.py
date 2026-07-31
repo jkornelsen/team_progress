@@ -456,6 +456,7 @@ def calculate_determinants(event, role_entities):
     game_token = g.game_token
     modifiers = []
     sides, _, _ = num_sides(event)
+    subject_id = resolve_anchor_id(Participant.SUBJECT, role_entities)
 
     for det in event.determinants:
         val = 0.0
@@ -496,7 +497,7 @@ def calculate_determinants(event, role_entities):
             anchor_id = resolve_anchor_id(infield.role, role_entities)
             if anchor_id is None and infield.role != Participant.BLUEPRINT:
                 continue
-            val = get_entity_value(anchor_id, infield)
+            val = get_entity_value(anchor_id, infield, subject_id)
 
             # Source Display Name
             if infield.role == Participant.BLUEPRINT:

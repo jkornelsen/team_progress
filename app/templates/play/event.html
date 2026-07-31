@@ -324,7 +324,8 @@
                                 else 'false' }}">
                             <div class="flex-between align-center">
                                 <div>
-                                    <strong class="target-name-display">...</strong>
+                                    <strong class="target-name">...</strong>
+                                    <span class="target-label"></span>
                                     <span>{{ eff.outfield.get_field_name() }}</span>
                                 </div>
 
@@ -597,9 +598,10 @@ async function refreshFactors() {
             const equationEl = row.querySelector('.equation-display');
             const getValFrom = row.dataset.getValFrom;
 
-            const labelText = (eff.label && eff.label.trim() !== "") 
-                ? ` ${eff.label}: ` : "";
-            row.querySelector('.target-name-display').innerText = eff.target_name + labelText;
+            row.querySelector('.target-name').innerText = eff.target_name;
+            row.querySelector('.target-label').innerHTML =
+                (eff.label && eff.label.trim() !== "") 
+                ? ` <i>${eff.label}:</i> ` : "";
             row.style.opacity = eff.is_resolved ? "1" : "0.5";
 
             // Current value and operator
