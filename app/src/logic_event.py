@@ -1275,10 +1275,12 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
                     result_val, val_transform, op_transform, sides)
                 label = get_inner_breakdown(
                     "total", val_transform, op_transform)
-                breakdown_str = f"{breakdown_str} (Store {label})"
+                breakdown_str = f"{breakdown_str} (Store {label}) &rarr; 0"
             else:
                 memory_val = result_val
-                breakdown_str = f"{breakdown_str} (Store)"
+                breakdown_str = f"{breakdown_str} (Store) &rarr; 0"
+           # Reset cumulative value to 0
+            result_val = 0.0
             continue
 
         op_prec = PRECEDENCE.get(op, PRECEDENCE[Operation.ADD])

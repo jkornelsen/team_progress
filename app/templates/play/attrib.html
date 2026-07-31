@@ -151,6 +151,31 @@
 </div>
 
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const opSelect = document.getElementById('op-select');
+    const operandInput = document.querySelector('input[name="operand"]');
+    
+    // Get current attribute value from template context
+    const currentValue = {{ attrib_value.value if (attrib_value and attrib_value.value is not none) else 0 }};
+
+    function updateDefaultValue() {
+        if (!operandInput) return;
+
+        if (opSelect.value === ':=') {
+            operandInput.value = currentValue;
+        } else {
+            operandInput.value = 1;
+        }
+    }
+
+    if (opSelect && operandInput) {
+        // Set default value on initial load
+        updateDefaultValue();
+
+        // Update default value when operator changes
+        opSelect.addEventListener('change', updateDefaultValue);
+    }
+});
 </script>
 
 <style>
