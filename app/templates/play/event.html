@@ -57,6 +57,37 @@
                     {{ ctx_loc.name }}
                 {% endcall %}
             {% endif %}
+
+            <span class="separator">|</span>
+            <span id="caller-picker-container">
+                <a href="javascript:void(0)" onclick="toggleCallerPicker()" class="text-accent" id="picker-link">
+                    Call from...
+                </a>
+                <select id="subject-selector" class="hidden mini-select" style="max-width: 250px;" onchange="switchCaller(this.value)">
+                    <option value="1">🌐 General / System</option>
+                    <optgroup label="Characters">
+                        {% for c in all_chars %}
+                            <option value="{{ c.id }}" {{ 'selected' if subject and subject.id == c.id }}>
+                                {{ c.name }}
+                            </option>
+                        {% endfor %}
+                    </optgroup>
+                    <optgroup label="Locations">
+                        {% for l in all_locs %}
+                            <option value="{{ l.id }}" {{ 'selected' if subject and subject.id == l.id }}>
+                                {{ l.name }}
+                            </option>
+                        {% endfor %}
+                    </optgroup>
+                    <optgroup label="Items">
+                        {% for i in all_items %}
+                            <option value="{{ i.id }}" {{ 'selected' if subject and subject.id == i.id }}>
+                                {{ i.name }}
+                            </option>
+                        {% endfor %}
+                    </optgroup>
+                </select>
+            </span>
         </span>
         <h1>⚡ {{ event.name }}</h1>
         {% if event.description %}
@@ -877,6 +908,39 @@ async function applySingleEffect(factorId) {
         btn.innerText = "Retry";
     }
 }
+
+function toggleCallerPicker() {
+    const link = document.getElementById('picker-link');
+    const selector = document.getElementById('subject-selector');
+    link.classList.add('hidden');
+    selector.classList.remove('hidden');
+    selector.focus();
+}
+
+function switchCaller(newId) {
+    const url = new URL(window.location.href);
+    // subject_id drives the logic_event.py resolution
+    url.searchParams.set('subject_id', newId);
+    
+    // Clear any previously chosen roles that might conflict or be invalid 
+    // for the new context (e.g. Target Char might no longer be nearby)
+    // Optional: Only clear if you want a "clean" participant slate
+    // url.searchParams.delete('target char_role_id'); 
+
+    window.location.href = url.toString();
+}
+
+// Close the picker if the user clicks away
+document.addEventListener('mousedown', (e) => {
+    const container = document.getElementById('caller-picker-container');
+    const selector = document.getElementById('subject-selector');
+    const link = document.getElementById('picker-link');
+    
+    if (container && !container.contains(e.target) && !selector.classList.contains('hidden')) {
+        selector.classList.add('hidden');
+        link.classList.remove('hidden');
+    }
+});
 
 document.addEventListener('DOMContentLoaded', function() {
     updateDieThresholds();

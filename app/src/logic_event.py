@@ -188,27 +188,35 @@ def get_inner_breakdown(val, mod_val, op):
 # Fields
 # ------------------------------------------------------------------------
 
-def resolve_anchor_id(role_name, role_entities):
+def resolve_anchor_id(role_name, role_entities, field_def=None):
     """
     Maps a named participant slot to an entity ID.
     This entity ID comes from URL parameters, or from selectbox,
     or a single value returned by lookup that meets the requirements.
+    Anchor means who has the particular attribute or item.
 
-    role_name: e.g. '[Subject]' or 'Target'
-    role_entities: e.g. {'[Subject]': 17, 'Target': 18}
+    role_name: e.g. Participant.SUBJECT
+    role_entities: e.g. {SUBJECT: 17, TARGET: 18}
     """
-    if role_name == Participant.UNIVERSAL:
-        return GENERAL_ID
-    if role_name == Participant.BLUEPRINT:
-        return None
+    # Configured Selection
+    if role_name == Participant.PRESELECTED and field_def:
+        if field_def.field_mode == Participant.QTY:
+            # Anchors are the owner if field mode is QTY
+            return field_def.char_id or field_def.loc_id or GENERAL_ID
+        return field_def.char_id \
+            or field_def.loc_id \
+            or field_def.item_id \
+            or field_def.recipe_id \
+            or GENERAL_ID
+
+    # Dynamic Selection
     return role_entities.get(role_name)
 
 def _ledger_key(anchor_id, field_def):
     """
     Returns a hashable key that uniquely identifies the (entity, field) pair
     targeted by a field_def, for use in the virtual effect ledger.
-    Returns None for field modes that cannot be meaningfully ledgered
-    (e.g. movement, spawning).
+    Returns None for field modes that cannot be meaningfully ledgered.
     """
     if field_def is None:
         return None
@@ -227,7 +235,7 @@ def _ledger_key(anchor_id, field_def):
         return ('source_qty', field_def.recipe_id, field_def.source_item_id)
     if mode == Participant.BYP_QTY:
         return ('byp_qty', field_def.recipe_id, field_def.source_item_id)
-    return None  # POS, SPAWN, PLACE, DIST — not ledgerable
+    return None  # TELEPORT, PLACE, DIST
 
 def get_entity_value(anchor_id, field_def, subject_id=None, ledger=None):
     """Handles Attr vs Qty and Base vs Child."""
@@ -329,14 +337,13 @@ def get_entity_value(anchor_id, field_def, subject_id=None, ledger=None):
 
     # Fetch Quantity Value
     if field_def.field_mode == Participant.QTY and field_def.item_id:
-        item = db.session.get(Item, (game_token, field_def.item_id))
-        if field_def.role == Participant.UNIVERSAL or (
-                item and item.storage_type == StorageType.UNIVERSAL):
+        if field_def.role == Participant.PRESELECTED:
             owner_id = GENERAL_ID
         else:
             anchor_ent = db.session.get(Entity, (game_token, anchor_id))
             if anchor_ent and anchor_ent.entity_type == Item.TYPENAME:
-                owner_id = session.get('old_char_id') or session.get('old_loc_id') or GENERAL_ID
+                owner_id = session.get('old_char_id') \
+                    or session.get('old_loc_id') or GENERAL_ID
             else:
                 owner_id = anchor_id
 
@@ -357,7 +364,7 @@ def can_use_field(field, entity):
     """
     game_token = g.game_token
 
-    # --- 1. CHILD TRAVERSAL (Item inside a Location/Character) ---
+    # --- 1. Child Traversal (Item inside a Location/Character) ---
     if field.child_of_anchor:
         # Check all item piles currently at this location
         # or owned by this character.
@@ -377,14 +384,14 @@ def can_use_field(field, entity):
                     return True
         return False
 
-    # --- 2. UNIVERSAL STORAGE CHECK ---
+    # --- 2. Universal Storage Check ---
     # If the item is universal, only ID 1 (General Storage) can meet it
     if field.field_mode == Participant.QTY and field.item_id:
         item_def = db.session.get(Item, (game_token, field.item_id))
         if item_def and item_def.storage_type == StorageType.UNIVERSAL:
             return entity.id == GENERAL_ID
 
-    # --- 3. STANDARD ATTRIBUTE CHECK (On the Anchor itself) ---
+    # --- 3. Standard Attribute Check (On the Anchor itself) ---
     if field.field_mode == Participant.ATTR and field.attrib_id:
         if field.item_id:
             entity = db.session.get(Item, (game_token, field.item_id))
@@ -397,7 +404,7 @@ def can_use_field(field, entity):
     # dist = straight_line_dist(owner.position, c.position)
     # if dist is not None and dist > d.distance_reqired
 
-    # --- 4. STANDARD QUANTITY CHECK (On the Anchor itself) ---
+    # --- 4. Standard Quantity Check (On the Anchor itself) ---
     if field.field_mode == Participant.QTY and field.item_id:
         # Check if the entity has a pile of this item
         has_pile = any(p.item_id == field.item_id for p in entity.piles)
@@ -494,13 +501,13 @@ def calculate_determinants(event, role_entities):
                 breakdown_text = get_inner_breakdown(
                     "total", det.val_transform, det.op_transform)
         elif infield:
-            anchor_id = resolve_anchor_id(infield.role, role_entities)
-            if anchor_id is None and infield.role != Participant.BLUEPRINT:
+            anchor_id = resolve_anchor_id(infield.role, role_entities, infield)
+            if anchor_id is None:
                 continue
             val = get_entity_value(anchor_id, infield, subject_id)
 
             # Source Display Name
-            if infield.role == Participant.BLUEPRINT:
+            if infield.field_mode in Participant.REQUIRES_PRESELECTED:
                 if infield.item_id:
                     blueprint_item = db.session.get(Item, (game_token, infield.item_id))
                     source_display = \
@@ -644,8 +651,10 @@ def calculate_numeric_impact(eff, role_entities, roll_val=None, ledger=None):
         impact = roll_val
     elif eff.get_val_from in (Participant.INFIELD, Participant.OUTFIELD):
         source_field = eff.infield or eff.outfield
-        anchor_id = resolve_anchor_id(source_field.role, role_entities)
-        impact = get_entity_value(anchor_id, source_field, subject_id, ledger)
+        anchor_id = resolve_anchor_id(
+            source_field.role, role_entities, source_field)
+        impact = get_entity_value(
+            anchor_id, source_field, subject_id, ledger)
     else:
         impact = eff.val_transform
 
@@ -667,8 +676,8 @@ def preview_effects(event, role_entities, roll_val=None):
         field_def = eff.outfield
         if not field_def: continue
 
-        # --- 1. RESOLVE TARGET NAME & CURRENT VALUE ---
-        target_id = resolve_anchor_id(field_def.role, role_entities)
+        # --- 1. Resolve target name & current value ---
+        target_id = resolve_anchor_id(field_def.role, role_entities, field_def)
         target_name = ""
         current_display = ""
         impact_display = ""
@@ -688,15 +697,11 @@ def preview_effects(event, role_entities, roll_val=None):
             is_resolved = True
 
             # A. Determine Target Name (Who is moving)
-            if field_def.field_mode == Participant.SPAWN:
-                char_template = db.session.get(Character, (game_token, field_def.char_id))
-                target_name = f"Spawn {char_template.name if char_template else 'Char'}"
-                current_display = "Empty"
-            elif field_def.field_mode == Participant.PLACE:
+            if field_def.field_mode == Participant.PLACE:
                 item = db.session.get(Item, (game_token, field_def.item_id))
                 target_name = maskable_name(item) if item else '? item'
                 current_display = "None"
-            elif field_def.field_mode == Participant.POS:
+            elif field_def.field_mode == Participant.TELEPORT:
                 ent = db.session.get(Entity, (game_token, target_id))
                 target_name = maskable_name(ent) if ent \
                     else f"({field_def.role})"
@@ -717,7 +722,7 @@ def preview_effects(event, role_entities, roll_val=None):
                 impact_display = "(Selected)"
             impact_value = None
 
-        elif field_def.role in Participant.BLUEPRINT:
+        if field_def.field_mode in Participant.REQUIRES_PRESELECTED:
             is_resolved = True 
             target_name = "📦"
             current_val = get_entity_value(None, field_def, ledger)
@@ -759,11 +764,11 @@ def preview_effects(event, role_entities, roll_val=None):
                     else maskable_name(
                         db.session.get(Entity, (game_token, target_id)))
         else:
-            target_name = "" if field_def.role == Participant.BLUEPRINT \
-                else "(" + field_def.role + ")"
-            is_resolved = (field_def.role == Participant.BLUEPRINT)
+            is_resolved = (
+                field_def.field_mode in Participant.REQUIRES_PRESELECTED)
+            target_name = "" if is_resolved else "(" + field_def.role + ")"
 
-        # --- 2. RESOLVE SOURCE DATA (Existing Logic) ---
+        # --- 2. Resolve source data (existing logic) ---
         source_name = ""
         source_val = 0.0
         
@@ -781,7 +786,7 @@ def preview_effects(event, role_entities, roll_val=None):
         else:
             source_val = eff.val_transform
 
-        # --- 3. CALCULATE PRE-ROLL IMPACT ---
+        # --- 3. Calculate pre-roll impact ---
         impact_value, relies_on_roll = calculate_numeric_impact(
             eff, role_entities, roll_val, ledger)
 
@@ -855,14 +860,14 @@ def resolve_effects(event, role_entities, roll_val, tier=None):
         if not check_outcome_success(eff.outcome_success, tier):
             continue
  
-        # --- 1. FILL IN IMPACT now that roll_val is known ---
+        # --- 1. Fill in impact now that roll_val is known ---
         impact, _ = calculate_numeric_impact(
             eff, role_entities, roll_val, ledger)
  
-        # --- 2. COMPUTE FINAL VALUE ---
+        # --- 2. Compute Final Value ---
         # Use the ledgered value if a prior effect already changed this field,
         # otherwise fall back to the DB-sourced value from the preview.
-        target_id = resolve_anchor_id(field_def.role, role_entities)
+        target_id = resolve_anchor_id(field_def.role, role_entities, field_def)
         lkey = _ledger_key(target_id, field_def)
 
         attrib = None
@@ -884,7 +889,7 @@ def resolve_effects(event, role_entities, roll_val, tier=None):
         if lkey is not None:
             ledger[lkey] = final_val
  
-        # --- 3. BUILD DISPLAY STRINGS ---
+        # --- 3. Build Display Strings ---
         # Location-setting modes: show destination name rather than a number
         if field_def.field_mode in Participant.USES_LOC:
             loc_id = field_def.loc_id
@@ -949,14 +954,14 @@ def get_chain_results(event, role_entities, roll_val, tier, ledger=None):
                     is_eligible = False
             elif is_eligible and factor.infield:
                 anchor_id = resolve_anchor_id(
-                    factor.infield.role, role_entities)
+                    factor.infield.role, role_entities, factor.infield)
                 if anchor_id:
                     anchor = db.session.get(Entity, (game_token, anchor_id))
                     if not is_factor_met(
                             factor, anchor, subject_id=subject_id,
                             ledger=ledger):
                         is_eligible = False
-                elif factor.infield.role != Participant.BLUEPRINT:
+                elif factor.infield.field_mode not in Participant.REQUIRES_PRESELECTED:
                     is_eligible = False
 
         if is_eligible:
@@ -1008,18 +1013,19 @@ def do_effect_change(eff, roll_val, role_entities):
     """
     game_token = g.game_token
 
-    # --- STEP 1: CALCULATE IMPACT (The "From") ---
+    # --- Step 1: Calculate Impact (The "From") ---
     impact, _ = calculate_numeric_impact(eff, role_entities, roll_val)
 
-    # --- STEP 2: APPLY TO DATABASE (The "To") ---
+    # --- Step 2: Apply To Database (The "To") ---
     field_def = eff.outfield
     if not field_def:
         return True, ''
 
     # If the mode requires a specific instance (Character/Location/Pile), 
     # validate that the participant role is resolved.
-    if field_def.field_mode not in Participant.USES_BLUEPRINT:
-        out_entity_id = resolve_anchor_id(field_def.role, role_entities)
+    if field_def.field_mode not in Participant.REQUIRES_PRESELECTED:
+        out_entity_id = resolve_anchor_id(
+            field_def.role, role_entities, field_def)
         if out_entity_id is None:
             return False, f"No entity available for role {field_def.role}"
     op = eff.op_application
@@ -1161,8 +1167,8 @@ def do_effect_change(eff, roll_val, role_entities):
         item = db.session.get(Item, (game_token, field_def.item_id))
         add_message(f"Placed {maskable_name(item)} at {roll_val}")
 
-    # Destination F: Teleportation (Move existing character)
-    elif field_def.field_mode == Participant.POS:
+    # Destination F: Teleportation
+    elif field_def.field_mode == Participant.TELEPORT:
         char = db.session.get(Character, (game_token, out_entity_id))
         if not char:
             return False, "Expected a character."
@@ -1181,22 +1187,6 @@ def do_effect_change(eff, roll_val, role_entities):
                 else get_default_position(loc)
             add_message(
                 f"Positioned {char.name} at {maskable_name(loc)} {char.position}")
-
-    # Destination G: Mob Spawning (Clone a character)
-    elif field_def.field_mode == Participant.SPAWN:
-        if not isinstance(roll_val, (list, tuple)) or len(roll_val) != 2:
-            return False, "Expected a Coordinate outcome."
-
-        char = clone_entity(field_def.char_id, 'character')
-        if not char:
-            return False, "Character not found."
-
-        # Position the clone at the rolled coordinates
-        loc_id = get_loc(field_def, role_entities)
-        loc = db.session.get(Location, (game_token, loc_id))
-        char.location_id = loc_id
-        char.position = roll_val
-        add_message(f"Spawned {char.name} at {maskable_name(loc)} {roll_val}")
 
     db.session.flush()
     return True, ''

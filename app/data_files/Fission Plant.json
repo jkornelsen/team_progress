@@ -429,14 +429,14 @@
                 "fixed_base": 0.4,
                 "determinants": [
                     {
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 9},
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 9},
                         "op_application": "*"
                     }
                 ],
                 "effects": [
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 9},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 9},
                         "op_application": "-"
                     }
                 ]
@@ -457,7 +457,7 @@
                 "effects": [
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 11},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 11},
                         "op_application": "-"
                     },
                     {
@@ -474,7 +474,7 @@
                 "fixed_base": 1.0,
                 "determinants": [
                     {
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 54},
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 54},
                         "op_application": "*",
                         "op_transform": "^x",
                         "val_transform": 4.0
@@ -484,7 +484,7 @@
                     {
                         "get_val_from": "outcome",
                         "outfield": {
-                            "role": "blueprint",
+                            "role": "preselected",
                             "field_mode": "src_qty",
                             "item_id": 8,
                             "recipe_id": 77,
@@ -508,16 +508,16 @@
                 "outcome_type": "determined",
                 "determinants": [
                     {
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 3}
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 3}
                     },
                     {
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 16},
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 16},
                         "op_application": "*",
                         "op_transform": "*",
                         "val_transform": 4.0
                     },
                     {
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 48},
                         "op_application": "*",
                         "op_transform": "^x",
                         "val_transform": 1.5
@@ -527,7 +527,7 @@
                     {
                         "get_val_from": "outcome",
                         "outfield": {
-                            "role": "blueprint",
+                            "role": "preselected",
                             "field_mode": "src_qty",
                             "item_id": 9,
                             "recipe_id": 74,
@@ -538,7 +538,7 @@
                     {
                         "get_val_from": "outcome",
                         "outfield": {
-                            "role": "blueprint",
+                            "role": "preselected",
                             "field_mode": "rate_amt",
                             "item_id": 9,
                             "recipe_id": 74
@@ -550,7 +550,7 @@
                     {
                         "get_val_from": "outcome",
                         "outfield": {
-                            "role": "blueprint",
+                            "role": "preselected",
                             "field_mode": "byp_qty",
                             "item_id": 9,
                             "recipe_id": 74,
@@ -561,7 +561,7 @@
                     {
                         "get_val_from": "outcome",
                         "outfield": {
-                            "role": "blueprint",
+                            "role": "preselected",
                             "field_mode": "byp_qty",
                             "item_id": 9,
                             "recipe_id": 74,
@@ -574,7 +574,7 @@
                     {
                         "get_val_from": "outcome",
                         "outfield": {
-                            "role": "blueprint",
+                            "role": "preselected",
                             "field_mode": "byp_qty",
                             "item_id": 9,
                             "recipe_id": 74,
@@ -594,14 +594,14 @@
                 "fixed_base": 1.1,
                 "determinants": [
                     {
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 7},
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 7},
                         "op_application": "*"
                     }
                 ],
                 "effects": [
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 7},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 7},
                         "op_application": ":="
                     }
                 ]
@@ -614,21 +614,21 @@
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 5},
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 5},
                         "op_application": ">="
                     },
                     {
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 29},
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 29},
                         "op_application": "<"
                     },
                     {
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 7},
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 7},
                         "op_application": "-",
                         "op_transform": "scap",
                         "val_transform": 200000.0
                     },
                     {
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 8},
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 8},
                         "op_application": "-",
                         "op_transform": "scap",
                         "val_transform": 200000.0
@@ -642,20 +642,20 @@
                 "effects": [
                     {
                         "label": "Standard Gain",
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 5},
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 4}
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 5},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 4}
                     },
                     {
                         "label": "+40% Gain",
                         "get_val_from": "outfield",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 4},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 4},
                         "op_transform": "*",
                         "val_transform": 0.4,
                         "outcome_success": "success_major"
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 5},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 5},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": 0.0
@@ -675,7 +675,7 @@
                 "fixed_base": 35.0,
                 "determinants": [
                     {
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 9},
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 9},
                         "op_transform": "x^",
                         "val_transform": 0.7
                     },
@@ -690,12 +690,12 @@
                 "effects": [
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 11},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 11},
                         "op_application": "-"
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "blueprint", "field_mode": "limit", "item_id": 9},
+                        "outfield": {"role": "preselected", "field_mode": "limit", "item_id": 9},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": 10000000.0
@@ -710,13 +710,13 @@
                 "fixed_base": 10.0,
                 "determinants": [
                     {
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 54},
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 54},
                         "op_application": "*",
                         "op_transform": "*",
                         "val_transform": 1000.0
                     },
                     {
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 8},
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 8},
                         "op_application": "*",
                         "op_transform": "scap",
                         "val_transform": 200000.0
@@ -731,7 +731,7 @@
                 "effects": [
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 11},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 11},
                         "op_application": "-"
                     }
                 ]
@@ -743,17 +743,17 @@
                 "outcome_type": "determined",
                 "determinants": [
                     {
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 3},
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 3},
                         "op_transform": "*",
                         "val_transform": 50.0
                     },
                     {
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 16},
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 16},
                         "op_transform": "*",
                         "val_transform": 1000.0
                     },
                     {
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 48},
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 48},
                         "op_transform": "*",
                         "val_transform": 10000.0
                     },
@@ -767,7 +767,7 @@
                 "effects": [
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 11},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 11},
                         "op_application": "-"
                     }
                 ]
@@ -792,7 +792,7 @@
                     {
                         "get_val_from": "outcome",
                         "outfield": {
-                            "role": "blueprint",
+                            "role": "preselected",
                             "field_mode": "rate_dur",
                             "item_id": 52,
                             "recipe_id": 93
@@ -804,7 +804,7 @@
                     {
                         "get_val_from": "outcome",
                         "outfield": {
-                            "role": "blueprint",
+                            "role": "preselected",
                             "field_mode": "rate_dur",
                             "item_id": 31,
                             "recipe_id": 84
@@ -816,7 +816,7 @@
                     {
                         "get_val_from": "outcome",
                         "outfield": {
-                            "role": "blueprint",
+                            "role": "preselected",
                             "field_mode": "rate_dur",
                             "item_id": 40,
                             "recipe_id": 85
@@ -828,7 +828,7 @@
                     {
                         "get_val_from": "outcome",
                         "outfield": {
-                            "role": "blueprint",
+                            "role": "preselected",
                             "field_mode": "rate_dur",
                             "item_id": 46,
                             "recipe_id": 87
@@ -840,7 +840,7 @@
                     {
                         "get_val_from": "outcome",
                         "outfield": {
-                            "role": "blueprint",
+                            "role": "preselected",
                             "field_mode": "rate_dur",
                             "item_id": 3,
                             "recipe_id": 79
@@ -852,7 +852,7 @@
                     {
                         "get_val_from": "outcome",
                         "outfield": {
-                            "role": "blueprint",
+                            "role": "preselected",
                             "field_mode": "rate_dur",
                             "item_id": 16,
                             "recipe_id": 80
@@ -864,7 +864,7 @@
                     {
                         "get_val_from": "outcome",
                         "outfield": {
-                            "role": "blueprint",
+                            "role": "preselected",
                             "field_mode": "rate_dur",
                             "item_id": 48,
                             "recipe_id": 89
@@ -876,7 +876,7 @@
                     {
                         "get_val_from": "outcome",
                         "outfield": {
-                            "role": "blueprint",
+                            "role": "preselected",
                             "field_mode": "rate_dur",
                             "item_id": 54,
                             "recipe_id": 95
@@ -893,34 +893,34 @@
                 "outcome_type": "determined",
                 "determinants": [
                     {
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 31},
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 31},
                         "val_transform": 5.0
                     },
                     {
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 40},
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 40},
                         "op_application": "*",
                         "op_transform": "*",
                         "val_transform": 5.0
                     },
                     {
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 46},
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 46},
                         "op_application": "*",
                         "op_transform": "^x",
                         "val_transform": 1.5
                     },
                     {
-                        "infield": {"role": "blueprint", "field_mode": "limit", "item_id": 5},
+                        "infield": {"role": "preselected", "field_mode": "limit", "item_id": 5},
                         "op_application": "-"
                     }
                 ],
                 "effects": [
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "blueprint", "field_mode": "limit", "item_id": 5}
+                        "outfield": {"role": "preselected", "field_mode": "limit", "item_id": 5}
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 5}
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 5}
                     }
                 ]
             },
@@ -931,7 +931,7 @@
                 "fixed_base": 1.0,
                 "determinants": [
                     {
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 52},
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 52},
                         "op_application": "*",
                         "op_transform": "^x",
                         "val_transform": 3.0
@@ -941,7 +941,7 @@
                     {
                         "get_val_from": "outcome",
                         "outfield": {
-                            "role": "blueprint",
+                            "role": "preselected",
                             "field_mode": "rate_amt",
                             "item_id": 7,
                             "recipe_id": 76
@@ -952,7 +952,7 @@
                     {
                         "get_val_from": "outcome",
                         "outfield": {
-                            "role": "blueprint",
+                            "role": "preselected",
                             "field_mode": "src_qty",
                             "item_id": 7,
                             "recipe_id": 76,
@@ -995,21 +995,21 @@
                         "val_transform": 5.0
                     },
                     {
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 50},
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 50},
                         "op_application": ">="
                     }
                 ],
                 "effects": [
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 50},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 50},
                         "op_application": "-",
                         "op_transform": "c",
                         "outcome_success": "success_any"
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 50},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 50},
                         "op_application": "-",
                         "op_transform": "c",
                         "outcome_success": "failure_major"
@@ -1052,13 +1052,13 @@
                 "effects": [
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 11},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 11},
                         "op_application": "-",
                         "val_transform": 5.0
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 50},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 50},
                         "op_transform": "c"
                     }
                 ],
@@ -1121,14 +1121,14 @@
                 "effects": [
                     {
                         "infield": {"role": "at", "field_mode": "qty", "item_id": 19},
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 11},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 11},
                         "op_application": "-",
                         "op_transform": "*",
                         "val_transform": 1000.0
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 58},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 58},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": 2.0

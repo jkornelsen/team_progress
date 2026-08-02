@@ -813,22 +813,13 @@ def edit_event(id):
                     fld = row.get_map(field_key)
                     mode = fld.get_str('field_mode')
                     role = fld.get_str('role')
-                    if mode in Participant.USES_BLUEPRINT:
-                        role = Participant.BLUEPRINT
                     if role and mode:
-                        fld_attrib_id = fld.get_int('attrib_id') \
-                            if mode in Participant.USES_ATTRIB else None
-                        fld_item_id = fld.get_int('item_id') if (
-                            mode in Participant.USES_ITEM or 
-                                (mode == Participant.ATTR and
-                                role == Participant.UNIVERSAL)
-                            ) else None
-                        fld_recipe_id = fld.get_int('recipe_id') \
-                            if mode in Participant.USES_RECIPE else None
-                        fld_loc_id = fld.get_int('loc_id') \
-                            if mode in Participant.USES_LOC else None
-                        fld_source_item_id = fld.get_int('source_item_id') \
-                            if mode in Participant.USES_SOURCE_ITEM else None
+                        fld_attrib_id = fld.get_int('attrib_id', None)
+                        fld_item_id = fld.get_int('item_id', None)
+                        fld_recipe_id = fld.get_int('recipe_id', None)
+                        fld_char_id = fld.get_int('char_id', None)
+                        fld_loc_id = fld.get_int('loc_id', None)
+                        fld_source_item_id = fld.get_int('source_item_id', None)
 
                         setattr(factor, field_key, EventField(
                             game_token=game_token,
@@ -838,6 +829,7 @@ def edit_event(id):
                             attrib_id=fld_attrib_id,
                             item_id=fld_item_id,
                             recipe_id=fld_recipe_id,
+                            char_id=fld_char_id,
                             loc_id=fld_loc_id,
                             source_item_id=fld_source_item_id,
                         ))
@@ -885,11 +877,7 @@ def edit_event(id):
                         })
                         fld_attrib_id = fld.get_int('attrib_id') \
                             if mode in Participant.USES_ATTRIB else None
-                        fld_item_id = fld.get_int('item_id') if (
-                            mode in Participant.USES_ITEM or 
-                                (mode == Participant.ATTR and
-                                role == Participant.UNIVERSAL)
-                            ) else None
+                        fld_item_id = fld.get_int('item_id', None)
                         instance_args['infield'] = EventField(
                             game_token=game_token,
                             role=role,
@@ -935,6 +923,8 @@ def edit_event(id):
         all_attribs=Attrib.query.filter_by(
             game_token=game_token).order_by(name_stripped()).all(),
         all_items=all_items,
+        all_chars=Character.query.filter_by(
+            game_token=game_token).order_by(name_stripped()).all(),
         all_locs=Location.query.filter_by(
             game_token=game_token).order_by(name_stripped()).all(),
         all_events=Event.query.filter_by(

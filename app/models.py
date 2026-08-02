@@ -1240,11 +1240,11 @@ class Participant:
     """References a field to fetch or target for an event factor."""
 
     # --- Context Roles of the Anchor Entity ---
-    SUBJECT = 'subject'     # Entity that triggered the event
-    TARGET = 'target char'  # Nearby or explicitly chosen other char
-    AT = 'at'               # Current location
-    UNIVERSAL = 'universal' #TODO: DELETEME
-    BLUEPRINT = 'blueprint' # Universal items, recipes, preselected char
+    SUBJECT = 'subject'         # Entity that triggered the event
+    TARGET = 'target char'      # Nearby or explicitly chosen other char
+    AT = 'at'                   # Current location
+    PRESELECTED = 'preselected' # Configure a specific entity
+    SELECTED = 'selected'       # Select the entity from list at runtime
 
     ROLE_SUFFIX = '_role_id'
 
@@ -1275,29 +1275,28 @@ class Participant:
     CONST = 'const'       # Treat val_transform as the input
 
     # --- Field Mode ---
-    ATTR = 'attr'   # AttribVal
-    QTY  = 'qty'    # Pile quantity
-    LIMIT = 'limit' # Pile default limit
-    RATE_AMT = 'rate_amt' # Recipe.rate_amount
-    RATE_DUR = 'rate_dur' # Recipe.rate_duration
+    ATTR = 'attr'          # AttribVal
+    QTY  = 'qty'           # Pile quantity
+    LIMIT = 'limit'        # Pile default limit
+    RATE_AMT = 'rate_amt'  # Recipe.rate_amount
+    RATE_DUR = 'rate_dur'  # Recipe.rate_duration
     SOURCE_QTY = 'src_qty' # Recipe quantity for a particular source
     BYP_QTY = 'byp_qty'    # Recipe quantity for a particular byproduct
-    DIST = 'dist'   # Distance from subject grid pos (read-only)
-    PLACE = 'place' # Create pile at position (write-only)
-    POS = 'pos'     # Teleport char to location and position
-    SPAWN = 'spawn' # Create numbered duplicate of char
+    DIST = 'dist'          # Distance from subject grid pos (read-only)
+    PLACE = 'place'        # Create pile at position (write-only)
+    TELEPORT = 'teleport'  # Move char to location and position
 
     ALL_MODES = [
         ATTR, QTY, LIMIT, RATE_AMT, RATE_DUR, SOURCE_QTY, BYP_QTY,
-        DIST, PLACE, POS, SPAWN]
+        DIST, PLACE, TELEPORT]
     USES_ATTRIB = {ATTR}
     USES_ITEM = {QTY, LIMIT, RATE_AMT, RATE_DUR, SOURCE_QTY, BYP_QTY, PLACE}
     USES_RECIPE = {RATE_AMT, RATE_DUR, SOURCE_QTY, BYP_QTY}
-    USES_BLUEPRINT = {
-        LIMIT, RATE_AMT, RATE_DUR, SOURCE_QTY, BYP_QTY, PLACE, SPAWN}
+    # Modes that do not allow selecting a context role to determine the entity
+    REQUIRES_PRESELECTED = {
+        LIMIT, RATE_AMT, RATE_DUR, SOURCE_QTY, BYP_QTY, PLACE}
     USES_SOURCE_ITEM = {SOURCE_QTY, BYP_QTY}
-    USES_LOC = {POS, SPAWN, PLACE}
-    USES_CHAR = {SPAWN}
+    USES_LOC = {TELEPORT, PLACE}
 
     # --- Usage ---
     DET = 'det'  # Determinant (affects roll)

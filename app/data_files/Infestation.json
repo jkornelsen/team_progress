@@ -474,7 +474,7 @@
                 "determinants": [
                     {
                         "label": "Melee Range",
-                        "infield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "infield": {"role": "preselected", "item_id": 48, "attrib_id": 101},
                         "op_application": "==",
                         "val_required": "Engaged"
                     },
@@ -545,7 +545,7 @@
                 "numeric_range": [0, 2],
                 "determinants": [
                     {
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 102},
                         "op_application": ">="
                     },
                     {
@@ -555,7 +555,7 @@
                 "effects": [
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 102},
                         "op_application": "-",
                         "op_transform": "c"
                     },
@@ -574,7 +574,7 @@
                 "determinants": [
                     {
                         "label": "Melee Range",
-                        "infield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "infield": {"role": "preselected", "item_id": 48, "attrib_id": 101},
                         "op_application": "==",
                         "val_required": "Engaged"
                     },
@@ -615,7 +615,7 @@
                 "effects": [
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 102},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": 2.0,
@@ -623,14 +623,14 @@
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 102},
                         "op_application": ":=",
                         "op_transform": "c",
                         "outcome_success": "failure_minor"
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 102},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": 0.0
@@ -783,7 +783,7 @@
                 "determinants": [
                     {
                         "label": "Melee Range",
-                        "infield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "infield": {"role": "preselected", "item_id": 48, "attrib_id": 101},
                         "op_application": "==",
                         "val_required": "Engaged"
                     },
@@ -905,7 +905,7 @@
                 "effects": [
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "outfield": {"role": "preselected", "item_id": 48, "attrib_id": 101},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": "Long"
@@ -947,7 +947,7 @@
                 "determinants": [
                     {
                         "label": "Melee Range",
-                        "infield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "infield": {"role": "preselected", "item_id": 48, "attrib_id": 101},
                         "op_application": "==",
                         "val_required": "Engaged"
                     },
@@ -974,7 +974,7 @@
                 "effects": [
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "outfield": {"role": "preselected", "item_id": 48, "attrib_id": 101},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": "Long",
@@ -982,7 +982,7 @@
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "outfield": {"role": "preselected", "item_id": 48, "attrib_id": 101},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": "Long",
@@ -1039,20 +1039,20 @@
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "blueprint", "field_mode": "limit", "item_id": 5},
+                        "outfield": {"role": "preselected", "field_mode": "limit", "item_id": 5},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": 5.0
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "blueprint", "field_mode": "limit", "item_id": 5},
+                        "outfield": {"role": "preselected", "field_mode": "limit", "item_id": 5},
                         "op_transform": "*",
                         "val_transform": 5.0
                     },
                     {
                         "label": "5 + (5 × XL)",
-                        "infield": {"role": "blueprint", "field_mode": "limit", "item_id": 5},
+                        "infield": {"role": "preselected", "field_mode": "limit", "item_id": 5},
                         "outfield": {"field_mode": "qty", "item_id": 5},
                         "op_application": ":="
                     },
@@ -1126,7 +1126,7 @@
                 "determinants": [
                     {
                         "label": "Melee Range",
-                        "infield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "infield": {"role": "preselected", "item_id": 48, "attrib_id": 101},
                         "op_application": "==",
                         "val_required": "Engaged"
                     },
@@ -1181,7 +1181,7 @@
                 "determinants": [
                     {
                         "label": "Shots Remaining",
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 102},
                         "op_application": ">="
                     },
                     {"label": "On Target", "op_application": "m:="},
@@ -1207,7 +1207,7 @@
                 "effects": [
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 102},
                         "op_application": "-",
                         "op_transform": "c"
                     },
@@ -1274,7 +1274,7 @@
                 "determinants": [
                     {
                         "label": "Close Range",
-                        "infield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "infield": {"role": "preselected", "item_id": 48, "attrib_id": 101},
                         "op_application": "<",
                         "val_required": "Long"
                     },
@@ -1301,7 +1301,7 @@
                 "effects": [
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "outfield": {"role": "preselected", "item_id": 48, "attrib_id": 101},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": "Long",
@@ -1309,7 +1309,7 @@
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "outfield": {"role": "preselected", "item_id": 48, "attrib_id": 101},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": "Long",
@@ -1367,7 +1367,7 @@
                 "effects": [
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 50},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 50},
                         "op_application": "-"
                     },
                     {
@@ -1385,7 +1385,7 @@
                 "determinants": [
                     {
                         "label": "Throwing Distance",
-                        "infield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "infield": {"role": "preselected", "item_id": 48, "attrib_id": 101},
                         "op_application": ">=",
                         "val_required": "Short"
                     },
@@ -1481,7 +1481,7 @@
                 "effects": [
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "outfield": {"role": "preselected", "item_id": 48, "attrib_id": 101},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": "Long"
@@ -1530,7 +1530,7 @@
                 "determinants": [
                     {
                         "label": "Not Melee Range",
-                        "infield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "infield": {"role": "preselected", "item_id": 48, "attrib_id": 101},
                         "op_application": ">=",
                         "val_required": "Short"
                     },
@@ -1557,7 +1557,7 @@
                 "effects": [
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "outfield": {"role": "preselected", "item_id": 48, "attrib_id": 101},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": "Engaged",
@@ -1565,7 +1565,7 @@
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "outfield": {"role": "preselected", "item_id": 48, "attrib_id": 101},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": "Engaged",
@@ -1633,7 +1633,7 @@
                 "determinants": [
                     {
                         "label": "Attacks Remaining",
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 102},
                         "op_application": ">="
                     },
                     {
@@ -1651,7 +1651,7 @@
                 "effects": [
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 102},
                         "op_application": "-",
                         "op_transform": "c"
                     },
@@ -1750,7 +1750,7 @@
                 "determinants": [
                     {
                         "label": "Near Melee Range",
-                        "infield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "infield": {"role": "preselected", "item_id": 48, "attrib_id": 101},
                         "op_application": "<",
                         "val_required": "Long"
                     },
@@ -1799,7 +1799,7 @@
                 "effects": [
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "outfield": {"role": "preselected", "item_id": 48, "attrib_id": 101},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": "Short",
@@ -1807,7 +1807,7 @@
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "outfield": {"role": "preselected", "item_id": 48, "attrib_id": 101},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": "Short",
@@ -1829,7 +1829,7 @@
                 "determinants": [
                     {
                         "label": "Outside Melee Range",
-                        "infield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "infield": {"role": "preselected", "item_id": 48, "attrib_id": 101},
                         "op_application": "==",
                         "val_required": "Long"
                     },
@@ -1937,7 +1937,7 @@
                 "determinants": [
                     {
                         "label": "Outside Melee Range",
-                        "infield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "infield": {"role": "preselected", "item_id": 48, "attrib_id": 101},
                         "op_application": "==",
                         "val_required": "Long"
                     },
@@ -2031,7 +2031,7 @@
                 "determinants": [
                     {
                         "label": "Extended Melee Range",
-                        "infield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "infield": {"role": "preselected", "item_id": 48, "attrib_id": 101},
                         "op_application": "<",
                         "val_required": "Long"
                     },
@@ -2131,7 +2131,7 @@
                 "determinants": [
                     {
                         "label": "Outside Melee Range",
-                        "infield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "infield": {"role": "preselected", "item_id": 48, "attrib_id": 101},
                         "op_application": "==",
                         "val_required": "Long"
                     },
@@ -2199,14 +2199,14 @@
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 102},
                         "op_application": ":=",
                         "op_transform": "c",
                         "outcome_success": "success_any"
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 102},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": 0.0,
@@ -2236,7 +2236,7 @@
                 "determinants": [
                     {
                         "label": "Melee Range",
-                        "infield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "infield": {"role": "preselected", "item_id": 48, "attrib_id": 101},
                         "op_application": "==",
                         "val_required": "Engaged"
                     },
@@ -2298,7 +2298,7 @@
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 102},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": 4.0,
@@ -2306,7 +2306,7 @@
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 102},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": 3.0,
@@ -2314,14 +2314,14 @@
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 102},
                         "op_application": ":=",
                         "op_transform": "c",
                         "outcome_success": "failure_minor"
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 102},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": 0.0,
@@ -2347,7 +2347,7 @@
                 "determinants": [
                     {
                         "label": "Not Melee Range",
-                        "infield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "infield": {"role": "preselected", "item_id": 48, "attrib_id": 101},
                         "op_application": ">=",
                         "val_required": "Short"
                     },
@@ -2404,7 +2404,7 @@
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "outfield": {"role": "preselected", "item_id": 48, "attrib_id": 101},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": "Engaged",
@@ -2412,7 +2412,7 @@
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "outfield": {"role": "preselected", "item_id": 48, "attrib_id": 101},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": "Engaged",
@@ -2457,7 +2457,7 @@
                 "determinants": [
                     {
                         "label": "Outside Melee Range",
-                        "infield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "infield": {"role": "preselected", "item_id": 48, "attrib_id": 101},
                         "op_application": "==",
                         "val_required": "Long"
                     },
@@ -2517,7 +2517,7 @@
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 102},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": 6.0,
@@ -2525,7 +2525,7 @@
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 102},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": 4.0,
@@ -2533,7 +2533,7 @@
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 102},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": 2.0,
@@ -2541,7 +2541,7 @@
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 102},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 102},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": 0.0,
@@ -2567,7 +2567,7 @@
                 "determinants": [
                     {
                         "label": "Melee Range",
-                        "infield": {"role": "universal", "item_id": 48, "attrib_id": 101},
+                        "infield": {"role": "preselected", "item_id": 48, "attrib_id": 101},
                         "op_application": "==",
                         "val_required": "Engaged"
                     },

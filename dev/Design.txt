@@ -4,6 +4,14 @@
 
 ---- functional, tightening, quality of life ----
 
+recipe id gets saved when not needed
+    "infield": {
+        "role": "preselected",
+        "field_mode": "qty",
+        "item_id": 58,
+        "recipe_id": 77
+    },
+
 link "working..." text in char inv to the actual production pile
 show spin icon when char inventory is the target owner even if not the host
 
@@ -18,37 +26,6 @@ old_loc_id doesn't always get set when going to loc page
 
 applying a long list of effects sometimes causes one or more to mess up
     maybe wait until each response returns before sending the next request
-
-events should have the capability of preselecting a specific character
-    like universal items
-    for attribute or positioning mode
-    so we can place a specific character or check their attribute
-"Context Role" versus preselected entity
-    for a lot of event aspects we may want to have the event work based on either
-    preselection list: characters + items + locations
-"Universal" versus another role only makes sense for quantity mode
-    because it's really the owner that we're talking about
-    for attribute mode, blueprint would be more accurate,
-    and that would make sense for characters and locations as well
-    show "Universal" in role list for qty mode and "Preselected" for attribute mode
-rename "Position Char" to "Move Char"
-    should work like "Place Item" -- configure preselected char and preselected loc
-add "(None)" for source
-    constants, move char to loc but not to coordinates
-    make it the default because constants are common and "outcome" source is meaningful
-    Participant.CONST is no longer used
-maybe another role option is "Select"
-    location to choose random coordinate for
-    char to spawn at location
-spawn effect should place characters in two rows starting from parent char pos
-    1 3 5 7
-    2 4 6 8
-    so that they aren't all in the same tile
-but we are often spawning different characters for example two goblins and a wolf
-    duplicating should be fine for that
-    should only take a few seconds to select on play loc screen and reposition,
-    and would almost always need to do that anyway
-so a spawn effect doesn't get us anything that couldn't be done better without it
 
 corpse was dropped at 1,1 instead of subject's coordinates
     also when subject is at 1,1 it avoids the subject which it shouldn't do
@@ -71,8 +48,6 @@ CONTEXT:  while updating tuple (0,46) in relation "characters"
 [SQL: UPDATE characters SET position=%(position)s::INTEGER[] WHERE characters.game_token = %(characters_game_token)s AND characters.id = %(characters_id)s]
 [parameters: {'position': [9, 4], 'characters_game_token': '128a971e-9667-4496-9d0d-8ce491b31780', 'characters_id': 8}]
 
-constants in effects show `"get_val_from": "outcome",`
-    should probably be blank for default
 for randomly placing an item, hide calculation section and lock (require) roll result
 
 ---- scenario ----
@@ -84,6 +59,7 @@ lumber
         set flag to either 1 or 0: x -> 2 - roll, x -> min(x, 0)
 
 tethered one
+    teleport char to location
     deception check for lyria in sunken library
         handled by the event that starts the convo
         if deception fails (use target for an inverted roll)
@@ -96,13 +72,6 @@ tethered one
 
 dungeon crawl
     mask all locations other than the Entry Cavern
-    is the event "spawn" function useful?
-        rolling on tables and doing what it says seems much more creative
-        how would it work to automatically choose a character randomly?
-        to input, spawn reads field_def.char_id,
-            whereas pos reads out_entity_id which is from the role?
-        code reads either the location configured from list or from the At role
-    "pos" would be useful to move a preselected char to a location in tethered scenario
     generating enemies and items seems doable but asking users to
         create grid layouts and destination networks seems like too much
         make pre-built ones and they can always change them if they want

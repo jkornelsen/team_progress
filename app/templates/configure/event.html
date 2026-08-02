@@ -257,7 +257,7 @@ const USES_ATTRIB = {{ Participant.USES_ATTRIB|list|tojson }};
 const USES_ITEM = {{ Participant.USES_ITEM|list|tojson }};
 const USES_LOC = {{ Participant.USES_LOC|list|tojson }};
 const USES_RECIPE = {{ Participant.USES_RECIPE|list|tojson }};
-const USES_BLUEPRINT = {{ Participant.USES_BLUEPRINT|list|tojson }};
+const REQUIRES_PRESELECTED = {{ Participant.REQUIRES_PRESELECTED|list|tojson }};
 const USES_SOURCE_ITEM = {{ Participant.USES_SOURCE_ITEM|list|tojson }};
 const COMPARISON_OPS = {{ Operation.COMPARISON|list|tojson }};
 const FUNCTIONAL_OPS = {{ Operation.FUNCTIONAL|list|tojson }};
@@ -375,6 +375,21 @@ function syncEffSourceState(element) {
     }
 }
 
+function syncUnifiedIdsState(select) {
+    const group = select.closest('.field-input-group');
+    const [type, id] = select.value.split(':');
+    
+    // Clear all fixed-ID columns first
+    group.querySelector('.id-item').value = '';
+    group.querySelector('.id-char').value = '';
+    group.querySelector('.id-loc').value = '';
+
+    // Assign the ID to the correct column
+    if (type === 'item') group.querySelector('.id-item').value = id;
+    if (type === 'char') group.querySelector('.id-char').value = id;
+    if (type === 'loc')  group.querySelector('.id-loc').value = id;
+}
+
 function syncEventFieldState(element) {
     const card = element.closest('.factor-card');
     const fieldGroup = element.closest('.field-input-group');
@@ -384,6 +399,9 @@ function syncEventFieldState(element) {
     const roleHidden = fieldGroup.querySelector('.role-hidden-input');
     const roleRow = fieldGroup.querySelector('.role-row');
     const itemSelect = fieldGroup.querySelector('.id-item');
+    const charSelect = fieldGroup.querySelector('.id-char');
+    const locSelect = fieldGroup.querySelector('.id-loc');
+    const unifiedSelect = fieldGroup.querySelector('.id-unified');
     const childContainer = fieldGroup.querySelector('.child-toggle-container');
     const childCheckbox = fieldGroup.querySelector('.child-item-checkbox');
 
@@ -394,44 +412,69 @@ function syncEventFieldState(element) {
     const itemId = itemSelect ? itemSelect.value : null;
     const storageType = itemId ? ITEM_STORAGE_TYPE[itemId] : null;
 
-    // Role Restrictions based on Storage Type
-    if (USES_BLUEPRINT.includes(mode)) {
-        roleSelect.value = "{{ Participant.BLUEPRINT }}";
-        if (roleHidden) roleHidden.value = "{{ Participant.BLUEPRINT }}";
+    // Dynamic Labeling for PRESELECTED
+    const preselected = roleSelect.querySelector('option[value="{{ Participant.PRESELECTED }}"]');
+    if (preselected) {
+        preselected.textContent = (mode === '{{ Participant.QTY }}') ?
+            "No Owner (Universal)" : "Preselected";
+    }
+
+    // Role Restrictions
+    if (role === '{{ Participant.PRESELECTED }}') {
+        childContainer.classList.add('hidden');
+        if (mode === '{{ Participant.QTY }}') {
+            itemSelect.classList.remove('hidden');
+            unifiedSelect.classList.add('hidden');
+        } else if (mode === '{{ Participant.ATTR }}') {
+            unifiedSelect.classList.remove('hidden');
+            itemSelect.classList.add('hidden');
+        }
+    } else if (role === '{{ Participant.SELECTED }}') {
+        childContainer.classList.add('hidden');
+        unifiedSelect.classList.add('hidden');
+        // No ID pickers shown in Config; player picks at runtime
+    } else {
+        // Contextual Roles (Subject/Target/At)
+        childContainer.classList.toggle('hidden', mode !== '{{ Participant.ATTR }}');
+        unifiedSelect.classList.add('hidden');
+        if (mode === '{{ Participant.QTY }}') {
+            itemSelect.classList.remove('hidden');
+        }
+    }
+
+    if (REQUIRES_PRESELECTED.includes(mode)) {
         roleRow.classList.add('hidden');
         childContainer.classList.add('hidden');
         syncOuterExprState(card);
         return;
     } else {
         roleRow.classList.remove('hidden');
-        Array.from(roleSelect.options).forEach(opt => {
-            if (opt.value === "{{ Participant.BLUEPRINT }}") opt.hidden = true;
-        });
-        if (roleSelect.value === "{{ Participant.BLUEPRINT }}") {
-            roleSelect.value = "{{ Participant.SUBJECT }}";
-        }
     }
-    if (mode === "{{ Participant.QTY }}" || mode === "{{ Participant.DIST }}") {
+
+    if (mode === "{{ Participant.QTY }}") {
         const isUniversalItem = (storageType === "{{ StorageType.UNIVERSAL }}");
-        const isRoleUniversal = (role === "{{ Participant.UNIVERSAL }}");
+        const isRolePreselected = (role === "{{ Participant.PRESELECTED }}");
         if (isUniversalItem) {
-            if (!isRoleUniversal) {
-                roleSelect.value = "{{ Participant.UNIVERSAL }}";
+            if (!isRolePreselected) {
+                roleSelect.value = "{{ Participant.PRESELECTED }}";
             }
             roleSelect.disabled = true;
         } else {
-            if (isRoleUniversal) {
+            if (isRolePreselected) {
                 roleSelect.value = "{{ Participant.SUBJECT }}";
             }
             roleSelect.disabled = false;
             Array.from(roleSelect.options).forEach(opt => {
-                if (opt.value === "{{ Participant.UNIVERSAL }}") {
+                if (opt.value === "{{ Participant.PRESELECTED }}") {
                     opt.disabled = true;
                 } else {
                     opt.disabled = false;
                 }
             });
         }
+    } else if (mode === "{{ Participant.DIST }}") {
+        roleSelect.value = "{{ Participant.TARGET }}";
+        roleSelect.disabled = true;
     } else {
         roleSelect.disabled = false;
         Array.from(roleSelect.options).forEach(opt => opt.disabled = false);
@@ -441,17 +484,26 @@ function syncEventFieldState(element) {
     }
 
     if (mode === '{{ Participant.ATTR }}') {
-        if (roleSelect.value === "{{ Participant.UNIVERSAL }}") {
-            itemSelect.classList.remove('hidden');
+        if (roleSelect.value === "{{ Participant.PRESELECTED }}") {
             childContainer.classList.add('hidden');
             childCheckbox.checked = false;
         } else {
-            itemSelect.classList.add('hidden');
             childContainer.classList.remove('hidden');
         }
     } else {
         childContainer.classList.add('hidden');
         childCheckbox.checked = false;
+    }
+    if (mode === '{{ Participant.TELEPORT }}') {
+        locSelect.classList.remove('hidden');
+        if (role === '{{ Participant.PRESELECTED }}') {
+            charSelect.classList.remove('hidden');
+        } else {
+            charSelect.classList.add('hidden');
+        }
+    } else {
+        locSelect.classList.add('hidden');
+        charSelect.classList.add('hidden');
     }
 }
 
@@ -703,12 +755,12 @@ function syncInnerExprState(card) {
     const lhs = card.querySelector('[data-slot-lhs]');      // "Fetched Value"
     const rhsGroup = card.querySelector('[data-slot-rhs]'); // The numeric input [ 1.0 ]
 
-    // --- 1. VISIBILITY RULES ---
+    // --- 1. Visibility Rules ---
     
     if (lhs) lhs.classList.toggle('hidden', isConstant || isRecall);
     if (rhsGroup) rhsGroup.classList.toggle('hidden', hasNoTransform || isRecall || isUnary);
 
-    // --- 2. ORDERING RULES (Visual Equation Flow) ---
+    // --- 2. Ordering Rules (Visual Equation Flow) ---
     
     let isFunctional = false;
 
@@ -740,7 +792,7 @@ function syncInnerExprState(card) {
 
     card.classList.toggle('functional-layout', isFunctional);
 
-    // --- 3. SOURCE & TARGET LOGIC (📥 and 📤 sections) ---
+    // --- 3. Source & Target Logic (📥 and 📤 sections) ---
 
     if (isEff) {
         const subSections = card.querySelectorAll('.card-body > .sub-section');
@@ -846,6 +898,8 @@ document.addEventListener('DOMContentLoaded', function() {
     {% set field_mode = field_data.field_mode if field_data else 'attr' %}
     {% set attrib_id = field_data.attrib_id if field_data else None %}
     {% set item_id = field_data.item_id if field_data else None %}
+    {% set char_id = field_data.char_id if field_data else None %}
+    {% set loc_id = field_data.loc_id if field_data else None %}
 
     <div class="flex-row gap-10">
         <!-- Mode -->
@@ -870,10 +924,8 @@ document.addEventListener('DOMContentLoaded', function() {
             {% if 'outfield' in prefix %}
             <option value="{{ Participant.PLACE }}" {{ 'selected'
                 if field_mode == Participant.PLACE }}>Place Item</option>
-            <option value="{{ Participant.POS }}" {{ 'selected'
-                if field_mode == Participant.POS }}>Position Char</option>
-            <option value="{{ Participant.SPAWN }}" {{ 'selected'
-                if field_mode == Participant.SPAWN }}>Spawn Char</option>
+            <option value="{{ Participant.TELEPORT }}" {{ 'selected'
+                if field_mode == Participant.TELEPORT }}>Teleport Char</option>
             {% elif 'infield' in prefix %}
             <option value="{{ Participant.DIST }}" {{ 'selected'
                 if field_mode == Participant.DIST }}>Distance</option>
@@ -894,8 +946,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         'hidden' if field_mode not in Participant.USES_ATTRIB }}" 
                     style="min-width: 30ch; max-width: 50ch;"
                     onchange="syncFieldAttribState(this)">
+                <option value="">-- Select Attribute --</option>
                 {% for a in all_attribs %}
-                    <option value="{{ a.id }}" {{ 'selected' if attrib_id == a.id }}>{{ a.name }}</option>
+                    <option value="{{ a.id }}" {{
+                        'selected' if attrib_id == a.id }}>{{ a.name }}</option>
                 {% endfor %}
             </select>
             
@@ -905,8 +959,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         'hidden' if field_mode not in Participant.USES_ITEM }}" 
                     style="min-width: 30ch; max-width: 50ch;"
                     onchange="syncRecipesState(this); syncEventFieldState(this)">
+                <option value="">-- Select Item --</option>
                 {% for i in all_items %}
-                    <option value="{{ i.id }}" {{ 'selected' if item_id == i.id }}>{{ i.name }}</option>
+                    <option value="{{ i.id }}" {{
+                        'selected' if item_id == i.id }}>{{ i.name }}</option>
                 {% endfor %}
             </select>
 
@@ -929,6 +985,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 <!-- Populated by syncSourceItemState() -->
             </select>
 
+            <!-- Character -->
+            <select name="{{ prefix }}[char_id]" 
+                    class="id-char full-width {{
+                    'hidden' if field_mode != Participant.TELEPORT or role != Participant.PRESELECTED }}">
+                <option value="">-- Select Character --</option>
+                {% for c in all_chars %}
+                    <option value="{{ c.id }}" {{
+                        'selected' if char_id == c.id }}>{{ c.name }}</option>
+                {% endfor %}
+            </select>
+
             <!-- Location -->
             <select name="{{ prefix }}[loc_id]" 
                     class="id-loc full-width {{
@@ -939,6 +1006,30 @@ document.addEventListener('DOMContentLoaded', function() {
                     <option value="{{ l.id }}" {{ 'selected'
                         if field_data and field_data.loc_id == l.id }}>{{ l.name }}</option>
                 {% endfor %}
+            </select>
+
+            <!-- Unified Entity Picker (Used for ATTR + PRESELECTED) -->
+            <select class="id-unified full-width hidden" 
+                    onchange="syncUnifiedIdsState(this)">
+                <option value="">-- Select Entity --</option>
+                <optgroup label="Characters">
+                    {% for c in all_chars %}
+                        <option value="char:{{ c.id }}" {{
+                            'selected' if char_id == c.id }}>{{ c.name }}</option>
+                    {% endfor %}
+                </optgroup>
+                <optgroup label="Locations">
+                    {% for l in all_locs %}
+                        <option value="loc:{{ l.id }}" {{
+                            'selected' if loc_id == l.id }}>{{ l.name }}</option>
+                    {% endfor %}
+                </optgroup>
+                <optgroup label="Items">
+                    {% for i in all_items %}
+                        <option value="item:{{ i.id }}" {{
+                            'selected' if item_id == i.id }}>{{ i.name }}</option>
+                    {% endfor %}
+                </optgroup>
             </select>
         </div>
     </div>
@@ -965,14 +1056,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 title="The location where this is happening"
                 {{ 'selected' if role == Participant.AT }}>At</option>
 
-            <option value="{{ Participant.UNIVERSAL }}"
-                title="Global storage items not held or placed anywhere"
-                {{ 'selected' if role == Participant.UNIVERSAL }}>Universal</option>
+            <!--
+            Choosing the caller means there may not be any use for this.
+            <option value="{{ Participant.SELECTED }}"
+                title="Select the entity from a list during the event"
+                {{ 'selected' if role == Participant.SELECTED }}>Selectable</option>
+            -->
 
-            <option value="{{ Participant.BLUEPRINT }}"
-                hidden style="display: none;"
-                title="(Item Blueprint)"
-                {{ 'selected' if role == Participant.BLUEPRINT }}>(Item Blueprint)</option>
+            <option value="{{ Participant.PRESELECTED }}"
+                title="Configure a specific entity"
+                {{ 'selected' if role == Participant.PRESELECTED }}>Preselected</option>
         </select>
     </div>
 

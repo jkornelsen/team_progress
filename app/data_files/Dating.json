@@ -2184,17 +2184,17 @@
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
-                        "infield": {"role": "universal", "item_id": 87, "attrib_id": 88},
+                        "infield": {"role": "preselected", "item_id": 87, "attrib_id": 88},
                         "op_application": ">="
                     },
                     {
-                        "infield": {"role": "universal", "item_id": 87, "attrib_id": 109},
+                        "infield": {"role": "preselected", "item_id": 87, "attrib_id": 109},
                         "op_application": "==",
                         "val_required": false
                     },
                     {"op_application": "m:="},
                     {
-                        "infield": {"role": "universal", "item_id": 87, "attrib_id": 85}
+                        "infield": {"role": "preselected", "item_id": 87, "attrib_id": 85}
                     },
                     {
                         "infield": {"role": "at", "attrib_id": 85},
@@ -2209,7 +2209,7 @@
                     },
                     {"op_transform": "mr"},
                     {
-                        "infield": {"role": "universal", "item_id": 87, "attrib_id": 89},
+                        "infield": {"role": "preselected", "item_id": 87, "attrib_id": 89},
                         "op_application": "-",
                         "val_transform": 3.0
                     },
@@ -2225,27 +2225,27 @@
                 "effects": [
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "item_id": 87, "attrib_id": 109},
+                        "outfield": {"role": "preselected", "item_id": 87, "attrib_id": 109},
                         "op_application": ":=",
                         "op_transform": "c"
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "item_id": 87, "attrib_id": 110},
+                        "outfield": {"role": "preselected", "item_id": 87, "attrib_id": 110},
                         "op_application": ":=",
                         "op_transform": "c",
                         "outcome_success": "success_any"
                     },
                     {
-                        "infield": {"role": "universal", "item_id": 87, "attrib_id": 88},
-                        "outfield": {"role": "blueprint", "field_mode": "limit", "item_id": 77},
+                        "infield": {"role": "preselected", "item_id": 87, "attrib_id": 88},
+                        "outfield": {"role": "preselected", "field_mode": "limit", "item_id": 77},
                         "op_application": ":=",
                         "outcome_success": "success_any"
                     },
                     {
-                        "infield": {"role": "universal", "item_id": 87, "attrib_id": 89},
+                        "infield": {"role": "preselected", "item_id": 87, "attrib_id": 89},
                         "outfield": {
-                            "role": "blueprint",
+                            "role": "preselected",
                             "field_mode": "byp_qty",
                             "item_id": 77,
                             "recipe_id": 78,
@@ -2277,7 +2277,7 @@
                 "effects": [
                     {
                         "infield": {"role": "at", "attrib_id": 85},
-                        "outfield": {"role": "universal", "item_id": 87, "attrib_id": 85},
+                        "outfield": {"role": "preselected", "item_id": 87, "attrib_id": 85},
                         "op_application": ":=",
                         "outcome_success": "success_any"
                     }
@@ -2334,15 +2334,15 @@
                         "outcome_success": "success_any"
                     },
                     {
-                        "infield": {"role": "universal", "item_id": 68, "attrib_id": 86},
-                        "outfield": {"role": "universal", "item_id": 179, "attrib_id": 86},
+                        "infield": {"role": "preselected", "item_id": 68, "attrib_id": 86},
+                        "outfield": {"role": "preselected", "item_id": 179, "attrib_id": 86},
                         "op_application": ":=",
                         "op_transform": "+",
                         "outcome_success": "success_any"
                     },
                     {
-                        "infield": {"role": "universal", "item_id": 179, "attrib_id": 86},
-                        "outfield": {"role": "universal", "item_id": 179, "attrib_id": 15},
+                        "infield": {"role": "preselected", "item_id": 179, "attrib_id": 86},
+                        "outfield": {"role": "preselected", "item_id": 179, "attrib_id": 15},
                         "op_application": ":=",
                         "op_transform": "%",
                         "val_transform": 7.0,
@@ -2428,7 +2428,7 @@
                         "op_application": "=="
                     },
                     {
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 21},
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 21},
                         "op_application": "==",
                         "val_required": 0.0
                     }
@@ -2436,7 +2436,7 @@
                 "effects": [
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 21},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 21},
                         "op_application": ":=",
                         "op_transform": "c"
                     }
@@ -2662,7 +2662,7 @@
                     {
                         "label": "Damping Factor Temp",
                         "infield": {"role": "target char", "attrib_id": 7},
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 186},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 186},
                         "op_application": ":=",
                         "op_transform": "/",
                         "val_transform": 30.0
@@ -2670,21 +2670,21 @@
                     {
                         "label": "Damping Factor",
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 184},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 184},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": 0.0
                     },
                     {
                         "label": "Damping Factor",
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 186},
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 184},
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 186},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 184},
                         "op_application": "-"
                     },
                     {
                         "label": "Damping Factor",
                         "get_val_from": "outfield",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 184},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 184},
                         "op_application": ":=",
                         "op_transform": "^x",
                         "val_transform": 2.0
@@ -2692,7 +2692,7 @@
                     {
                         "label": "Base Delta",
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 186},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 186},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": 4.0,
@@ -2701,7 +2701,7 @@
                     {
                         "label": "Base Delta",
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 186},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 186},
                         "op_transform": "c",
                         "val_transform": 4.0,
                         "outcome_success": "success_major"
@@ -2709,7 +2709,7 @@
                     {
                         "label": "Base Delta",
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 186},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 186},
                         "op_application": ":=",
                         "op_transform": "c",
                         "outcome_success": "failure_minor"
@@ -2717,7 +2717,7 @@
                     {
                         "label": "Base Delta",
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 186},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 186},
                         "op_application": "-",
                         "op_transform": "c",
                         "val_transform": 3.0,
@@ -2725,20 +2725,20 @@
                     },
                     {
                         "label": "Damped Delta",
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 186},
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 184},
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 186},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 184},
                         "op_application": "*"
                     },
                     {
                         "label": "Damped Delta",
                         "get_val_from": "outfield",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 184},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 184},
                         "op_application": ":=",
                         "op_transform": "floor"
                     },
                     {
                         "label": "Apply The Delta",
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 184},
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 184},
                         "outfield": {"role": "target char", "attrib_id": 7}
                     },
                     {
@@ -2823,7 +2823,7 @@
                 "determinants": [
                     {
                         "label": "(works for 1 or 2)",
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 91},
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 91},
                         "op_application": ">="
                     }
                 ],
@@ -2846,7 +2846,7 @@
                 "selection_attrib_id": 85,
                 "determinants": [
                     {
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 82},
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 82},
                         "op_application": ">="
                     }
                 ],
@@ -2858,7 +2858,7 @@
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 82},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 82},
                         "op_application": "-",
                         "op_transform": "c"
                     }
@@ -2906,36 +2906,36 @@
                 "effects": [
                     {
                         "infield": {"attrib_id": 85},
-                        "outfield": {"role": "universal", "item_id": 87, "attrib_id": 85},
+                        "outfield": {"role": "preselected", "item_id": 87, "attrib_id": 85},
                         "op_application": ":="
                     },
                     {
                         "infield": {"attrib_id": 88},
-                        "outfield": {"role": "universal", "item_id": 87, "attrib_id": 88},
+                        "outfield": {"role": "preselected", "item_id": 87, "attrib_id": 88},
                         "op_application": ":="
                     },
                     {
                         "infield": {"attrib_id": 89},
-                        "outfield": {"role": "universal", "item_id": 87, "attrib_id": 89},
+                        "outfield": {"role": "preselected", "item_id": 87, "attrib_id": 89},
                         "op_application": ":="
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "item_id": 87, "attrib_id": 109},
+                        "outfield": {"role": "preselected", "item_id": 87, "attrib_id": 109},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": false
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "item_id": 87, "attrib_id": 110},
+                        "outfield": {"role": "preselected", "item_id": 87, "attrib_id": 110},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": false
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 77},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 77},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": 0.0
@@ -2968,59 +2968,59 @@
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 70},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 70},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": 24.0
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 74},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 74},
                         "op_application": "-",
                         "op_transform": "c",
                         "val_transform": 3.5
                     },
                     {
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 71},
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 74},
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 71},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 74},
                         "op_transform": "/",
                         "val_transform": 4.0
                     },
                     {
-                        "infield": {"role": "universal", "field_mode": "qty", "item_id": 75},
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 74},
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 75},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 74},
                         "op_transform": "*",
                         "val_transform": 2.0
                     },
                     {
                         "get_val_from": "outfield",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 74},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 74},
                         "op_application": ":=",
                         "op_transform": "floor"
                     },
                     {
                         "get_val_from": "outfield",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 74},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 74},
                         "op_application": ":=",
                         "op_transform": "min",
                         "val_transform": 10.0
                     },
                     {
                         "get_val_from": "outfield",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 74},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 74},
                         "op_application": ":=",
                         "op_transform": "max"
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 71},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 71},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": 0.0
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 75},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 75},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": 0.0
@@ -3028,35 +3028,35 @@
                     {
                         "label": "Daily News Delivery",
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 81},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 81},
                         "op_application": "-",
                         "op_transform": "c"
                     },
                     {
                         "label": "Daily News Delivery",
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 82},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 82},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": 2.0
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "item_id": 91, "attrib_id": 88},
+                        "outfield": {"role": "preselected", "item_id": 91, "attrib_id": 88},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": 0.0
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "item_id": 92, "attrib_id": 88},
+                        "outfield": {"role": "preselected", "item_id": 92, "attrib_id": 88},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": 0.0
                     },
                     {
                         "get_val_from": "outfield",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 257},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 257},
                         "op_application": "-",
                         "op_transform": "min"
                     }
@@ -3070,7 +3070,7 @@
                 "determinants": [
                     {
                         "label": "Proposed Status",
-                        "infield": {"role": "universal", "item_id": 304, "attrib_id": 144},
+                        "infield": {"role": "preselected", "item_id": 304, "attrib_id": 144},
                         "op_application": "-"
                     },
                     {
@@ -3324,7 +3324,7 @@
                 "effects": [
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "universal", "field_mode": "qty", "item_id": 70},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 70},
                         "op_application": "-"
                     }
                 ]

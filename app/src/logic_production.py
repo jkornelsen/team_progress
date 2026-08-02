@@ -30,13 +30,13 @@ def find_best_host(recipe, owner_id, ctx):
     game_token = g.game_token
     product = db.session.get(Item, (game_token, recipe.product_id))
 
-    # 1. THE MACHINE CHECK (Highest Priority)
+    # 1. The Machine Check (Highest Priority)
     # If the recipe requires a LOCAL crafting station marked as automated, 
     # the Location must be the host.
     if recipe.is_location_hosted:
         return ctx.loc_id
 
-    # 2. UNIVERSAL PRODUCT BRANCH (Currencies, Global Upgrades)
+    # 2. Universal Product Branch (Currencies, Global Upgrades)
     if product.storage_type == StorageType.UNIVERSAL:
         # Priority A: General Host (System)
         # If ingredients/stats are all in the global bank.
@@ -58,7 +58,7 @@ def find_best_host(recipe, owner_id, ctx):
         # Fallback for UI (Error reporting)
         return GENERAL_ID
 
-    # 3. PHYSICAL PRODUCT BRANCH (Tools, Resources, Structures)
+    # 3. Physical Product Branch (Tools, Resources, Structures)
     logger.debug(
         f"find_best_host() returning | is_location_hosted:{recipe.is_location_hosted}"
         f" | storage_type:{product.storage_type}"

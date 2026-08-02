@@ -128,7 +128,7 @@ const ConfigEditor = {
      * @param {HTMLElement} context - The element to search within.
      */
     triggerInitialState: function(context = document) {
-        const selector = 'select[onchange*="ConfigEditor.sync"], select[onchange*="syncFieldAttribState"]';
+        const selector = 'select[onchange*="ConfigEditor.sync"], select[onchange*="syncFieldAttribState"], select[onchange*="syncEventFieldState"]';
         context.querySelectorAll(selector).forEach(s => {
             if (typeof s.onchange === 'function') {
                 s.onchange();

@@ -885,10 +885,14 @@ def play_event(id):
     eligible_role_entities = {}
     fields_not_met = {}
     for role in roles_to_resolve:
-        if role == Participant.BLUEPRINT:
+        if role == Participant.PRESELECTED:
             continue
-        if role == Participant.UNIVERSAL:
-            search_pool= [db.session.get(Entity, (game_token, GENERAL_ID))]
+        if role == Participant.SELECTED:
+            search_pool = Entity.query.filter(
+                Entity.game_token == game_token,
+                Entity.id != GENERAL_ID,
+                Entity.entity_type.in_(['character', 'location', 'item'])
+            ).all()
         elif role == Participant.SUBJECT:
             search_pool = [subject] if subject else other_entities_here
         elif role == Participant.AT:
@@ -994,6 +998,12 @@ def play_event(id):
         role_entities=eligible_role_entities,
         fields_not_met=fields_not_met,
         related_entities=related,
+        all_items=Item.query.filter_by(
+            game_token=game_token).order_by(name_stripped()).all(),
+        all_chars=Character.query.filter_by(
+            game_token=game_token).order_by(name_stripped()).all(),
+        all_locs=Location.query.filter_by(
+            game_token=game_token).order_by(name_stripped()).all(),
         OutcomeType=OutcomeType,
         SuccessTier=SuccessTier,
         Participant=Participant,
