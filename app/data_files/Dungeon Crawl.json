@@ -3,7 +3,6 @@
         "title": "Dungeon Crawl",
         "description": "Your party was responding to a distress signal when suddenly, the ground below collapsed, and all fell down a nearly vertical shaft. No one seems to be injured *(yet)*. Doubtless there are {lightcoral|enemies} in the surrounding caverns — good source of {lightcoral|XP}, an optimist would say.\r\n\r\nStart by adding a set of 1-4 characters to play — see **GM Tools.** Then craft rudimentary supplies before embarking on an escape to the surface or delving deeper.",
         "win_reqs": [
-            {"item_id": 91, "quantity": 6.0},
             {"item_id": 29, "quantity": 6.0}
         ],
         "tag_introduce_order": 54,
@@ -104,6 +103,11 @@
                 "id": 9,
                 "name": "Quality",
                 "description": "Higher quality gives better bonuses and is more difficult to craft."
+            },
+            {
+                "id": 143,
+                "name": "Required Value",
+                "description": "The number to achieve to solve the puzzle."
             },
             {
                 "id": 11,
@@ -254,7 +258,7 @@
             {
                 "id": 5,
                 "name": "XP Level",
-                "description": "How powerful and advanced a character is. Increment when the floor boss is defeated."
+                "description": "How powerful and advanced a character is.\r\n\r\nFor player characters, it's the highest floor boss defeated + 1 (milestone leveling, not xp). So, it matches the floor your party is currently fighting enemies on, unless you go back."
             }
         ],
         "items": [
@@ -266,11 +270,52 @@
                 "recipes": [
                     {
                         "id": 73,
-                        "rate_amount": 10.0,
+                        "rate_amount": 2.0,
                         "rate_duration": 8,
                         "sources": [
                             {"item_id": 22, "q_required": 1.0, "preserve": true},
                             {"item_id": 28, "q_required": 1.0}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 134,
+                "name": "⚖️Balance Scale B",
+                "description": "Gather debris from the cavern to adjust the quantity in the scale.",
+                "storage_type": "l",
+                "q_limit": 6.0,
+                "recipes": [
+                    {"id": 135, "rate_amount": 2.0},
+                    {
+                        "id": 136,
+                        "rate_amount": 2.0,
+                        "sources": [
+                            {"item_id": 134, "q_required": 4.0}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 140,
+                "name": "⚖️Balance Scale C",
+                "description": "Gather debris from the cavern to adjust the quantity in the scale.",
+                "storage_type": "l",
+                "q_limit": 9.0,
+                "recipes": [
+                    {"id": 138, "rate_amount": 3.0},
+                    {
+                        "id": 139,
+                        "rate_amount": 3.0,
+                        "sources": [
+                            {"item_id": 140, "q_required": 6.0}
+                        ]
+                    },
+                    {
+                        "id": 142,
+                        "rate_amount": 2.0,
+                        "sources": [
+                            {"item_id": 134, "q_required": 6.0, "preserve": true}
                         ]
                     }
                 ]
@@ -316,6 +361,16 @@
                 "q_limit": 1.0,
                 "slot": "Body Armor"
             },
+            {
+                "id": 137,
+                "name": "🩼Lever U1",
+                "attribs": [
+                    [143, 10.0]
+                ],
+                "abilities": [144],
+                "storage_type": "l"
+            },
+            {"id": 145, "name": "Lever U1 Result", "storage_type": "u"},
             {
                 "id": 133,
                 "name": "👕Natural Armour",
@@ -444,19 +499,12 @@
                 "description": "Can be carved into weapons or torches or burned for fuel."
             },
             {
-                "id": 91,
-                "name": "@Player Level",
-                "description": "Highest floor boss defeated + 1 (milestone leveling, not xp). So, it matches the floor your party is currently on, unless you want to go back and fight weaker enemies.",
-                "storage_type": "u",
-                "q_limit": 6.0,
-                "toplevel": true
-            },
-            {
                 "id": 113,
-                "name": "Restarts",
+                "name": "🛟Restarts",
                 "description": "Divide by XL, so a level 5 character could restart up to 4 times. Lower level restarts are significantly more forgiving.",
                 "storage_type": "u",
-                "q_limit": 20.0
+                "q_limit": 20.0,
+                "toplevel": true
             },
             {"id": 111, "name": "🪦Tomb"},
             {
@@ -664,7 +712,7 @@
                     }
                 ],
                 "entrance_reqs": [
-                    {"item_id": 91, "val_required": 6.0}
+                    {"attrib_id": 5, "val_required": 6.0}
                 ],
                 "zones": [
                     {
@@ -678,11 +726,23 @@
             {
                 "id": 97,
                 "name": "U1Boss",
-                "description": "Defeat the boss to gain access to the next floor.",
-                "dimensions": [5, 5],
+                "description": "Defeat the pack and then level up your party to 2.",
+                "dimensions": [9, 10],
+                "entrance_reqs": [
+                    {"item_id": 145, "val_required": 10.0}
+                ],
                 "zones": [
                     {
-                        "coords": [3, 1, 5, 2]
+                        "coords": [1, 8, 3, 10]
+                    },
+                    {
+                        "coords": [7, 8, 9, 10]
+                    },
+                    {
+                        "coords": [1, 6, 2, 7]
+                    },
+                    {
+                        "coords": [8, 6, 9, 7]
                     }
                 ]
             },
@@ -695,7 +755,7 @@
                     {
                         "loc2_id": 36,
                         "door1": [1, 1],
-                        "door2": [2, 5]
+                        "door2": [2, 4]
                     },
                     {
                         "loc2_id": 37,
@@ -712,39 +772,53 @@
             {
                 "id": 36,
                 "name": "U1R2",
-                "description": "From here on, your group will have to decide what enemies and items are found. There are [GM Tools](/play/location/76) available.",
-                "dimensions": [5, 5],
+                "description": "There don't seem to be any enemies in this room. Instead, there are a couple of scales and a lever.",
+                "dimensions": [8, 4],
+                "items": [
+                    {
+                        "item_id": 134,
+                        "quantity": 2.0,
+                        "position": [1, 1]
+                    },
+                    {
+                        "item_id": 137,
+                        "quantity": 1.0,
+                        "position": [6, 1]
+                    },
+                    {
+                        "item_id": 140,
+                        "quantity": 3.0,
+                        "position": [3, 1]
+                    }
+                ],
                 "destinations": [
                     {
                         "loc2_id": 97,
-                        "door1": [2, 1],
-                        "door2": [2, 5]
+                        "door1": [8, 2],
+                        "door2": [5, 10]
                     }
                 ],
                 "zones": [
                     {
-                        "coords": [3, 1, 5, 2]
+                        "coords": [4, 1, 5, 2]
                     }
                 ]
             },
             {
                 "id": 98,
                 "name": "U2Boss",
-                "dimensions": [4, 4],
-                "entrance_reqs": [
-                    {"item_id": 91, "val_required": 2.0}
-                ]
+                "dimensions": [4, 4]
             },
             {
                 "id": 92,
                 "name": "U2R1",
-                "description": "Congratulations, you've made it to the second floor! Don't get your hopes up yet, though, there's still a long way to reach the surface.",
+                "description": "Congratulations, you've made it to the second floor! Don't get too excited yet, though, there's still a long way to reach the surface.",
                 "dimensions": [4, 4],
                 "destinations": [
                     {
                         "loc2_id": 97,
                         "door1": [2, 4],
-                        "door2": [2, 1]
+                        "door2": [8, 1]
                     },
                     {
                         "loc2_id": 98,
@@ -753,7 +827,7 @@
                     }
                 ],
                 "entrance_reqs": [
-                    {"item_id": 91, "val_required": 2.0}
+                    {"attrib_id": 5, "val_required": 2.0}
                 ]
             },
             {
@@ -774,7 +848,7 @@
                     }
                 ],
                 "entrance_reqs": [
-                    {"item_id": 91, "val_required": 3.0}
+                    {"attrib_id": 5, "val_required": 3.0}
                 ]
             },
             {
@@ -800,16 +874,13 @@
                     }
                 ],
                 "entrance_reqs": [
-                    {"item_id": 91, "val_required": 4.0}
+                    {"attrib_id": 5, "val_required": 4.0}
                 ]
             },
             {
                 "id": 100,
                 "name": "U4RBoss",
-                "dimensions": [4, 4],
-                "entrance_reqs": [
-                    {"item_id": 91, "val_required": 4.0}
-                ]
+                "dimensions": [4, 4]
             },
             {
                 "id": 95,
@@ -829,17 +900,14 @@
                     }
                 ],
                 "entrance_reqs": [
-                    {"item_id": 91, "val_required": 5.0}
+                    {"attrib_id": 5, "val_required": 5.0}
                 ]
             },
             {
                 "id": 101,
                 "name": "U5RBoss",
                 "description": "Final boss.",
-                "dimensions": [4, 4],
-                "entrance_reqs": [
-                    {"item_id": 91, "val_required": 5.0}
-                ]
+                "dimensions": [4, 4]
             }
         ],
         "characters": [
@@ -859,7 +927,11 @@
                     [110, true]
                 ],
                 "abilities": [53, 59, 108, 115],
-                "location_id": 76
+                "location_id": 76,
+                "items": [
+                    {"item_id": 114, "quantity": 1.0, "slot": "Main Hand"},
+                    {"item_id": 133, "quantity": 1.0, "slot": "Body Armor"}
+                ]
             },
             {
                 "id": 39,
@@ -1003,7 +1075,7 @@
             {
                 "id": 119,
                 "name": "👹Roarness",
-                "description": "Ogre Druid, a player character. As a child, he imagined being a ferocious animal, disappointed at how most ogres he knew are relatively passive (Str +1, Int -1).",
+                "description": "Ogre Druid, an example player character. As a child, he imagined being a ferocious animal, disappointed at how most ogres he knew were relatively passive (Str +1, Int -1).",
                 "attribs": [
                     [3, 18.0],
                     [4, 4.0],
@@ -1075,10 +1147,105 @@
                 "travel_party": "Main Party",
                 "items": [
                     {"item_id": 23, "quantity": 1.0, "slot": "Light Source"},
-                    {"item_id": 24, "quantity": 15.0, "slot": "Quiver"},
+                    {"item_id": 24, "quantity": 3.0, "slot": "Quiver"},
                     {"item_id": 25, "quantity": 1.0},
                     {"item_id": 27, "quantity": 1.0, "slot": "Main Hand"},
                     {"item_id": 132, "quantity": 1.0, "slot": "Body Armor"}
+                ]
+            },
+            {
+                "id": 146,
+                "name": "wolf",
+                "description": "Not particularly strong, but rarely hunts alone. Duplicate as \"wolf 1\", \"wolf 2\" et cetera.",
+                "attribs": [
+                    [3, 9.0],
+                    [5, 1.0],
+                    [6, 8.0],
+                    [7, 4.0],
+                    [8, 9.0],
+                    [12, 8.0],
+                    [105, 6.0],
+                    [106, 9.0],
+                    [110, true]
+                ],
+                "abilities": [53, 59, 107, 108, 115],
+                "position": [1, 1],
+                "travel_party": "Wolf Pack",
+                "items": [
+                    {"item_id": 114, "quantity": 1.0, "slot": "Main Hand"},
+                    {"item_id": 133, "quantity": 1.0, "slot": "Body Armor"}
+                ]
+            },
+            {
+                "id": 148,
+                "name": "wolf 2",
+                "description": "Not particularly strong, but rarely hunts alone. Duplicate as \"wolf 1\", \"wolf 2\" et cetera.",
+                "attribs": [
+                    [3, 9.0],
+                    [5, 1.0],
+                    [6, 8.0],
+                    [7, 4.0],
+                    [8, 9.0],
+                    [12, 8.0],
+                    [105, 6.0],
+                    [106, 9.0],
+                    [110, true]
+                ],
+                "abilities": [53, 59, 107, 108, 115],
+                "location_id": 97,
+                "position": [2, 2],
+                "travel_party": "Wolf Pack",
+                "items": [
+                    {"item_id": 114, "quantity": 1.0, "slot": "Main Hand"},
+                    {"item_id": 133, "quantity": 1.0, "slot": "Body Armor"}
+                ]
+            },
+            {
+                "id": 149,
+                "name": "wolf 3",
+                "description": "Not particularly strong, but rarely hunts alone. Duplicate as \"wolf 1\", \"wolf 2\" et cetera.",
+                "attribs": [
+                    [3, 9.0],
+                    [5, 1.0],
+                    [6, 8.0],
+                    [7, 4.0],
+                    [8, 9.0],
+                    [12, 8.0],
+                    [105, 6.0],
+                    [106, 9.0],
+                    [110, true]
+                ],
+                "abilities": [53, 59, 107, 108, 115],
+                "location_id": 97,
+                "position": [6, 3],
+                "travel_party": "Wolf Pack",
+                "items": [
+                    {"item_id": 114, "quantity": 1.0, "slot": "Main Hand"},
+                    {"item_id": 133, "quantity": 1.0, "slot": "Body Armor"}
+                ]
+            },
+            {
+                "id": 147,
+                "name": "wolf chief",
+                "description": "Not particularly strong, but rarely hunts alone. Duplicate as \"wolf 1\", \"wolf 2\" et cetera.",
+                "attribs": [
+                    [3, 15.0],
+                    [5, 2.0],
+                    [6, 8.0],
+                    [7, 4.0],
+                    [8, 15.0],
+                    [12, 8.0],
+                    [105, 6.0],
+                    [106, 9.0],
+                    [110, true]
+                ],
+                "abilities": [53, 59, 107, 108, 115],
+                "location_id": 97,
+                "position": [4, 1],
+                "travel_party": "Wolf Pack",
+                "items": [
+                    {"item_id": 114, "quantity": 1.0, "slot": "Main Hand"},
+                    {"item_id": 133, "quantity": 1.0, "slot": "Body Armor"}
                 ]
             }
         ],
@@ -1124,6 +1291,12 @@
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
+                        "label": "Can Travel 30ft",
+                        "infield": {"role": "target char", "field_mode": "dist"},
+                        "op_application": "<",
+                        "val_required": 7.0
+                    },
+                    {
                         "label": "Can Fight",
                         "infield": {"attrib_id": 3},
                         "op_application": ">="
@@ -1148,6 +1321,30 @@
                     {
                         "label": "Standard Item Impact",
                         "infield": {"child_of_anchor": true, "attrib_id": 14}
+                    },
+                    {
+                        "label": "Reduced Stat Impact",
+                        "infield": {"role": "target char", "attrib_id": 12},
+                        "op_application": "-",
+                        "op_transform": "/",
+                        "val_transform": 5.0
+                    },
+                    {
+                        "label": "Standard Item Impact",
+                        "infield": {"role": "target char", "child_of_anchor": true, "attrib_id": 13},
+                        "op_application": "-"
+                    },
+                    {
+                        "label": "Standard XL Impact",
+                        "infield": {"role": "target char", "attrib_id": 5},
+                        "op_application": "-",
+                        "op_transform": "/",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "label": "Threshold Adjustment",
+                        "op_transform": "c",
+                        "val_transform": 3.0
                     },
                     {"op_application": ":=", "op_transform": "floor"}
                 ],
@@ -1255,9 +1452,9 @@
             {
                 "id": 59,
                 "name": "Drops",
-                "description": "Number of items dropped by an enemy on death.\r\n1/8 chance that at least something will be dropped.",
+                "description": "1/8 chance that an item is dropped by an enemy on death.",
                 "outcome_type": "numeric",
-                "numeric_range": [-13, 2],
+                "numeric_range": [-5, 1],
                 "determinants": [
                     {
                         "infield": {"attrib_id": 3},
@@ -1422,10 +1619,10 @@
             {
                 "id": 117,
                 "name": "Populate Room — Cleared Encounter Chance",
-                "description": "If the room has already been cleared, there is a good chance that no new enemies will be found when you enter the room again. Even if they're there, they're likely to hide and not come out to fight.\r\n\r\nFailure indicates that there *are* enemies to encounter, so roll for **Number of Enemies.**",
+                "description": "If the room has already been cleared, then most likely there will be no new enemies when you enter the room again, or at least they'll hide and not come out to fight. Also, roll when resting.\r\n\r\nFailure indicates that there *are* enemies to encounter, so roll for **Number of Enemies.**",
                 "numeric_range": [1, 20],
                 "determinants": [
-                    {"label": "Threshold", "op_transform": "c", "val_transform": 7.0}
+                    {"label": "Threshold", "op_transform": "c", "val_transform": 10.0}
                 ],
                 "chained": [
                     {
@@ -1503,9 +1700,30 @@
                 "selection_attrib_id": 62
             },
             {
+                "id": 144,
+                "name": "Pull Lever U1",
+                "outcome_type": "determined",
+                "determinants": [
+                    {
+                        "infield": {"role": "at", "field_mode": "qty", "item_id": 134, "recipe_id": 135}
+                    },
+                    {
+                        "infield": {"role": "at", "field_mode": "qty", "item_id": 140, "recipe_id": 138},
+                        "op_application": "*"
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 145},
+                        "op_application": ":="
+                    }
+                ]
+            },
+            {
                 "id": 112,
-                "name": "Restart in Entry Cavern",
-                "description": "Player characters can do this instead of die, but only for a limited number of times, especially at higher levels.\r\n\r\nUnable to fight anymore, you manage to drag your body into a hidden shaft and scramble back through it to the **Entry Cavern.**",
+                "name": "🛟Restart in Entry Cavern",
+                "description": "Player characters can do this instead of die, but only for a limited number of times, especially at higher levels.\r\n\r\nUnable to fight anymore, you manage to drag your body into a hidden shaft and scramble back through it to the **Entry Cavern.**\r\n\r\nAfter a *Long Rest,* your **HP** is reset to max.",
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -1535,14 +1753,14 @@
             {
                 "id": 52,
                 "name": "✦Shoot",
-                "description": "- **On Major Success:** additional shot\r\n- **On Major Failure:** the arrow breaks or the ammo is lost\r\n\r\nIf any opponent is within melee range, then roll at disadvantage.",
+                "description": "- **On Major Success:** additional shot\r\n- **On Major Failure:** the arrow breaks or the ammo is lost\r\n\r\nIf any opponent is within melee range, even if it's not the one you're shooting at, then roll at disadvantage.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
-                        "label": "At Range",
+                        "label": "Max Range 40ft",
                         "infield": {"role": "target char", "field_mode": "dist"},
-                        "op_application": ">=",
-                        "val_required": 2.0
+                        "op_application": "<",
+                        "val_required": 9.0
                     },
                     {
                         "label": "Can Fight",
@@ -1842,8 +2060,8 @@
     },
     "general data": {
         "piles": [
-            {"item_id": 91, "quantity": 1.0},
-            {"item_id": 113, "quantity": 20.0}
+            {"item_id": 113, "quantity": 20.0},
+            {"item_id": 145, "quantity": 6.0}
         ]
     },
     "progress": []

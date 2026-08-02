@@ -79,13 +79,6 @@
                             </option>
                         {% endfor %}
                     </optgroup>
-                    <optgroup label="Items">
-                        {% for i in all_items %}
-                            <option value="{{ i.id }}" {{ 'selected' if subject and subject.id == i.id }}>
-                                {{ i.name }}
-                            </option>
-                        {% endfor %}
-                    </optgroup>
                 </select>
             </span>
         </span>

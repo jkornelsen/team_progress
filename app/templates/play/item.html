@@ -370,7 +370,9 @@
                                   data-q-req="{{ entry.q_required }}" 
                                   data-preserve="{{ 'true' if entry.preserve else 'false' }}">
                                 
-                                {% if not entry.preserve %}
+                                {% if entry.preserve %}
+                                    <span class="q-req-display">Requires {{ entry.q_required | formatNum }}</span>
+                                {% else %}
                                     {# Consumables: [Cost] | [Potential Yield] #}
                                     <span class="q-req-display">Takes {{ entry.q_required | formatNum }}{{ ' Each' if entry.item.q_limit and entry.item.q_limit > 1 else '' }}</span>
                                 {% endif %}

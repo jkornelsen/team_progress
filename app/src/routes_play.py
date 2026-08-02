@@ -998,8 +998,6 @@ def play_event(id):
         role_entities=eligible_role_entities,
         fields_not_met=fields_not_met,
         related_entities=related,
-        all_items=Item.query.filter_by(
-            game_token=game_token).order_by(name_stripped()).all(),
         all_chars=Character.query.filter_by(
             game_token=game_token).order_by(name_stripped()).all(),
         all_locs=Location.query.filter_by(
