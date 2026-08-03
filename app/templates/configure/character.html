@@ -110,7 +110,7 @@
                     <span>Value</span>
                     <span></span>
                 </div>
-                {% for av in character.attrib_values %}
+                {% for av in character.attrib_values | sort(attribute='attrib.name') %}
                     {{ attrib_row(loop.index0, av, all_attribs) }}
                 {% endfor %}
             </div>
@@ -138,7 +138,7 @@
                     <span></span>
                 </div>
 
-                {% for pile in character.piles %}
+                {% for pile in character.piles | sort(attribute='item.name') %}
                     {{ inv_row(loop.index0, pile, all_items) }}
                 {% endfor %}
             </div>
@@ -158,7 +158,7 @@
                 <style>
                     .ability-row { --grid-cols: 12fr 1fr; }
                 </style>
-                {% for evt in character.abilities|sort(attribute='name') %}
+                {% for evt in character.abilities | sort(attribute='name') %}
                     {{ ability_row(loop.index0, evt.id, all_events) }}
                 {% endfor %}
             </div>

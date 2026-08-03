@@ -5,6 +5,7 @@
 ---- functional, tightening, quality of life ----
 
 get local items to produce to the correct piles in lever room
+    the u5 wall works better -- take a look at how events handle it
 
 recipe id gets saved when not needed
     "infield": {
@@ -32,8 +33,6 @@ applying a long list of effects sometimes causes one or more to mess up
 corpse was dropped at 1,1 instead of subject's coordinates
     also when subject is at 1,1 it avoids the subject which it shouldn't do
 
-empty zone label and color are getting saved as literal string "None" in json
-
 don't show duplicate destinations in play location
     same door positions (null in the example)
     maybe shouldn't allow in database
@@ -50,7 +49,7 @@ CONTEXT:  while updating tuple (0,46) in relation "characters"
 [SQL: UPDATE characters SET position=%(position)s::INTEGER[] WHERE characters.game_token = %(characters_game_token)s AND characters.id = %(characters_id)s]
 [parameters: {'position': [9, 4], 'characters_game_token': '128a971e-9667-4496-9d0d-8ce491b31780', 'characters_id': 8}]
 
-for randomly placing an item, hide calculation section and lock (require) roll result
+in event configure for randomly placing an item, hide calculation section and lock (require) roll result
 
 ---- scenario ----
 
@@ -73,22 +72,17 @@ tethered one
         still must hear convo (branched) about atlanth's revenge plan
 
 dungeon crawl
+    elementals would make more sense in the depths
     mask all locations other than the Entry Cavern
-    generating enemies and items seems doable but asking users to
-        create grid layouts and destination networks seems like too much
-        make pre-built ones and they can always change them if they want
-    try setting up more rooms with positioned enemies and see if random is better
-        could have the depths be less predefined
-    room layouts
-        narrow wall blocking an inner room
-            the door could be a zone, possibly blocked with instructions to unblock
-            or a local item -- bars or something
-        enemies are on the other side of a u-shaped corridor
-        deep water blocking direct path to enemies but can walk around wall
-            one flying enemy
-            shallow water on the other side
-        spiral
-            minotaur boss at center
+    archer abilities
+        double shot
+            attempt to hit two different enemies (cannot be the same one)
+        disengaging or interrupting or knockback or crippling shot
+        special arrow only once per fight or once per floor
+    druid
+        roar to fear or taunt enemies or buff self
+        summon moss
+            recall a fragment of your sentience
 
 mine helium-3 with location production
     then char converts to cannisters

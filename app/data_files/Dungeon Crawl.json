@@ -1,14 +1,14 @@
 {
     "overall settings": {
         "title": "Dungeon Crawl",
-        "description": "Your party was responding to a distress signal when suddenly, the ground below collapsed, and all fell down a nearly vertical shaft. No one seems to be injured *(yet)*. Doubtless there are {lightcoral|enemies} in the surrounding caverns — good source of {lightcoral|XP}, an optimist would say.\r\n\r\nStart by adding a set of 1-4 characters to play — see **GM Tools.** Then craft rudimentary supplies before embarking on an escape to the surface or delving deeper.",
+        "description": "Your party was responding to a distress signal when suddenly, the ground below collapsed, and all fell down a nearly vertical shaft. No one seems to be injured *(yet)*. Doubtless there are {lightcoral|enemies} in the surrounding caverns—good source of {lightcoral|XP}, an optimist would say.\r\n\r\nStart by adding a set of 1-4 characters to play—see **GM Tools.** Then craft rudimentary supplies before embarking on an escape to the surface or delving deeper.",
         "win_reqs": [
             {"item_id": 29, "quantity": 6.0}
         ],
         "tag_introduce_order": 54,
-        "tag_best_order": 57,
+        "tag_best_order": 40,
         "tag_progress_type": "RPG",
-        "tag_complete": "05 Starter Kit / Needs Rooms"
+        "tag_complete": "07 Complete Framework / Needs Playthrough"
     },
     "entities": {
         "attribs": [
@@ -23,21 +23,16 @@
                 "description": "Reduces damage depending on the type of attack. Good against bladed weapons."
             },
             {
-                "id": 104,
-                "name": "Bleeding",
-                "description": "Turns remaining for the negative status to last."
-            },
-            {
                 "id": 15,
                 "name": "Brightness",
                 "description": "More light makes it easier to perceive enemies and details, and may affect light-sensitive creatures. Complete absence of light may even mean running into walls."
             },
-            {
-                "id": 19,
-                "name": "Burning",
-                "description": "Turns remaining for the negative status to last. Fire does extra damage to undead."
-            },
             {"id": 110, "name": "Can Drop Corpse", "is_binary": true},
+            {
+                "id": 165,
+                "name": "🚦Color",
+                "enum_list": ["Green", "Red"]
+            },
             {
                 "id": 16,
                 "name": "Damage",
@@ -95,11 +90,6 @@
                 "description": "How full magic reserves can be for a character. Also determines MP regen rate."
             },
             {
-                "id": 18,
-                "name": "Poisoned",
-                "description": "Turns remaining for the negative status to last."
-            },
-            {
                 "id": 9,
                 "name": "Quality",
                 "description": "Higher quality gives better bonuses and is more difficult to craft."
@@ -113,6 +103,17 @@
                 "id": 11,
                 "name": "Stamina",
                 "description": "Reserves of physical energy used for big actions."
+            },
+            {
+                "id": 19,
+                "name": "Status Effect Turns",
+                "description": "Turns remaining for the status to last."
+            },
+            {
+                "id": 161,
+                "name": "Status Effect Type",
+                "description": "- **Bleeding:** from cutting weapons\r\n- **Stunned:** reduces damage for the next turn\r\n- **Burning:** fire does extra damage to undead\r\n- **Poisoned:** works against living enemies",
+                "enum_list": ["(None)", "Bleeding", "Stunned", "Burning", "Poisoned"]
             },
             {
                 "id": 6,
@@ -160,7 +161,7 @@
             {
                 "id": 80,
                 "name": "Which Class",
-                "description": "Add class bonuses (shown in {SeaGreen|green}) to the species modifiers. The *Health* values should be added to both **HP/Lvl** and **HP Initial,** and half of the extra **Int** also gets added to **MP.**\r\n\r\nThen, add the listed events to the character's abilities. *Recommended:* For player characters and bosses, create at least one new ability that only that character can do, by duplicating an existing event and modifying it.\r\n\r\n- **Fighter:** {SeaGreen|+2 Health, +3 Str, +2 Dex;} Charge\r\n- **Barbarian:** {SeaGreen|+3 Health, +3 Str, +2 Dex;} Charge\r\n- **Archer:** {SeaGreen|+3 Dex;} Shoot\r\n- **Rogue:** {SeaGreen|+4 Dex;} Stealth\r\n- **Druid:** {SeaGreen|+2 Int, +1 Str, +1 Dex;} Vines, Bear Form, Charge\r\n- **Mage:** -{SeaGreen|2 Health, +4 Int, -1 Str;} Magic Missile, Fireball\r\n\r\nFor enemies such as animals and plants, the specific kind is instead of a class. For example, elephants have more hit points and less dexterity than rats, and they can grab or spray water with their trunks.",
+                "description": "Add class bonuses (shown in {SeaGreen|green}) to the species modifiers. The *Health* values should be added to both **HP/Lvl** and **HP Initial,** and half of the extra **Int** also gets added to **MP.**\r\n\r\nThen, add the listed events to the character's abilities. *Recommended:* For player characters and bosses, create at least one new ability that only that character can do, by duplicating an existing event and modifying it.\r\n\r\n- **Fighter:** {SeaGreen|+2 Health, +3 Str, +2 Dex;} Charge\r\n- **Barbarian:** {SeaGreen|+3 Health, +3 Str, +2 Dex;} Charge\r\n- **Archer:** {SeaGreen|+3 Dex;} Shoot, Tumble Shot\r\n- **Rogue:** {SeaGreen|+4 Dex;} Stealth\r\n- **Druid:** {SeaGreen|+2 Int, +1 Str, +1 Dex;} Vines, Bear Form, Call Moss, Charge\r\n- **Mage:** -{SeaGreen|2 Health, +4 Int, -1 Str;} Magic Missile, Fireball\r\n\r\nFor enemies such as animals and plants, the specific kind is instead of a class. For example, elephants have more hit points and less dexterity than rats, and they can grab or spray water with their trunks.",
                 "enum_list": [
                     "Fighter: shield",
                     "Barbarian: two-handed melee",
@@ -362,16 +363,6 @@
                 "slot": "Body Armor"
             },
             {
-                "id": 137,
-                "name": "🩼Lever U1",
-                "attribs": [
-                    [143, 10.0]
-                ],
-                "abilities": [144],
-                "storage_type": "l"
-            },
-            {"id": 145, "name": "Lever U1 Result", "storage_type": "u"},
-            {
                 "id": 133,
                 "name": "👕Natural Armour",
                 "description": "Such as an animal's own hide.",
@@ -506,7 +497,32 @@
                 "q_limit": 20.0,
                 "toplevel": true
             },
+            {"id": 153, "name": "🪢Rope"},
             {"id": 111, "name": "🪦Tomb"},
+            {
+                "id": 137,
+                "name": "🩼U1 Lever",
+                "attribs": [
+                    [143, 10.0]
+                ],
+                "abilities": [144],
+                "storage_type": "l"
+            },
+            {"id": 145, "name": "U1 Lever Result", "storage_type": "u"},
+            {
+                "id": 154,
+                "name": "U3 Bridge Repaired",
+                "description": "1 means repaired.",
+                "storage_type": "u",
+                "q_limit": 1.0
+            },
+            {
+                "id": 177,
+                "name": "🧱U5 Weak Stone Wall",
+                "abilities": [178],
+                "storage_type": "l",
+                "q_limit": 7.0
+            },
             {
                 "id": 103,
                 "name": "🗡️Unarmed",
@@ -541,7 +557,7 @@
         "locations": [
             {
                 "id": 31,
-                "name": "D1R1",
+                "name": "D1A Same Enemy",
                 "description": "The first room down from the entry floor, where the main dive begins. Again, there is a skittering in the shadows. Probably a rat like last time, although the squeaking noises feel thinner, grating.",
                 "dimensions": [4, 7],
                 "destinations": [
@@ -564,7 +580,7 @@
             },
             {
                 "id": 34,
-                "name": "D1R2",
+                "name": "D1B",
                 "description": "From here on, your group will have to decide what enemies and items are found. There are [GM Tools](/play/location/76) available.\r\nPre-built room layouts have not yet been done for the deep side, so you'll need to add those too.",
                 "dimensions": [5, 6],
                 "zones": [
@@ -625,7 +641,7 @@
             },
             {
                 "id": 32,
-                "name": "Entry Floor Room 2",
+                "name": "Entry Floor B Enemy",
                 "description": "North of Entry Cavern. There is a skittering noise in the shadows. (This is the only enemy on the entry floor).",
                 "dimensions": [3, 6],
                 "items": [
@@ -650,7 +666,7 @@
             },
             {
                 "id": 37,
-                "name": "Entry Floor Room 3",
+                "name": "Entry Floor C Up",
                 "description": "Staircase up, leading to earthbound enemies that get stronger nearer the surface: animals, plants, humanoid races, constructs.",
                 "dimensions": [5, 8],
                 "zones": [
@@ -667,7 +683,7 @@
             },
             {
                 "id": 35,
-                "name": "Entry Floor Room 4",
+                "name": "Entry Floor D Down",
                 "description": "Staircase down, leading to otherworldly enemies that get stronger in the depths: undead, dragons, and demons.",
                 "dimensions": [6, 5],
                 "destinations": [
@@ -700,15 +716,28 @@
                 "toplevel": true
             },
             {
+                "id": 151,
+                "name": "Inner Cajon",
+                "description": "Not much room to move around inside.",
+                "dimensions": [2, 2],
+                "zones": [
+                    {
+                        "coords": [1, 1, 2, 2],
+                        "color": "Tan",
+                        "prevents_travel": false
+                    }
+                ]
+            },
+            {
                 "id": 96,
                 "name": "Surface",
                 "description": "You've escaped the dungeon! Breathe fresh air and remember the sight of green grass and trees.",
-                "dimensions": [4, 4],
+                "dimensions": [8, 8],
                 "destinations": [
                     {
                         "loc2_id": 101,
-                        "door1": [2, 4],
-                        "door2": [2, 1]
+                        "door1": [2, 8],
+                        "door2": [10, 1]
                     }
                 ],
                 "entrance_reqs": [
@@ -716,39 +745,40 @@
                 ],
                 "zones": [
                     {
-                        "coords": [1, 1, 4, 4],
+                        "coords": [1, 3, 8, 8],
                         "label": "Grass",
-                        "color": "green",
+                        "color": "forestgreen",
+                        "prevents_travel": false
+                    },
+                    {
+                        "coords": [2, 3, 8, 7],
+                        "label": "Grass",
+                        "color": "springgreen",
+                        "prevents_travel": false
+                    },
+                    {
+                        "coords": [3, 3, 8, 6],
+                        "label": "Grass",
+                        "color": "lightgreen",
+                        "prevents_travel": false
+                    },
+                    {
+                        "coords": [1, 1, 8, 1],
+                        "label": "Sunlit Ground",
+                        "color": "lemonchiffon",
+                        "prevents_travel": false
+                    },
+                    {
+                        "coords": [1, 2, 8, 2],
+                        "label": "Sunlit Ground",
+                        "color": "khaki",
                         "prevents_travel": false
                     }
                 ]
             },
             {
-                "id": 97,
-                "name": "U1Boss",
-                "description": "Defeat the pack and then level up your party to 2.",
-                "dimensions": [9, 10],
-                "entrance_reqs": [
-                    {"item_id": 145, "val_required": 10.0}
-                ],
-                "zones": [
-                    {
-                        "coords": [1, 8, 3, 10]
-                    },
-                    {
-                        "coords": [7, 8, 9, 10]
-                    },
-                    {
-                        "coords": [1, 6, 2, 7]
-                    },
-                    {
-                        "coords": [8, 6, 9, 7]
-                    }
-                ]
-            },
-            {
                 "id": 33,
-                "name": "U1R1",
+                "name": "U1A Moss",
                 "description": "The first room up from the entry floor, where the main journey begins. There is a narrow passage, with a suspicious-looking moss all but blocking the middle, and spores are being shot at you from the far end.",
                 "dimensions": [3, 8],
                 "destinations": [
@@ -771,7 +801,7 @@
             },
             {
                 "id": 36,
-                "name": "U1R2",
+                "name": "U1B Scales",
                 "description": "There don't seem to be any enemies in this room. Instead, there are a couple of scales and a lever.",
                 "dimensions": [8, 4],
                 "items": [
@@ -805,109 +835,446 @@
                 ]
             },
             {
-                "id": 98,
-                "name": "U2Boss",
-                "dimensions": [4, 4]
+                "id": 97,
+                "name": "U1C Pack",
+                "description": "Defeat the pack and then level up your party to 2.",
+                "dimensions": [9, 10],
+                "entrance_reqs": [
+                    {"item_id": 145, "val_required": 10.0}
+                ],
+                "zones": [
+                    {
+                        "coords": [1, 8, 3, 10]
+                    },
+                    {
+                        "coords": [7, 8, 9, 10]
+                    },
+                    {
+                        "coords": [1, 6, 2, 7]
+                    },
+                    {
+                        "coords": [8, 6, 9, 7]
+                    }
+                ]
             },
             {
                 "id": 92,
-                "name": "U2R1",
-                "description": "Congratulations, you've made it to the second floor! Don't get too excited yet, though, there's still a long way to reach the surface.",
-                "dimensions": [4, 4],
+                "name": "U2A Water",
+                "description": "Congratulations, you've made it to the second floor! Don't get too excited yet, though, there's still a long way to reach the surface.\r\n\r\nIn this room, the enemies are behind deep water. Flying and aquatic creatures don't mind it, but anyone else would have to swim one tile per turn, completely preventing them from fighting, with the risk of dousing torches to boot.\r\n\r\nOn the other side is shallow water, so you can wade 2 tiles per turn (10 ft) instead of walking 3 tiles.\r\n\r\n**Setup:**\r\n\r\n- Place a level 2 **Spore colony** (meaning upgrade the existing one's hitpoint stats) behind the deep water at position 1,5. It cannot shoot at targets where line of sight is blocked by the central pillar.\r\n- Place a level 2 **Wolf** next to it at position 2,4. The wolf will wait unless it gets attacked from range or smells targets coming around the corner.",
+                "dimensions": [7, 9],
                 "destinations": [
                     {
                         "loc2_id": 97,
-                        "door1": [2, 4],
+                        "door1": [3, 9],
                         "door2": [8, 1]
                     },
                     {
-                        "loc2_id": 98,
+                        "loc2_id": 150,
                         "door1": [2, 1],
-                        "door2": [2, 4]
+                        "door2": [5, 4]
                     }
                 ],
                 "entrance_reqs": [
                     {"attrib_id": 5, "val_required": 2.0}
+                ],
+                "zones": [
+                    {
+                        "coords": [1, 6, 3, 7],
+                        "label": "Deep Water",
+                        "color": "DarkBlue",
+                        "prevents_travel": false
+                    },
+                    {
+                        "coords": [6, 6, 7, 6],
+                        "label": "Shallow Water",
+                        "color": "LightBlue",
+                        "prevents_travel": false
+                    },
+                    {
+                        "coords": [4, 3, 5, 7]
+                    }
+                ]
+            },
+            {
+                "id": 150,
+                "name": "U2B Bounce",
+                "description": "Of all the things you were expecting to find underground, this wasn't one of them. Rubbery spheres hit the cave sides in a highly chaotic fashion. Some of the red color has rubbed off onto the stone as well.\r\n\r\n**Setup:** Duplicate the ball for 2 more. Roll **Grid Coordinates** for the starting position of each (without attacking).",
+                "dimensions": [5, 5],
+                "zones": [
+                    {
+                        "coords": [2, 2, 4, 4],
+                        "label": "Faint Coloring",
+                        "color": "RosyBrown",
+                        "prevents_travel": false
+                    }
+                ]
+            },
+            {
+                "id": 98,
+                "name": "U2C Cardboard",
+                "description": "Alright, all you have to do before levelling up your party is defeat the... wait, does that thing even fight?",
+                "dimensions": [5, 3],
+                "destinations": [
+                    {
+                        "loc2_id": 150,
+                        "door1": [5, 1],
+                        "door2": [1, 3]
+                    }
                 ]
             },
             {
                 "id": 93,
-                "name": "U3R1",
-                "description": "Third floor.",
-                "dimensions": [4, 4],
+                "name": "U3A Bridge",
+                "description": "The way through the third floor is blocked by a deep fissure. A rope bridge crosses, but the middle must be repaired.",
+                "abilities": [152],
+                "dimensions": [4, 7],
+                "items": [
+                    {
+                        "item_id": 153,
+                        "quantity": 10.0,
+                        "position": [1, 1]
+                    }
+                ],
                 "destinations": [
                     {
                         "loc2_id": 98,
-                        "door1": [2, 4],
-                        "door2": [2, 1]
+                        "door1": [4, 1],
+                        "door2": [1, 3]
                     },
                     {
-                        "loc2_id": 99,
-                        "door1": [2, 1],
-                        "door2": [2, 4]
+                        "loc2_id": 155,
+                        "door1": [3, 7],
+                        "door2": [2, 1]
                     }
                 ],
                 "entrance_reqs": [
                     {"attrib_id": 5, "val_required": 3.0}
+                ],
+                "zones": [
+                    {
+                        "coords": [1, 4, 1, 4],
+                        "label": "Deep Fissure",
+                        "color": "Black"
+                    },
+                    {
+                        "coords": [3, 4, 4, 4],
+                        "label": "Deep Fissure",
+                        "color": "Black"
+                    },
+                    {
+                        "coords": [2, 3, 2, 3],
+                        "label": "Rope Bridge",
+                        "color": "Peru",
+                        "prevents_travel": false
+                    },
+                    {
+                        "coords": [2, 5, 2, 5],
+                        "label": "Rope Bridge",
+                        "color": "Peru",
+                        "prevents_travel": false
+                    },
+                    {
+                        "coords": [2, 4, 2, 4],
+                        "label": "Broken Bridge",
+                        "color": "DarkSlateGray"
+                    }
+                ]
+            },
+            {
+                "id": 155,
+                "name": "U3B Grass",
+                "description": "A patch of coarse grass survives for grazing. So there must be a shaft somewhere to let in light occasionally.",
+                "dimensions": [9, 8],
+                "entrance_reqs": [
+                    {"item_id": 154, "val_required": 1.0}
+                ],
+                "zones": [
+                    {
+                        "coords": [3, 1, 5, 5]
+                    },
+                    {
+                        "coords": [8, 6, 9, 8]
+                    },
+                    {
+                        "coords": [6, 1, 7, 3],
+                        "label": "Grass",
+                        "color": "DarkOliveGreen",
+                        "prevents_travel": false
+                    }
                 ]
             },
             {
                 "id": 99,
-                "name": "U3RBoss",
-                "dimensions": [4, 4]
+                "name": "U3C Traffic",
+                "description": "Bright blinking lights are a stark contrast to the normally dim, colorless dungeon.",
+                "dimensions": [7, 5],
+                "destinations": [
+                    {
+                        "loc2_id": 155,
+                        "door1": [1, 2],
+                        "door2": [9, 2]
+                    }
+                ],
+                "zones": [
+                    {
+                        "coords": [1, 1, 7, 2],
+                        "color": "Green",
+                        "prevents_travel": false
+                    },
+                    {
+                        "coords": [1, 3, 3, 3],
+                        "color": "Green",
+                        "prevents_travel": false
+                    },
+                    {
+                        "coords": [5, 3, 7, 3],
+                        "color": "Red",
+                        "prevents_travel": false
+                    },
+                    {
+                        "coords": [1, 4, 7, 5],
+                        "color": "Red",
+                        "prevents_travel": false
+                    }
+                ]
             },
             {
                 "id": 94,
-                "name": "U4R1",
-                "description": "Fourth floor.",
-                "dimensions": [4, 4],
+                "name": "U4A Hail",
+                "description": "Arrows are coming down from fortifications on both sides! You can run to move 4 tiles (20 ft) in a turn, although out of breath, you'd have to roll at increased difficulty to attack. It would also be at least *Hard* difficulty trying to shoot up at the fortifications.\r\n\r\nFor most locations, you must clear the enemies or possibly sneak past, but these enemies are behind walls, so you can take the exit immediately.",
+                "dimensions": [9, 9],
                 "destinations": [
                     {
                         "loc2_id": 99,
-                        "door1": [2, 4],
-                        "door2": [2, 1]
+                        "door1": [2, 8],
+                        "door2": [7, 2]
                     },
                     {
-                        "loc2_id": 100,
-                        "door1": [2, 1],
-                        "door2": [2, 4]
+                        "loc2_id": 174,
+                        "door1": [6, 1],
+                        "door2": [4, 5]
                     }
                 ],
                 "entrance_reqs": [
                     {"attrib_id": 5, "val_required": 4.0}
+                ],
+                "zones": [
+                    {
+                        "coords": [1, 6, 2, 6]
+                    },
+                    {
+                        "coords": [3, 1, 3, 6]
+                    },
+                    {
+                        "coords": [7, 4, 7, 9]
+                    },
+                    {
+                        "coords": [8, 4, 9, 4]
+                    },
+                    {
+                        "coords": [1, 1, 2, 5],
+                        "label": "Raised Floor",
+                        "color": "LightSlateGray",
+                        "prevents_travel": false
+                    },
+                    {
+                        "coords": [8, 5, 9, 9],
+                        "label": "Raised Floor",
+                        "color": "LightSlateGray",
+                        "prevents_travel": false
+                    }
+                ]
+            },
+            {
+                "id": 174,
+                "name": "U4B Stables",
+                "description": "The goblins keep wolves here, preferring to eat any horses they find.\r\n\r\n**Setup:** Place 1 level 4 wolf at position 5,1",
+                "dimensions": [5, 5],
+                "zones": [
+                    {
+                        "coords": [4, 1, 5, 2],
+                        "label": "Open Pen",
+                        "color": "LightGray",
+                        "prevents_travel": false
+                    },
+                    {
+                        "coords": [1, 3, 1, 5]
+                    }
                 ]
             },
             {
                 "id": 100,
-                "name": "U4RBoss",
-                "dimensions": [4, 4]
+                "name": "U4C Castle",
+                "description": "**Setup:**\r\n\r\n- Place **goblin archers** on the castle walls at 1,3 and 9,3\r\n- Place a **goblin fighter** at the top of the ramp",
+                "dimensions": [10, 7],
+                "destinations": [
+                    {
+                        "loc2_id": 174,
+                        "door1": [5, 7],
+                        "door2": [2, 1]
+                    }
+                ],
+                "zones": [
+                    {
+                        "coords": [1, 4, 3, 4]
+                    },
+                    {
+                        "coords": [3, 3, 4, 3]
+                    },
+                    {
+                        "coords": [7, 3, 8, 3]
+                    },
+                    {
+                        "coords": [8, 4, 10, 4]
+                    },
+                    {
+                        "coords": [1, 1, 10, 2],
+                        "label": "Raised Floor",
+                        "color": "LightSlateGray",
+                        "prevents_travel": false
+                    },
+                    {
+                        "coords": [4, 2, 7, 2],
+                        "label": "Ramp",
+                        "color": "DarkSlateGray",
+                        "prevents_travel": false
+                    },
+                    {
+                        "coords": [1, 3, 2, 3],
+                        "label": "Raised Floor",
+                        "color": "LightSlateGray",
+                        "prevents_travel": false
+                    },
+                    {
+                        "coords": [9, 3, 10, 3],
+                        "label": "Raised Floor",
+                        "color": "LightSlateGray",
+                        "prevents_travel": false
+                    }
+                ]
             },
             {
                 "id": 95,
-                "name": "U5R1",
-                "description": "Final floor to clear.",
-                "dimensions": [4, 4],
+                "name": "U5A Swamp",
+                "description": "Final floor to clear—only a few rooms to go. This one is covered with stagnant shallow water, slowing normal movement to 2 tiles except for aquatic creatures. Water plants provide half cover when behind them, causing shots to be *Hard* difficulty from either side.",
+                "dimensions": [5, 6],
                 "destinations": [
                     {
                         "loc2_id": 100,
-                        "door1": [2, 4],
-                        "door2": [2, 1]
+                        "door1": [1, 2],
+                        "door2": [10, 2]
                     },
                     {
-                        "loc2_id": 101,
-                        "door1": [2, 1],
-                        "door2": [2, 4]
+                        "loc2_id": 175,
+                        "door1": [4, 6],
+                        "door2": [2, 1]
                     }
                 ],
                 "entrance_reqs": [
                     {"attrib_id": 5, "val_required": 5.0}
+                ],
+                "zones": [
+                    {
+                        "coords": [1, 3, 1, 6]
+                    },
+                    {
+                        "coords": [2, 2, 5, 5],
+                        "label": "Shallow Water",
+                        "color": "LightBlue",
+                        "prevents_travel": false
+                    },
+                    {
+                        "coords": [4, 1, 5, 1],
+                        "label": "Shallow Water",
+                        "color": "LightBlue",
+                        "prevents_travel": false
+                    },
+                    {
+                        "coords": [2, 6, 2, 6],
+                        "label": "Shallow Water",
+                        "color": "LightBlue",
+                        "prevents_travel": false
+                    },
+                    {
+                        "coords": [4, 2, 4, 2],
+                        "label": "Water Plant",
+                        "color": "MediumAquamarine",
+                        "prevents_travel": false
+                    },
+                    {
+                        "coords": [3, 4, 3, 4],
+                        "label": "Water Plant",
+                        "color": "MediumAquamarine",
+                        "prevents_travel": false
+                    }
+                ]
+            },
+            {
+                "id": 175,
+                "name": "U5B Blocked",
+                "description": "So close, but a wall completely blocks all progress. The stone is weak at one point.",
+                "dimensions": [4, 5],
+                "items": [
+                    {
+                        "item_id": 177,
+                        "quantity": 7.0,
+                        "position": [2, 3]
+                    }
+                ],
+                "zones": [
+                    {
+                        "coords": [3, 3, 4, 3],
+                        "label": "Stone Wall",
+                        "color": "Maroon"
+                    },
+                    {
+                        "coords": [1, 3, 1, 3],
+                        "label": "Stone Wall",
+                        "color": "Maroon"
+                    },
+                    {
+                        "coords": [2, 3, 2, 3],
+                        "label": "Weak Point",
+                        "color": "RosyBrown",
+                        "prevents_travel": false
+                    }
                 ]
             },
             {
                 "id": 101,
-                "name": "U5RBoss",
-                "description": "Final boss.",
-                "dimensions": [4, 4]
+                "name": "U5C Amazing",
+                "description": "Final boss. Some maze corridors are narrow and may be challenging to navigate with a party.",
+                "dimensions": [10, 10],
+                "destinations": [
+                    {
+                        "loc2_id": 175,
+                        "door1": [1, 2],
+                        "door2": [4, 4]
+                    }
+                ],
+                "zones": [
+                    {
+                        "coords": [3, 1, 3, 8]
+                    },
+                    {
+                        "coords": [7, 1, 7, 4]
+                    },
+                    {
+                        "coords": [5, 6, 10, 6]
+                    },
+                    {
+                        "coords": [5, 4, 5, 5]
+                    },
+                    {
+                        "coords": [3, 9, 8, 9]
+                    },
+                    {
+                        "coords": [9, 3, 9, 3],
+                        "label": "Throne",
+                        "color": "DarkOrange",
+                        "prevents_travel": false
+                    }
+                ]
             }
         ],
         "characters": [
@@ -922,9 +1289,11 @@
                     [7, 4.0],
                     [8, 9.0],
                     [12, 8.0],
+                    [19, 0.0],
                     [105, 6.0],
                     [106, 9.0],
-                    [110, true]
+                    [110, true],
+                    [161, "(None)"]
                 ],
                 "abilities": [53, 59, 108, 115],
                 "location_id": 76,
@@ -946,8 +1315,10 @@
                     [8, 10.0],
                     [10, 1.0],
                     [12, 6.0],
+                    [19, 0.0],
                     [105, 6.0],
-                    [106, 10.0]
+                    [106, 10.0],
+                    [161, "(None)"]
                 ],
                 "abilities": [53, 108],
                 "location_id": 76
@@ -965,8 +1336,10 @@
                     [8, 8.0],
                     [10, 1.0],
                     [12, 10.0],
+                    [19, 0.0],
                     [105, 5.0],
-                    [106, 8.0]
+                    [106, 8.0],
+                    [161, "(None)"]
                 ],
                 "abilities": [53, 108],
                 "location_id": 76
@@ -1003,11 +1376,289 @@
                     [8, 8.0],
                     [10, 4.0],
                     [12, 7.0],
+                    [19, 0.0],
                     [105, 5.0],
-                    [106, 8.0]
+                    [106, 8.0],
+                    [161, "(None)"]
                 ],
                 "abilities": [108],
                 "location_id": 76
+            },
+            {
+                "id": 183,
+                "name": "⚽bouncy red ball",
+                "description": "On each turn, roll new **Grid Coordinates.** For any targets along the path to the new coordinates, **Strike.**",
+                "attribs": [
+                    [3, 21.0],
+                    [5, 2.0],
+                    [6, 8.0],
+                    [7, 4.0],
+                    [8, 21.0],
+                    [12, 8.0],
+                    [19, 0.0],
+                    [105, 6.0],
+                    [106, 9.0],
+                    [110, false],
+                    [161, "(None)"]
+                ],
+                "abilities": [50, 53, 109],
+                "location_id": 150,
+                "position": [3, 2],
+                "items": [
+                    {"item_id": 114, "quantity": 1.0, "slot": "Main Hand"},
+                    {"item_id": 133, "quantity": 1.0, "slot": "Body Armor"}
+                ]
+            },
+            {
+                "id": 156,
+                "name": "📦El Cajón",
+                "description": "It has an inside and an outside, and 6 sides. Banging on the side makes a solid booming sound that could be used for music.\r\n\r\nAttempts to move targets against a wall with **Knockback** or **Put Inside,* then uses **Wall Bash.**",
+                "attribs": [
+                    [19, 0.0],
+                    [110, false],
+                    [161, "(None)"]
+                ],
+                "abilities": [59, 107, 157, 158, 159],
+                "location_id": 98,
+                "position": [2, 1]
+            },
+            {
+                "id": 179,
+                "name": "🐟fish",
+                "description": "Aquatic — no penalties in water.",
+                "attribs": [
+                    [3, 38.0],
+                    [5, 5.0],
+                    [6, 6.0],
+                    [7, 6.0],
+                    [8, 38.0],
+                    [12, 8.0],
+                    [19, 0.0],
+                    [105, 6.0],
+                    [106, 8.0],
+                    [110, true],
+                    [161, "(None)"]
+                ],
+                "abilities": [59, 115, 180],
+                "location_id": 95,
+                "position": [4, 5],
+                "items": [
+                    {"item_id": 114, "quantity": 1.0, "slot": "Main Hand"},
+                    {"item_id": 133, "quantity": 1.0, "slot": "Body Armor"}
+                ]
+            },
+            {
+                "id": 181,
+                "name": "🐟fish 2",
+                "description": "Aquatic — no penalties in water.",
+                "attribs": [
+                    [3, 38.0],
+                    [5, 5.0],
+                    [6, 6.0],
+                    [7, 6.0],
+                    [8, 38.0],
+                    [12, 8.0],
+                    [19, 0.0],
+                    [105, 6.0],
+                    [106, 8.0],
+                    [110, true],
+                    [161, "(None)"]
+                ],
+                "abilities": [59, 115, 180],
+                "location_id": 95,
+                "position": [5, 2],
+                "items": [
+                    {"item_id": 114, "quantity": 1.0, "slot": "Main Hand"},
+                    {"item_id": 133, "quantity": 1.0, "slot": "Body Armor"}
+                ]
+            },
+            {
+                "id": 176,
+                "name": "🐐goat",
+                "description": "They mehhh, although not as loud as sheep. Goats prefer to charge rather than stand still to fight.",
+                "attribs": [
+                    [3, 27.0],
+                    [5, 3.0],
+                    [6, 8.0],
+                    [7, 4.0],
+                    [8, 27.0],
+                    [12, 8.0],
+                    [19, 0.0],
+                    [105, 6.0],
+                    [106, 9.0],
+                    [110, true],
+                    [161, "(None)"]
+                ],
+                "abilities": [59, 107, 108, 115, 158],
+                "location_id": 155,
+                "position": [6, 2],
+                "items": [
+                    {"item_id": 114, "quantity": 1.0, "slot": "Main Hand"},
+                    {"item_id": 133, "quantity": 1.0, "slot": "Body Armor"}
+                ]
+            },
+            {
+                "id": 167,
+                "name": "🐐goat 2",
+                "description": "They mehhh, although not as loud as sheep. Goats prefer to charge rather than stand still to fight.",
+                "attribs": [
+                    [3, 27.0],
+                    [5, 3.0],
+                    [6, 8.0],
+                    [7, 4.0],
+                    [8, 27.0],
+                    [12, 8.0],
+                    [19, 0.0],
+                    [105, 6.0],
+                    [106, 9.0],
+                    [110, true],
+                    [161, "(None)"]
+                ],
+                "abilities": [59, 107, 108, 115, 158],
+                "location_id": 155,
+                "position": [7, 1],
+                "items": [
+                    {"item_id": 114, "quantity": 1.0, "slot": "Main Hand"},
+                    {"item_id": 133, "quantity": 1.0, "slot": "Body Armor"}
+                ]
+            },
+            {
+                "id": 168,
+                "name": "goblin archer",
+                "description": "These little green guys don't need much introduction, being unfortunately common in folklore.",
+                "attribs": [
+                    [3, 23.0],
+                    [4, 4.0],
+                    [5, 4.0],
+                    [6, 6.0],
+                    [7, 7.0],
+                    [8, 23.0],
+                    [10, 4.0],
+                    [12, 9.0],
+                    [19, 0.0],
+                    [105, 5.0],
+                    [106, 8.0],
+                    [161, "(None)"]
+                ],
+                "abilities": [52, 59, 169],
+                "location_id": 94,
+                "position": [2, 5]
+            },
+            {
+                "id": 170,
+                "name": "goblin archer 2",
+                "description": "These little green guys don't need much introduction, being unfortunately common in folklore.",
+                "attribs": [
+                    [3, 23.0],
+                    [4, 4.0],
+                    [5, 4.0],
+                    [6, 6.0],
+                    [7, 7.0],
+                    [8, 23.0],
+                    [10, 4.0],
+                    [12, 9.0],
+                    [19, 0.0],
+                    [105, 5.0],
+                    [106, 8.0],
+                    [161, "(None)"]
+                ],
+                "abilities": [52, 59, 169],
+                "location_id": 94,
+                "position": [8, 5]
+            },
+            {
+                "id": 171,
+                "name": "goblin archer 3",
+                "description": "These little green guys don't need much introduction, being unfortunately common in folklore.",
+                "attribs": [
+                    [3, 23.0],
+                    [4, 4.0],
+                    [5, 4.0],
+                    [6, 6.0],
+                    [7, 7.0],
+                    [8, 23.0],
+                    [10, 4.0],
+                    [12, 9.0],
+                    [19, 0.0],
+                    [105, 5.0],
+                    [106, 8.0],
+                    [161, "(None)"]
+                ],
+                "abilities": [52, 59, 169],
+                "location_id": 94,
+                "position": [1, 1]
+            },
+            {
+                "id": 173,
+                "name": "goblin fighter",
+                "description": "These little green guys don't need much introduction, being unfortunately common in folklore.",
+                "attribs": [
+                    [3, 23.0],
+                    [4, 4.0],
+                    [5, 4.0],
+                    [6, 6.0],
+                    [7, 7.0],
+                    [8, 23.0],
+                    [10, 4.0],
+                    [12, 9.0],
+                    [19, 0.0],
+                    [105, 5.0],
+                    [106, 8.0],
+                    [161, "(None)"]
+                ],
+                "abilities": [59],
+                "location_id": 174,
+                "position": [3, 2]
+            },
+            {
+                "id": 166,
+                "name": "🐂Minotaur",
+                "description": "Bull above, two powerful legs below. As you approach, he'll look for a corridor that gives him a positional advantage, perhaps a corner.",
+                "attribs": [
+                    [3, 50.0],
+                    [5, 5.0],
+                    [6, 8.0],
+                    [7, 4.0],
+                    [8, 50.0],
+                    [12, 8.0],
+                    [19, 0.0],
+                    [105, 6.0],
+                    [106, 9.0],
+                    [110, true],
+                    [161, "(None)"]
+                ],
+                "abilities": [53, 59, 107, 108, 158],
+                "location_id": 101,
+                "position": [9, 3],
+                "items": [
+                    {"item_id": 114, "quantity": 1.0, "slot": "Main Hand"},
+                    {"item_id": 133, "quantity": 1.0, "slot": "Body Armor"}
+                ]
+            },
+            {
+                "id": 182,
+                "name": "🦟mosquito",
+                "description": "Flying — not slowed by deep water or lava.\r\nNormal strikes that land heal 20% of **Max HP.**",
+                "attribs": [
+                    [3, 18.0],
+                    [5, 2.0],
+                    [6, 6.0],
+                    [7, 4.0],
+                    [8, 18.0],
+                    [12, 7.0],
+                    [19, 0.0],
+                    [105, 6.0],
+                    [106, 8.0],
+                    [110, true],
+                    [161, "(None)"]
+                ],
+                "abilities": [53, 59, 115],
+                "location_id": 92,
+                "position": [3, 5],
+                "items": [
+                    {"item_id": 114, "quantity": 1.0, "slot": "Main Hand"},
+                    {"item_id": 133, "quantity": 1.0, "slot": "Body Armor"}
+                ]
             },
             {
                 "id": 42,
@@ -1035,7 +1686,7 @@
             },
             {
                 "id": 44,
-                "name": "rat sickly",
+                "name": "🐀rat sickly",
                 "description": "Somehow they're always bigger emerging from the shadows. With sharp teeth.\r\nAt least this one is sickly though (**-1 Dex, -1 Str**).\r\n\r\nPlayers always go first when entering a room, except for enemies that can roll **Stealth** (which this one cannot).",
                 "attribs": [
                     [3, 15.0],
@@ -1044,10 +1695,12 @@
                     [7, 2.0],
                     [8, 15.0],
                     [12, 7.0],
-                    [110, true]
+                    [19, 0.0],
+                    [110, true],
+                    [161, "(None)"]
                 ],
                 "abilities": [53, 107, 108, 109, 115],
-                "location": 32,
+                "location_id": 32,
                 "position": [2, 1],
                 "items": [
                     {"item_id": 114, "quantity": 1.0, "slot": "Main Hand"},
@@ -1077,26 +1730,27 @@
                 "name": "👹Roarness",
                 "description": "Ogre Druid, an example player character. As a child, he imagined being a ferocious animal, disappointed at how most ogres he knew were relatively passive (Str +1, Int -1).",
                 "attribs": [
-                    [3, 18.0],
+                    [3, 11.0],
                     [4, 4.0],
-                    [5, 1.0],
+                    [5, 2.0],
                     [6, 10.0],
                     [7, 8.0],
                     [8, 11.0],
                     [10, 4.0],
                     [12, 5.0],
+                    [19, 0.0],
                     [105, 7.0],
-                    [106, 11.0]
+                    [106, 11.0],
+                    [161, "(None)"]
                 ],
-                "abilities": [53, 107, 108, 112, 123, 127],
+                "abilities": [53, 107, 108, 112, 123, 127, 172],
                 "toplevel": true,
-                "location_id": 33,
-                "position": [3, 1],
+                "location_id": 97,
+                "position": [6, 9],
                 "travel_party": "Main Party",
                 "items": [
                     {"item_id": 114, "quantity": 1.0, "slot": "Main Hand"},
                     {"item_id": 126, "quantity": 1.0},
-                    {"item_id": 129, "quantity": 1.0, "slot": "Light Source"},
                     {"item_id": 133, "quantity": 1.0, "slot": "Body Armor"}
                 ]
             },
@@ -1137,26 +1791,48 @@
                     [8, 10.0],
                     [10, 3.0],
                     [12, 9.0],
+                    [19, 0.0],
                     [105, 6.0],
-                    [106, 10.0]
+                    [106, 10.0],
+                    [161, "(None)"]
                 ],
-                "abilities": [51, 52, 53, 108, 112],
+                "abilities": [51, 52, 53, 108, 112, 169],
                 "toplevel": true,
                 "location_id": 30,
                 "position": [2, 6],
                 "travel_party": "Main Party",
                 "items": [
-                    {"item_id": 23, "quantity": 1.0, "slot": "Light Source"},
-                    {"item_id": 24, "quantity": 3.0, "slot": "Quiver"},
-                    {"item_id": 25, "quantity": 1.0},
-                    {"item_id": 27, "quantity": 1.0, "slot": "Main Hand"},
                     {"item_id": 132, "quantity": 1.0, "slot": "Body Armor"}
                 ]
             },
             {
+                "id": 163,
+                "name": "🚦Traffic Light",
+                "description": "The source of the flashing colors.",
+                "attribs": [
+                    [3, 30.0],
+                    [5, 5.0],
+                    [6, 6.0],
+                    [7, 8.0],
+                    [8, 30.0],
+                    [12, 6.0],
+                    [19, 0.0],
+                    [110, false],
+                    [161, "(None)"],
+                    [165, "Red"]
+                ],
+                "abilities": [59, 108, 164],
+                "location_id": 99,
+                "position": [4, 3],
+                "items": [
+                    {"item_id": 114, "quantity": 1.0, "slot": "Main Hand"},
+                    {"item_id": 133, "quantity": 1.0, "slot": "Body Armor"}
+                ]
+            },
+            {
                 "id": 146,
-                "name": "wolf",
-                "description": "Not particularly strong, but rarely hunts alone. Duplicate as \"wolf 1\", \"wolf 2\" et cetera.",
+                "name": "🐺wolf",
+                "description": "Not particularly strong, but rarely hunts alone. Duplicate as \"wolf 2\", et cetera.",
                 "attribs": [
                     [3, 9.0],
                     [5, 1.0],
@@ -1178,8 +1854,8 @@
             },
             {
                 "id": 148,
-                "name": "wolf 2",
-                "description": "Not particularly strong, but rarely hunts alone. Duplicate as \"wolf 1\", \"wolf 2\" et cetera.",
+                "name": "🐺wolf 2",
+                "description": "Not particularly strong, but rarely hunts alone.",
                 "attribs": [
                     [3, 9.0],
                     [5, 1.0],
@@ -1202,8 +1878,8 @@
             },
             {
                 "id": 149,
-                "name": "wolf 3",
-                "description": "Not particularly strong, but rarely hunts alone. Duplicate as \"wolf 1\", \"wolf 2\" et cetera.",
+                "name": "🐺wolf 3",
+                "description": "Not particularly strong, but rarely hunts alone.",
                 "attribs": [
                     [3, 9.0],
                     [5, 1.0],
@@ -1226,7 +1902,7 @@
             },
             {
                 "id": 147,
-                "name": "wolf chief",
+                "name": "🐺wolf chief",
                 "description": "Not particularly strong, but rarely hunts alone. Duplicate as \"wolf 1\", \"wolf 2\" et cetera.",
                 "attribs": [
                     [3, 15.0],
@@ -1281,6 +1957,31 @@
                         "infield": {"attrib_id": 105},
                         "outfield": {"attrib_id": 3},
                         "outcome_success": "success_any"
+                    }
+                ]
+            },
+            {
+                "id": 172,
+                "name": "✦Call Moss",
+                "description": "**On Any Success,** the caller summons 1 moss on a random adjacent tile. Only one may be summoned at a time. Druids can use this ability while in a beast form.\r\n\r\nThe moss may either hold its position and last indefinitely, or **Strike** and then dissolve.",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "label": "Experienced Enough (Cantrip)",
+                        "infield": {"attrib_id": 5},
+                        "op_application": ">=",
+                        "val_required": 2.0
+                    },
+                    {
+                        "label": "Standard Stat Impact",
+                        "infield": {"attrib_id": 7},
+                        "op_transform": "/",
+                        "val_transform": 3.5
+                    },
+                    {
+                        "infield": {"attrib_id": 5},
+                        "op_transform": "/",
+                        "val_transform": 2.0
                     }
                 ]
             },
@@ -1421,7 +2122,7 @@
             },
             {
                 "id": 109,
-                "name": "Die",
+                "name": "Death — Body",
                 "description": "Do when an enemy has no HP left. Success determines whether a corpse is dropped.\r\n\r\n*{lemonchiffon|TO DO: add effect to move to Inactive location.}*",
                 "numeric_range": [1, 20],
                 "determinants": [
@@ -1451,7 +2152,7 @@
             },
             {
                 "id": 59,
-                "name": "Drops",
+                "name": "Death — Drop",
                 "description": "1/8 chance that an item is dropped by an enemy on death.",
                 "outcome_type": "numeric",
                 "numeric_range": [-5, 1],
@@ -1463,10 +2164,7 @@
                     {"op_application": ":=", "op_transform": "max", "val_transform": 0.0}
                 ],
                 "chained": [
-                    {
-                        "child_id": 57,
-                        "req": {"op_application": ">="}
-                    },
+                    {"child_id": 57},
                     {"child_id": 109}
                 ]
             },
@@ -1540,8 +2238,82 @@
             {
                 "id": 50,
                 "name": "Grid Coordinates",
-                "description": "Find out where something is placed in a room.\r\nIf the placement doesn't make sense, then move to a nearby tile.",
+                "description": "Find out where something is placed in a room.\r\nTo choose the room, press *Call from...* and select a location.\r\n\r\nIf the placement doesn't make sense, then move to a nearby tile.",
                 "outcome_type": "coordinates"
+            },
+            {
+                "id": 158,
+                "name": "✦Knockback",
+                "description": "Reverse spin or (for horned creatures) headbutt to knock back a target 3 tiles. Travel with the target to stay in melee range. If the target runs into something, then roll for damage. Does not crit.\r\n\r\n- **Any Success:** knock back, stay in melee distance, and roll for damage if the target runs into terrain, a stationary object, or another character\r\n- **Minor Failure:** knockback still succeeds, but don't stay in melee distance\r\n- **Major Failure:** the failed backspin puts the performer badly off balance, preventing all action for a turn",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "label": "Melee Range",
+                        "infield": {"role": "target char", "field_mode": "dist"},
+                        "op_application": "=="
+                    },
+                    {
+                        "label": "Can Fight",
+                        "infield": {"attrib_id": 3},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Opponent Can Fight",
+                        "infield": {"role": "target char", "attrib_id": 3},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Standard Stat Impact",
+                        "infield": {"attrib_id": 12},
+                        "op_transform": "/",
+                        "val_transform": 3.5
+                    },
+                    {
+                        "label": "Standard XL Impact",
+                        "infield": {"attrib_id": 5},
+                        "op_transform": "/",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "label": "Standard Item Impact",
+                        "infield": {"child_of_anchor": true, "attrib_id": 14}
+                    },
+                    {
+                        "label": "Standard Stat Impact",
+                        "infield": {"role": "target char", "attrib_id": 12},
+                        "op_application": "-",
+                        "op_transform": "/",
+                        "val_transform": 3.5
+                    },
+                    {
+                        "label": "Standard Item Impact",
+                        "infield": {"role": "target char", "child_of_anchor": true, "attrib_id": 13},
+                        "op_application": "-"
+                    },
+                    {
+                        "label": "Standard XL Impact",
+                        "infield": {"role": "target char", "attrib_id": 5},
+                        "op_application": "-",
+                        "op_transform": "/",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "label": "Threshold Adjustment",
+                        "op_transform": "c",
+                        "val_transform": 2.0
+                    },
+                    {"op_application": ":=", "op_transform": "floor"}
+                ],
+                "chained": [
+                    {
+                        "child_id": 55,
+                        "req": {"outcome_success": "success_any"}
+                    },
+                    {
+                        "child_id": 55,
+                        "req": {"outcome_success": "failure_minor"}
+                    }
+                ]
             },
             {
                 "id": 124,
@@ -1588,7 +2360,7 @@
             {
                 "id": 115,
                 "name": "Panic",
-                "description": "Roll to save when a living enemy takes unusually high damage, or health is very low. If the enemy fails to save:\r\n\r\n- **Within melee range:** They attack wildly, making all attack rolls at *Disadvantage*\r\n- **Outside of melee range:** They Dodge, or freeze in place if they can't.",
+                "description": "Roll to save when a living enemy takes unusually high damage, or health is very low. If the enemy fails to save:\r\n\r\n- **Within melee range:** They fight wildly, making all of their attack rolls *Hard* difficulty\r\n- **Outside of melee range:** They Dodge, or freeze in place if they can't",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {"op_application": "m:="},
@@ -1700,24 +2472,100 @@
                 "selection_attrib_id": 62
             },
             {
-                "id": 144,
-                "name": "Pull Lever U1",
-                "outcome_type": "determined",
+                "id": 157,
+                "name": "✦Put Inside",
+                "description": "On success, moves the target inside of itself for two turns.",
+                "numeric_range": [1, 20],
                 "determinants": [
                     {
-                        "infield": {"role": "at", "field_mode": "qty", "item_id": 134, "recipe_id": 135}
+                        "label": "Melee Range",
+                        "infield": {"role": "target char", "field_mode": "dist"},
+                        "op_application": "=="
                     },
                     {
-                        "infield": {"role": "at", "field_mode": "qty", "item_id": 140, "recipe_id": 138},
-                        "op_application": "*"
-                    }
+                        "label": "Can Fight",
+                        "infield": {"attrib_id": 3},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Opponent Can Fight",
+                        "infield": {"role": "target char", "attrib_id": 3},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Standard Stat Impact",
+                        "infield": {"attrib_id": 12},
+                        "op_transform": "/",
+                        "val_transform": 3.5
+                    },
+                    {
+                        "label": "Standard XL Impact",
+                        "infield": {"attrib_id": 5},
+                        "op_transform": "/",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "label": "Standard Item Impact",
+                        "infield": {"child_of_anchor": true, "attrib_id": 14}
+                    },
+                    {
+                        "label": "Standard Stat Impact",
+                        "infield": {"role": "target char", "attrib_id": 12},
+                        "op_application": "-",
+                        "op_transform": "/",
+                        "val_transform": 3.5
+                    },
+                    {
+                        "label": "Standard Item Impact",
+                        "infield": {"role": "target char", "child_of_anchor": true, "attrib_id": 13},
+                        "op_application": "-"
+                    },
+                    {
+                        "label": "Standard XL Impact",
+                        "infield": {"role": "target char", "attrib_id": 5},
+                        "op_application": "-",
+                        "op_transform": "/",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "label": "Threshold Adjustment",
+                        "op_transform": "c",
+                        "val_transform": 2.0
+                    },
+                    {"op_application": ":=", "op_transform": "floor"}
                 ],
                 "effects": [
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 145},
+                        "outfield": {"role": "target char", "field_mode": "teleport", "loc_id": 151},
+                        "op_application": ":=",
+                        "outcome_success": "success_any"
+                    }
+                ]
+            },
+            {
+                "id": 164,
+                "name": "Red Light Green Light",
+                "description": "Roll every turn for which color. The light damages everyone standing on that color.",
+                "auto_apply": true,
+                "outcome_type": "numeric",
+                "numeric_range": [0, 4],
+                "determinants": [
+                    {"op_application": ":=", "op_transform": "min"},
+                    {
+                        "infield": {"attrib_id": 165}
+                    },
+                    {"op_application": ":=", "op_transform": "%", "val_transform": 2.0}
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 165},
                         "op_application": ":="
                     }
+                ],
+                "chained": [
+                    {"child_id": 124}
                 ]
             },
             {
@@ -1753,7 +2601,7 @@
             {
                 "id": 52,
                 "name": "✦Shoot",
-                "description": "- **On Major Success:** additional shot\r\n- **On Major Failure:** the arrow breaks or the ammo is lost\r\n\r\nIf any opponent is within melee range, even if it's not the one you're shooting at, then roll at disadvantage.",
+                "description": "- **On Major Success:** additional shot\r\n- **On Major Failure:** the arrow breaks or the ammo is lost\r\n\r\nIf any opponent is within melee range, even if it's not the one you're shooting at, then roll at *Hard* difficulty.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -1869,6 +2717,68 @@
                 ]
             },
             {
+                "id": 180,
+                "name": "✦Spew Water",
+                "description": "If any opponent is within melee range, even if it's not the one you're shooting at, then roll at *Hard* difficulty.",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "label": "Max Range 30ft",
+                        "infield": {"role": "target char", "field_mode": "dist"},
+                        "op_application": "<",
+                        "val_required": 7.0
+                    },
+                    {
+                        "label": "Can Fight",
+                        "infield": {"attrib_id": 3},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Opponent Can Fight",
+                        "infield": {"role": "target char", "attrib_id": 3},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Standard Stat Impact",
+                        "infield": {"attrib_id": 7},
+                        "op_transform": "/",
+                        "val_transform": 3.5
+                    },
+                    {
+                        "label": "Standard XL Impact",
+                        "infield": {"attrib_id": 5},
+                        "op_transform": "/",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "label": "Standard Stat Impact",
+                        "infield": {"role": "target char", "attrib_id": 12},
+                        "op_application": "-",
+                        "op_transform": "/",
+                        "val_transform": 3.5
+                    },
+                    {
+                        "label": "Standard XL Impact",
+                        "infield": {"role": "target char", "attrib_id": 5},
+                        "op_application": "-",
+                        "op_transform": "/",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "label": "Standard Item Impact",
+                        "infield": {"role": "target char", "child_of_anchor": true, "attrib_id": 13},
+                        "op_application": "-"
+                    },
+                    {"op_application": ":=", "op_transform": "floor"}
+                ],
+                "chained": [
+                    {
+                        "child_id": 124,
+                        "req": {"outcome_success": "success_any"}
+                    }
+                ]
+            },
+            {
                 "id": 47,
                 "name": "Stealth",
                 "description": "Chance to avoid detection.\r\nPlayers always go first when entering a room unless the enemy can do a successful stealth roll.\r\n\r\n• Int and Dex increase detection.\r\n• Dex increases stealth.",
@@ -1977,6 +2887,144 @@
                 ]
             },
             {
+                "id": 162,
+                "name": "Suffer DoT",
+                "description": "Chance to reduce **HP** by a percentage of **Max HP** depending on **Status Effect Type.**",
+                "numeric_range": [1, 20]
+            },
+            {
+                "id": 169,
+                "name": "✦Tumble Shot",
+                "description": "Move one tile and then shoot, such as to avoid the penalty of being in melee range. Most enemies would have plenty of time on the next turn to step forward 1 tile and then strike, so tumbling won't necessarily help get away from attackers.\r\n\r\n- **On Minor Failure:** tumble away but the shot misses\r\n- **On Major Failure:** unable to change position",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "label": "Max Range 40ft",
+                        "infield": {"role": "target char", "field_mode": "dist"},
+                        "op_application": "<",
+                        "val_required": 9.0
+                    },
+                    {
+                        "label": "Experienced Enough",
+                        "infield": {"attrib_id": 5},
+                        "op_application": ">=",
+                        "val_required": 2.0
+                    },
+                    {
+                        "label": "Can Fight",
+                        "infield": {"attrib_id": 3},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Opponent Can Fight",
+                        "infield": {"role": "target char", "attrib_id": 3},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Has Ammo",
+                        "infield": {"field_mode": "qty", "item_id": 24},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Standard Stat Impact",
+                        "infield": {"attrib_id": 12},
+                        "op_transform": "/",
+                        "val_transform": 3.5
+                    },
+                    {
+                        "label": "Standard XL Impact",
+                        "infield": {"attrib_id": 5},
+                        "op_transform": "/",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "label": "Standard Item Impact",
+                        "infield": {"child_of_anchor": true, "attrib_id": 14}
+                    },
+                    {
+                        "label": "Standard Stat Impact",
+                        "infield": {"role": "target char", "attrib_id": 12},
+                        "op_application": "-",
+                        "op_transform": "/",
+                        "val_transform": 3.5
+                    },
+                    {
+                        "label": "Standard XL Impact",
+                        "infield": {"role": "target char", "attrib_id": 5},
+                        "op_application": "-",
+                        "op_transform": "/",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "label": "Standard Item Impact",
+                        "infield": {"role": "target char", "child_of_anchor": true, "attrib_id": 13},
+                        "op_application": "-"
+                    },
+                    {"op_application": ":=", "op_transform": "floor"}
+                ],
+                "chained": [
+                    {
+                        "child_id": 54,
+                        "req": {"outcome_success": "success_any"}
+                    }
+                ]
+            },
+            {
+                "id": 144,
+                "name": "U1 Pull Lever",
+                "outcome_type": "determined",
+                "determinants": [
+                    {
+                        "infield": {"role": "at", "field_mode": "qty", "item_id": 134}
+                    },
+                    {
+                        "infield": {"role": "at", "field_mode": "qty", "item_id": 140},
+                        "op_application": "*"
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 145},
+                        "op_application": ":="
+                    }
+                ]
+            },
+            {
+                "id": 152,
+                "name": "U3 Repair Bridge",
+                "numeric_range": [1, 20]
+            },
+            {
+                "id": 178,
+                "name": "U5 Smash Wall",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "label": "Threshold Adjustment",
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "val_transform": 6.0
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "at", "field_mode": "qty", "item_id": 177},
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "at", "field_mode": "qty", "item_id": 177},
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "outcome_success": "success_major"
+                    }
+                ]
+            },
+            {
                 "id": 108,
                 "name": "Update for XL",
                 "description": "Sets HP and Max HP. If you're not levelling up then apply the changes to **HP Max** but not the change to **HP.**",
@@ -2055,13 +3103,96 @@
                         "req": {"outcome_success": "failure_minor"}
                     }
                 ]
+            },
+            {
+                "id": 159,
+                "name": "✦Wall Bash",
+                "description": "Stuns for 1 turn and does low damage.",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "label": "Melee Range",
+                        "infield": {"role": "target char", "field_mode": "dist"},
+                        "op_application": "=="
+                    },
+                    {
+                        "label": "Can Fight",
+                        "infield": {"attrib_id": 3},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Opponent Can Fight",
+                        "infield": {"role": "target char", "attrib_id": 3},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Standard Stat Impact",
+                        "infield": {"attrib_id": 12},
+                        "op_transform": "/",
+                        "val_transform": 3.5
+                    },
+                    {
+                        "label": "Standard XL Impact",
+                        "infield": {"attrib_id": 5},
+                        "op_transform": "/",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "label": "Standard Item Impact",
+                        "infield": {"child_of_anchor": true, "attrib_id": 14}
+                    },
+                    {
+                        "label": "Standard Stat Impact",
+                        "infield": {"role": "target char", "attrib_id": 12},
+                        "op_application": "-",
+                        "op_transform": "/",
+                        "val_transform": 3.5
+                    },
+                    {
+                        "label": "Standard Item Impact",
+                        "infield": {"role": "target char", "child_of_anchor": true, "attrib_id": 13},
+                        "op_application": "-"
+                    },
+                    {
+                        "label": "Standard XL Impact",
+                        "infield": {"role": "target char", "attrib_id": 5},
+                        "op_application": "-",
+                        "op_transform": "/",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "label": "Threshold Adjustment",
+                        "op_transform": "c",
+                        "val_transform": 2.0
+                    },
+                    {"op_application": ":=", "op_transform": "floor"}
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 3},
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "val_transform": 2.0,
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "infield": {"attrib_id": 5},
+                        "outfield": {"role": "target char", "attrib_id": 3},
+                        "op_application": "-",
+                        "op_transform": "*",
+                        "val_transform": 2.0,
+                        "outcome_success": "success_any"
+                    }
+                ]
             }
         ]
     },
     "general data": {
         "piles": [
+            {"item_id": 29, "quantity": 0.0},
             {"item_id": 113, "quantity": 20.0},
-            {"item_id": 145, "quantity": 6.0}
+            {"item_id": 145, "quantity": 10.0}
         ]
     },
     "progress": []

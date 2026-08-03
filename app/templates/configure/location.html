@@ -361,11 +361,11 @@ function adjustZone(method, ...args) {
     <input type="text" name="zones[{{ index }}][rb]"
         value="{{ zone.coords[2:]|join(',') if zone else '' }}" placeholder="2,2">
     <input type="text" name="zones[{{ index }}][color]"
-        value="{{ zone.color if zone else '' }}" placeholder="rgba(0,0,0,0.5)">
+        value="{{ zone.color if zone and zone.color is not none else '' }}" placeholder="rgba(0,0,0,0.5)">
     <input type="checkbox" name="zones[{{ index }}][prevents_travel]"
         {{ 'checked' if zone and zone.prevents_travel }}>
     <input type="text" name="zones[{{ index }}][label]"
-        value="{{ zone.label if zone else '' }}" placeholder="Stone Wall">
+        value="{{ zone.label if zone and zone.label is not none else '' }}" placeholder="Stone Wall">
     <div class="flex-row">
         <button type="button" class="btn-sm btn-zone-up"
             onclick="adjustZone('moveRow', this, -1)">↑</button>
