@@ -555,12 +555,20 @@ function syncFieldIdsState(modeSelect) {
     const locSelect = container.querySelector('.id-loc');
     const sourceItemSelect = container.querySelector('.id-source-item');
 
-    // 1. Reset visibility
-    attrSelect?.classList.toggle('hidden', !USES_ATTRIB.includes(mode));
-    itemSelect?.classList.toggle('hidden', !USES_ITEM.includes(mode));
-    locSelect?.classList.toggle('hidden', !USES_LOC.includes(mode));
-    recipeSelect?.classList.toggle('hidden', !USES_RECIPE.includes(mode));
-    sourceItemSelect?.classList.toggle('hidden', !USES_SOURCE_ITEM.includes(mode));
+    const selectors = [
+        [attrSelect, USES_ATTRIB.includes(mode)],
+        [itemSelect, USES_ITEM.includes(mode)],
+        [recipeSelect, USES_RECIPE.includes(mode)],
+        [locSelect, USES_LOC.includes(mode)],
+        [sourceItemSelect, USES_SOURCE_ITEM.includes(mode)]
+    ];
+
+    for (const [elemSelect, isVisible] of selectors) {
+        if (!elemSelect) continue;
+        elemSelect.classList.toggle('hidden', !isVisible);
+        // Disable so the value isn't sent to the server
+        elemSelect.disabled = !isVisible;
+    }
     if (USES_RECIPE.includes(mode)) {
         syncRecipesState(itemSelect);
     }
@@ -1055,13 +1063,6 @@ document.addEventListener('DOMContentLoaded', function() {
             <option value="{{ Participant.AT }}"
                 title="The location where this is happening"
                 {{ 'selected' if role == Participant.AT }}>At</option>
-
-            <!--
-            Choosing the caller means there may not be any use for this.
-            <option value="{{ Participant.SELECTED }}"
-                title="Select the entity from a list during the event"
-                {{ 'selected' if role == Participant.SELECTED }}>Selectable</option>
-            -->
 
             <option value="{{ Participant.PRESELECTED }}"
                 title="Configure a specific entity"

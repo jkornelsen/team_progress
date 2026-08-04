@@ -105,6 +105,8 @@ def apply_numeric_op(current_val, mod_val, op, output_range=None):
         return max(current_val, mod_val)
     if op == Operation.MASK:
         return 1 if current_val > 0 else 0
+    if op == Operation.EQ_TO_ONE:
+        return 1 if current_val == mod_val else 0
     if op in (Operation.ROUND, Operation.FLOOR, Operation.CEIL):
         try:
             step = float(mod_val) if mod_val else 1.0
@@ -180,6 +182,7 @@ def get_inner_breakdown(val, mod_val, op):
         Operation.MIN:        f"Min({v}, {m})",
         Operation.MAX:        f"Max({v}, {m})",
         Operation.MASK:       f">0→1({v})",
+        Operation.EQ_TO_ONE:  f"EQ→1({v}=={m})",
         Operation.SOFTCAP:    f"SoftCap({v}, {m})",
     }
     return formats.get(op, v)
@@ -708,18 +711,14 @@ def preview_effects(event, role_entities, roll_val=None):
                 if ent and ent.entity_type == Character.TYPENAME:
                     char = db.session.get(Character, (game_token, ent.id))
                     current_display = char.location.name if char.location \
-                        else "Inactive"
+                        else "Nowhere"
 
             # B. Determine Source Display (Where are they going?)
-            loc_id = field_def.loc_id if field_def.loc_id is not None \
-                     else resolve_anchor_id(Participant.AT, role_entities)
-            if loc_id == 0:
-                impact_display = "Inactive"
-            elif loc_id:
+            if field_def.loc_id:
                 impact_display = maskable_name(
-                    db.session.get(Location, (game_token, loc_id)))
+                    db.session.get(Location, (game_token, field_def.loc_id)))
             else:
-                impact_display = "(Selected)"
+                impact_display = "Nowhere"
             impact_value = None
 
         if field_def.field_mode in Participant.REQUIRES_PRESELECTED:
@@ -895,7 +894,7 @@ def resolve_effects(event, role_entities, roll_val, tier=None):
             loc_id = field_def.loc_id
             if loc_id is None:
                 loc_id = resolve_anchor_id(Participant.AT, role_entities)
-            d_name = "Inactive"
+            d_name = "Nowhere"
             if loc_id:
                 loc = db.session.get(Location, (game_token, loc_id))
                 d_name = loc.name if loc else "Unknown"
@@ -1030,12 +1029,6 @@ def do_effect_change(eff, roll_val, role_entities):
             return False, f"No entity available for role {field_def.role}"
     op = eff.op_application
 
-    def get_loc(field_def, role_entities):
-        """Use hard-coded loc_id if present, else fallback to 'At' role."""
-        if field_def.loc_id is not None:
-            return field_def.loc_id
-        return resolve_anchor_id(Participant.AT, role_entities)
-
     # Destination A: Attributes
     if field_def.field_mode == Participant.ATTR:
         if field_def.child_of_anchor:
@@ -1149,8 +1142,7 @@ def do_effect_change(eff, roll_val, role_entities):
 
     # Destination E: Physical Placement
     elif field_def.field_mode == Participant.PLACE:
-        loc_id = get_loc(field_def, role_entities)
-        if not loc_id:
+        if not field_def.loc_id:
             return False, "No location (At) for placement."
         position = roll_val \
             if isinstance(roll_val, list) and len(roll_val) == 2 \
@@ -1159,7 +1151,7 @@ def do_effect_change(eff, roll_val, role_entities):
         # Create or increment the pile
         adjust_quantity(
             field_def.item_id, 
-            loc_id, 
+            field_def.loc_id, 
             delta=1.0, 
             position=position
         )
@@ -1172,16 +1164,14 @@ def do_effect_change(eff, roll_val, role_entities):
         char = db.session.get(Character, (game_token, out_entity_id))
         if not char:
             return False, "Expected a character."
-        loc_id = get_loc(field_def, role_entities)
-        
-        if loc_id == 0 or loc_id is None: # Nowhere
+        if not field_def.loc_id: # Nowhere
             char.location_id = None
             char.position = None
             add_message(f"{char.name} is now inactive.")
         else:
             # Determine Position
-            loc = db.session.get(Location, (game_token, loc_id))
-            char.location_id = loc_id
+            loc = db.session.get(Location, (game_token, field_def.loc_id))
+            char.location_id = field_def.loc_id
             char.position = roll_val \
                 if isinstance(roll_val, list) and len(roll_val) == 2 \
                 else get_default_position(loc)

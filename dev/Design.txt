@@ -7,13 +7,12 @@
 get local items to produce to the correct piles in lever room
     the u5 wall works better -- take a look at how events handle it
 
-recipe id gets saved when not needed
-    "infield": {
-        "role": "preselected",
-        "field_mode": "qty",
-        "item_id": 58,
-        "recipe_id": 77
-    },
+pass on selected participants to chained events
+    select as default or could we lock them in?
+
+enum constant event field mode
+    limit choices to attrs that have enums
+    needed to compare (or set) cumulative value to off balance in strike
 
 link "working..." text in char inv to the actual production pile
 show spin icon when char inventory is the target owner even if not the host
@@ -26,6 +25,12 @@ old_loc_id doesn't always get set when going to loc page
     with 7 tabs open -- maybe because of chrome performance behavior
     holding shift to reload didn't help
     waiting 5 seconds may have helped?
+
+pages often stop responding to dynamic javascript changes after awhile
+    when viewing a different tab
+    reloading makes them work again
+    for example grid movement and item production
+    No action bound to [1] 92?active_char_id=119:53
 
 applying a long list of effects sometimes causes one or more to mess up
     maybe wait until each response returns before sending the next request
@@ -74,17 +79,18 @@ tethered one
 dungeon crawl
     elementals would make more sense in the depths
     mask all locations other than the Entry Cavern
+    goal is to get completness to 8
+        "full example run"
     archer abilities
         double shot
             attempt to hit two different enemies (cannot be the same one)
-        disengaging or interrupting or knockback or crippling shot
+        interrupting or knockback or crippling shot
         special arrow only once per fight or once per floor
     druid
         roar to fear or taunt enemies or buff self
-        summon moss
-            recall a fragment of your sentience
 
-mine helium-3 with location production
+moon base
+    mine helium-3 with location production
     then char converts to cannisters
 
 ---- code quality ----

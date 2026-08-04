@@ -1325,6 +1325,7 @@ class Operation:
     MIN = 'min'
     MAX = 'max'
     MASK = 'mask'
+    EQ_TO_ONE = 'eq1'
     SOFTCAP = 'scap'
     MEM_STORE = 'm:='
     MEM_RECALL = 'mr'
@@ -1350,6 +1351,7 @@ class Operation:
         MIN:        'Min',
         MAX:        'Max',
         MASK:       '>0→1',
+        EQ_TO_ONE:  'EQ→1',
         SOFTCAP:    'SoftCap',
         MEM_STORE:  'Store',
         MEM_RECALL: 'Recall',
@@ -1357,7 +1359,8 @@ class Operation:
 
     # How the result applies to the total
     DET_APPLICATION = [
-        ADD, SUB, MULT, DIV, MOD, ASSIGN, MEM_STORE, EQ, GE, LT, NE]
+        ADD, SUB, MULT, DIV, MOD, ASSIGN, MEM_STORE, EQ, GE, LT, NE,
+        EQ_TO_ONE]
     COMPARISON = [EQ, GE, LT, NE]
 
     # Modify the Field Value before we apply it to the total

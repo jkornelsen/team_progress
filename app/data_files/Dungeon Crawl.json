@@ -3,7 +3,7 @@
         "title": "Dungeon Crawl",
         "description": "Your party was responding to a distress signal when suddenly, the ground below collapsed, and all fell down a nearly vertical shaft. No one seems to be injured *(yet)*. Doubtless there are {lightcoral|enemies} in the surrounding caverns—good source of {lightcoral|XP}, an optimist would say.\r\n\r\nStart by adding a set of 1-4 characters to play—see **GM Tools.** Then craft rudimentary supplies before embarking on an escape to the surface or delving deeper.",
         "win_reqs": [
-            {"item_id": 29, "quantity": 6.0}
+            {"item_id": 29, "attrib_id": 185, "attrib_value": 6.0}
         ],
         "tag_introduce_order": 54,
         "tag_best_order": 40,
@@ -38,6 +38,7 @@
                 "name": "Damage",
                 "description": "Equipped weapons can increase damage. Combines with character's Dex or Str."
             },
+            {"id": 185, "name": "Depth"},
             {
                 "id": 12,
                 "name": "Dex",
@@ -112,8 +113,15 @@
             {
                 "id": 161,
                 "name": "Status Effect Type",
-                "description": "- **Bleeding:** from cutting weapons\r\n- **Stunned:** reduces damage for the next turn\r\n- **Burning:** fire does extra damage to undead\r\n- **Poisoned:** works against living enemies",
-                "enum_list": ["(None)", "Bleeding", "Stunned", "Burning", "Poisoned"]
+                "description": "- **Bleeding:** from cutting weapons\r\n- **Stunned:** reduces damage for the next turn\r\n- **Off Balance:** minor reaction penalty\r\n- **Burning:** fire does extra damage to undead\r\n- **Poisoned:** works against living enemies",
+                "enum_list": [
+                    "(None)",
+                    "Bleeding",
+                    "Stunned",
+                    "Off Balance",
+                    "Burning",
+                    "Poisoned"
+                ]
             },
             {
                 "id": 6,
@@ -197,7 +205,7 @@
                 "id": 61,
                 "name": "Which Enemy",
                 "description": "Edit this list as you go through the dungeon to include all of your new enemy characters except bosses.",
-                "enum_list": ["rat", "skeleton rat", "moss", "spore colony"]
+                "enum_list": ["🐀rat", "moss", "🍄‍🟫spore colony"]
             },
             {
                 "id": 62,
@@ -323,9 +331,13 @@
             },
             {
                 "id": 29,
-                "name": "🛠️Barometer Depth",
-                "description": "Update this quantity to whatever floor the party is on, relative to the entry floor (0) where the danger is least. U1 is depth -1 (for flavor), while D1 is depth 1.\r\n\r\nDetermines the chance of encountering higher level monsters and better items.",
+                "name": "🛠️Barometer",
+                "description": "Update **Depth** to whatever floor the party is on, relative to the entry floor (0) where the danger is least. U1 is depth -1 (for flavor), while D1 is depth 1.\r\n\r\nDetermines the chance of encountering higher level monsters and better items.",
+                "attribs": [
+                    [185, 2.0]
+                ],
                 "storage_type": "u",
+                "q_limit": 1.0,
                 "toplevel": true
             },
             {
@@ -334,7 +346,7 @@
                 "description": "Set by an event for follow-up events.",
                 "storage_type": "u"
             },
-            {"id": 21, "name": "🪵Bowstring"},
+            {"id": 21, "name": "🪢Bowstring"},
             {
                 "id": 116,
                 "name": "💀Corpse",
@@ -557,7 +569,7 @@
         "locations": [
             {
                 "id": 31,
-                "name": "D1A Same Enemy",
+                "name": "D1a Same Enemy",
                 "description": "The first room down from the entry floor, where the main dive begins. Again, there is a skittering in the shadows. Probably a rat like last time, although the squeaking noises feel thinner, grating.",
                 "dimensions": [4, 7],
                 "destinations": [
@@ -580,8 +592,8 @@
             },
             {
                 "id": 34,
-                "name": "D1B",
-                "description": "From here on, your group will have to decide what enemies and items are found. There are [GM Tools](/play/location/76) available.\r\nPre-built room layouts have not yet been done for the deep side, so you'll need to add those too.",
+                "name": "D1b",
+                "description": "From here on, your group will have to set up room layouts and decide on what enemies and items are found. There are [GM Tools](/play/location/76) available.\r\n\r\nIf this is not what you want, then head toward the surface instead.",
                 "dimensions": [5, 6],
                 "zones": [
                     {
@@ -641,7 +653,7 @@
             },
             {
                 "id": 32,
-                "name": "Entry Floor B Enemy",
+                "name": "Entry Floor b Enemy",
                 "description": "North of Entry Cavern. There is a skittering noise in the shadows. (This is the only enemy on the entry floor).",
                 "dimensions": [3, 6],
                 "items": [
@@ -666,7 +678,7 @@
             },
             {
                 "id": 37,
-                "name": "Entry Floor C Up",
+                "name": "Entry Floor c",
                 "description": "Staircase up, leading to earthbound enemies that get stronger nearer the surface: animals, plants, humanoid races, constructs.",
                 "dimensions": [5, 8],
                 "zones": [
@@ -683,7 +695,7 @@
             },
             {
                 "id": 35,
-                "name": "Entry Floor D Down",
+                "name": "Entry Floor d",
                 "description": "Staircase down, leading to otherworldly enemies that get stronger in the depths: undead, dragons, and demons.",
                 "dimensions": [6, 5],
                 "destinations": [
@@ -712,7 +724,7 @@
                 "attribs": [
                     [80, "Fighter: shield"]
                 ],
-                "abilities": [49, 58, 77, 86],
+                "abilities": [49, 58, 77, 86, 117],
                 "toplevel": true
             },
             {
@@ -778,8 +790,8 @@
             },
             {
                 "id": 33,
-                "name": "U1A Moss",
-                "description": "The first room up from the entry floor, where the main journey begins. There is a narrow passage, with a suspicious-looking moss all but blocking the middle, and spores are being shot at you from the far end.",
+                "name": "U1a Moss",
+                "description": "The first room up from the entry floor, where the main climb begins. There is a narrow passage, with a suspicious-looking moss all but blocking the middle, and spores are being shot at you from the far end.",
                 "dimensions": [3, 8],
                 "destinations": [
                     {
@@ -801,7 +813,7 @@
             },
             {
                 "id": 36,
-                "name": "U1B Scales",
+                "name": "U1b Scales",
                 "description": "There don't seem to be any enemies in this room. Instead, there are a couple of scales and a lever.",
                 "dimensions": [8, 4],
                 "items": [
@@ -836,8 +848,8 @@
             },
             {
                 "id": 97,
-                "name": "U1C Pack",
-                "description": "Defeat the pack and then level up your party to 2.",
+                "name": "U1c Pack",
+                "description": "The final room on each floor is a boss encounter. After defeating the enemies here, level up your party to 2.",
                 "dimensions": [9, 10],
                 "entrance_reqs": [
                     {"item_id": 145, "val_required": 10.0}
@@ -859,8 +871,8 @@
             },
             {
                 "id": 92,
-                "name": "U2A Water",
-                "description": "Congratulations, you've made it to the second floor! Don't get too excited yet, though, there's still a long way to reach the surface.\r\n\r\nIn this room, the enemies are behind deep water. Flying and aquatic creatures don't mind it, but anyone else would have to swim one tile per turn, completely preventing them from fighting, with the risk of dousing torches to boot.\r\n\r\nOn the other side is shallow water, so you can wade 2 tiles per turn (10 ft) instead of walking 3 tiles.\r\n\r\n**Setup:**\r\n\r\n- Place a level 2 **Spore colony** (meaning upgrade the existing one's hitpoint stats) behind the deep water at position 1,5. It cannot shoot at targets where line of sight is blocked by the central pillar.\r\n- Place a level 2 **Wolf** next to it at position 2,4. The wolf will wait unless it gets attacked from range or smells targets coming around the corner.",
+                "name": "U2a Water",
+                "description": "Congratulations, you've made it to the second floor! Update the [Barometer](/play/item/29).\r\n\r\nIn this room, enemies are behind deep water. Flying and aquatic creatures don't mind it, but anyone else would have to swim one tile per turn, completely preventing them from fighting, with the risk of dousing torches to boot.\r\n\r\nOn the other side is shallow water, where you can wade 2 tiles per turn (10 ft) instead of walking 3 tiles.\r\n\r\n**Setup:**\r\n\r\n- Place a level 2 **🍄‍🟫Spore colony** behind the deep water at position 1,5. To do this, relocate the existing one and upgrade their HP stats. It cannot shoot at targets where line of sight is blocked by the central pillar.\r\n- Place a level 2 **🐺Wolf** next to it at position 2,4. The wolf will wait unless it gets attacked from range or hears targets approaching.",
                 "dimensions": [7, 9],
                 "destinations": [
                     {
@@ -897,8 +909,8 @@
             },
             {
                 "id": 150,
-                "name": "U2B Bounce",
-                "description": "Of all the things you were expecting to find underground, this wasn't one of them. Rubbery spheres hit the cave sides in a highly chaotic fashion. Some of the red color has rubbed off onto the stone as well.\r\n\r\n**Setup:** Duplicate the ball for 2 more. Roll **Grid Coordinates** for the starting position of each (without attacking).",
+                "name": "U2b Bounce",
+                "description": "Of all the things you were expecting to find underground, this wasn't one of them. Rubbery spheres hit the cave sides in a highly chaotic fashion. Some of their red color has rubbed off onto the stone floor.\r\n\r\n**Setup:** Duplicate the ball for 2 more. Roll **Grid Coordinates** for the starting position of each (without attacking).",
                 "dimensions": [5, 5],
                 "zones": [
                     {
@@ -911,7 +923,7 @@
             },
             {
                 "id": 98,
-                "name": "U2C Cardboard",
+                "name": "U2c Cardboard",
                 "description": "Alright, all you have to do before levelling up your party is defeat the... wait, does that thing even fight?",
                 "dimensions": [5, 3],
                 "destinations": [
@@ -924,7 +936,7 @@
             },
             {
                 "id": 93,
-                "name": "U3A Bridge",
+                "name": "U3a Bridge",
                 "description": "The way through the third floor is blocked by a deep fissure. A rope bridge crosses, but the middle must be repaired.",
                 "abilities": [152],
                 "dimensions": [4, 7],
@@ -982,7 +994,7 @@
             },
             {
                 "id": 155,
-                "name": "U3B Grass",
+                "name": "U3b Grass",
                 "description": "A patch of coarse grass survives for grazing. So there must be a shaft somewhere to let in light occasionally.",
                 "dimensions": [9, 8],
                 "entrance_reqs": [
@@ -1005,7 +1017,7 @@
             },
             {
                 "id": 99,
-                "name": "U3C Traffic",
+                "name": "U3c Traffic",
                 "description": "Bright blinking lights are a stark contrast to the normally dim, colorless dungeon.",
                 "dimensions": [7, 5],
                 "destinations": [
@@ -1040,7 +1052,7 @@
             },
             {
                 "id": 94,
-                "name": "U4A Hail",
+                "name": "U4a Hail",
                 "description": "Arrows are coming down from fortifications on both sides! You can run to move 4 tiles (20 ft) in a turn, although out of breath, you'd have to roll at increased difficulty to attack. It would also be at least *Hard* difficulty trying to shoot up at the fortifications.\r\n\r\nFor most locations, you must clear the enemies or possibly sneak past, but these enemies are behind walls, so you can take the exit immediately.",
                 "dimensions": [9, 9],
                 "destinations": [
@@ -1087,7 +1099,7 @@
             },
             {
                 "id": 174,
-                "name": "U4B Stables",
+                "name": "U4b Stables",
                 "description": "The goblins keep wolves here, preferring to eat any horses they find.\r\n\r\n**Setup:** Place 1 level 4 wolf at position 5,1",
                 "dimensions": [5, 5],
                 "zones": [
@@ -1104,7 +1116,7 @@
             },
             {
                 "id": 100,
-                "name": "U4C Castle",
+                "name": "U4c Castle",
                 "description": "**Setup:**\r\n\r\n- Place **goblin archers** on the castle walls at 1,3 and 9,3\r\n- Place a **goblin fighter** at the top of the ramp",
                 "dimensions": [10, 7],
                 "destinations": [
@@ -1155,7 +1167,7 @@
             },
             {
                 "id": 95,
-                "name": "U5A Swamp",
+                "name": "U5a Swamp",
                 "description": "Final floor to clear—only a few rooms to go. This one is covered with stagnant shallow water, slowing normal movement to 2 tiles except for aquatic creatures. Water plants provide half cover when behind them, causing shots to be *Hard* difficulty from either side.",
                 "dimensions": [5, 6],
                 "destinations": [
@@ -1211,7 +1223,7 @@
             },
             {
                 "id": 175,
-                "name": "U5B Blocked",
+                "name": "U5b Blocked",
                 "description": "So close, but a wall completely blocks all progress. The stone is weak at one point.",
                 "dimensions": [4, 5],
                 "items": [
@@ -1242,7 +1254,7 @@
             },
             {
                 "id": 101,
-                "name": "U5C Amazing",
+                "name": "U5c Amazing",
                 "description": "Final boss. Some maze corridors are narrow and may be challenging to navigate with a party.",
                 "dimensions": [10, 10],
                 "destinations": [
@@ -1386,7 +1398,7 @@
             },
             {
                 "id": 183,
-                "name": "⚽bouncy red ball",
+                "name": "⚽bouncy ball",
                 "description": "On each turn, roll new **Grid Coordinates.** For any targets along the path to the new coordinates, **Strike.**",
                 "attribs": [
                     [3, 21.0],
@@ -1421,56 +1433,6 @@
                 "abilities": [59, 107, 157, 158, 159],
                 "location_id": 98,
                 "position": [2, 1]
-            },
-            {
-                "id": 179,
-                "name": "🐟fish",
-                "description": "Aquatic — no penalties in water.",
-                "attribs": [
-                    [3, 38.0],
-                    [5, 5.0],
-                    [6, 6.0],
-                    [7, 6.0],
-                    [8, 38.0],
-                    [12, 8.0],
-                    [19, 0.0],
-                    [105, 6.0],
-                    [106, 8.0],
-                    [110, true],
-                    [161, "(None)"]
-                ],
-                "abilities": [59, 115, 180],
-                "location_id": 95,
-                "position": [4, 5],
-                "items": [
-                    {"item_id": 114, "quantity": 1.0, "slot": "Main Hand"},
-                    {"item_id": 133, "quantity": 1.0, "slot": "Body Armor"}
-                ]
-            },
-            {
-                "id": 181,
-                "name": "🐟fish 2",
-                "description": "Aquatic — no penalties in water.",
-                "attribs": [
-                    [3, 38.0],
-                    [5, 5.0],
-                    [6, 6.0],
-                    [7, 6.0],
-                    [8, 38.0],
-                    [12, 8.0],
-                    [19, 0.0],
-                    [105, 6.0],
-                    [106, 8.0],
-                    [110, true],
-                    [161, "(None)"]
-                ],
-                "abilities": [59, 115, 180],
-                "location_id": 95,
-                "position": [5, 2],
-                "items": [
-                    {"item_id": 114, "quantity": 1.0, "slot": "Main Hand"},
-                    {"item_id": 133, "quantity": 1.0, "slot": "Body Armor"}
-                ]
             },
             {
                 "id": 176,
@@ -1611,6 +1573,56 @@
                 "position": [3, 2]
             },
             {
+                "id": 179,
+                "name": "🐟jet fish",
+                "description": "Ranged attacker that spews jets of water.\r\nTheir version of **Disengage** means to duck underwater for one turn, preventing any attacks.\r\nAquatic — no penalties from water.",
+                "attribs": [
+                    [3, 38.0],
+                    [5, 5.0],
+                    [6, 6.0],
+                    [7, 6.0],
+                    [8, 38.0],
+                    [12, 8.0],
+                    [19, 0.0],
+                    [105, 6.0],
+                    [106, 8.0],
+                    [110, true],
+                    [161, "(None)"]
+                ],
+                "abilities": [59, 115, 180, 184],
+                "location_id": 95,
+                "position": [4, 5],
+                "items": [
+                    {"item_id": 114, "quantity": 1.0, "slot": "Main Hand"},
+                    {"item_id": 133, "quantity": 1.0, "slot": "Body Armor"}
+                ]
+            },
+            {
+                "id": 181,
+                "name": "🐟jet fish 2",
+                "description": "Ranged attacker that spews jets of water.\r\nTheir version of **Disengage** means to duck underwater for one turn, preventing any attacks.\r\nAquatic — no penalties from water.",
+                "attribs": [
+                    [3, 38.0],
+                    [5, 5.0],
+                    [6, 6.0],
+                    [7, 6.0],
+                    [8, 38.0],
+                    [12, 8.0],
+                    [19, 0.0],
+                    [105, 6.0],
+                    [106, 8.0],
+                    [110, true],
+                    [161, "(None)"]
+                ],
+                "abilities": [59, 115, 180, 184],
+                "location_id": 95,
+                "position": [5, 2],
+                "items": [
+                    {"item_id": 114, "quantity": 1.0, "slot": "Main Hand"},
+                    {"item_id": 133, "quantity": 1.0, "slot": "Body Armor"}
+                ]
+            },
+            {
                 "id": 166,
                 "name": "🐂Minotaur",
                 "description": "Bull above, two powerful legs below. As you approach, he'll look for a corridor that gives him a positional advantage, perhaps a corner.",
@@ -1674,6 +1686,7 @@
                     [10, 0.0],
                     [12, 5.0],
                     [105, 7.0],
+                    [106, 9.0],
                     [110, false]
                 ],
                 "abilities": [53, 108, 109],
@@ -1719,6 +1732,8 @@
                     [8, 6.0],
                     [12, 5.0],
                     [63, 2.0],
+                    [105, 4.0],
+                    [106, 6.0],
                     [110, false]
                 ],
                 "abilities": [53, 59, 107, 108],
@@ -1743,7 +1758,7 @@
                     [106, 11.0],
                     [161, "(None)"]
                 ],
-                "abilities": [53, 107, 108, 112, 123, 127, 172],
+                "abilities": [53, 107, 108, 112, 123, 127, 172, 184],
                 "toplevel": true,
                 "location_id": 97,
                 "position": [6, 9],
@@ -1756,7 +1771,7 @@
             },
             {
                 "id": 41,
-                "name": "spore colony",
+                "name": "🍄‍🟫spore colony",
                 "description": "Connected fungi that launch spores over long distances (unlimited ammo).",
                 "attribs": [
                     [3, 13.0],
@@ -1767,6 +1782,7 @@
                     [10, 0.0],
                     [12, 11.0],
                     [105, 6.0],
+                    [106, 9.0],
                     [110, false]
                 ],
                 "abilities": [52, 59, 108],
@@ -1845,7 +1861,8 @@
                     [110, true]
                 ],
                 "abilities": [53, 59, 107, 108, 115],
-                "position": [1, 1],
+                "location_id": 97,
+                "position": [6, 3],
                 "travel_party": "Wolf Pack",
                 "items": [
                     {"item_id": 114, "quantity": 1.0, "slot": "Main Hand"},
@@ -1870,30 +1887,6 @@
                 "abilities": [53, 59, 107, 108, 115],
                 "location_id": 97,
                 "position": [2, 2],
-                "travel_party": "Wolf Pack",
-                "items": [
-                    {"item_id": 114, "quantity": 1.0, "slot": "Main Hand"},
-                    {"item_id": 133, "quantity": 1.0, "slot": "Body Armor"}
-                ]
-            },
-            {
-                "id": 149,
-                "name": "🐺wolf 3",
-                "description": "Not particularly strong, but rarely hunts alone.",
-                "attribs": [
-                    [3, 9.0],
-                    [5, 1.0],
-                    [6, 8.0],
-                    [7, 4.0],
-                    [8, 9.0],
-                    [12, 8.0],
-                    [105, 6.0],
-                    [106, 9.0],
-                    [110, true]
-                ],
-                "abilities": [53, 59, 107, 108, 115],
-                "location_id": 97,
-                "position": [6, 3],
                 "travel_party": "Wolf Pack",
                 "items": [
                     {"item_id": 114, "quantity": 1.0, "slot": "Main Hand"},
@@ -1929,7 +1922,7 @@
             {
                 "id": 127,
                 "name": "✦Bear Form",
-                "description": "**On Any Success,** the caller gains **HP** and melee power like that of a large, strong beast, along with the ability to **Charge** (which characters that have this ability cannot do in their original form).\r\n\r\nEquip **Unarmed Beast** instead of a staff. Instant — you may perform another action on the same turn unless the transformation fails. (You can just leave **Natural Armour** equipped for both forms).\r\n\r\nThe effect lasts indefinitely and may be cancelled at any time, although doing so prevents you from attacking for 2 combat turns. On the second turn, re-equip the staff, and set **HP** back to **Max HP** if it was higher.",
+                "description": "**On Any Success,** the caller gains **HP** and melee power like that of a large, strong beast, along with the ability to **Charge** (which characters that have this ability cannot do in their original form).\r\n\r\nEquip **Unarmed Beast** instead of a staff. Instant — you may perform another action on the same turn unless the transformation fails. (You can just leave **Natural Armour** equipped for both forms).\r\n\r\nThe effect lasts indefinitely and may be cancelled at any time, although doing so prevents you from attacking for 2 combat turns. On the second turn, re-equip the staff, and set **HP** back to **Max HP** if it was higher. *This is a buff, not a heal—switching back and forth doesn't gain HP overall.*",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -1982,6 +1975,12 @@
                         "infield": {"attrib_id": 5},
                         "op_transform": "/",
                         "val_transform": 2.0
+                    }
+                ],
+                "chained": [
+                    {
+                        "child_id": 186,
+                        "req": {"outcome_success": "success_any"}
                     }
                 ]
             },
@@ -2123,7 +2122,7 @@
             {
                 "id": 109,
                 "name": "Death — Body",
-                "description": "Do when an enemy has no HP left. Success determines whether a corpse is dropped.\r\n\r\n*{lemonchiffon|TO DO: add effect to move to Inactive location.}*",
+                "description": "Do when an enemy has no HP left to remove them from the location.\r\nSuccess determines whether a corpse is dropped.\r\nAll enemies must run this event, even those who are incorporeal (they just won't leave a body).",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -2147,6 +2146,11 @@
                         "outfield": {"role": "at", "field_mode": "qty", "item_id": 111},
                         "op_transform": "c",
                         "outcome_success": "failure_any"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"field_mode": "teleport"},
+                        "op_application": ":="
                     }
                 ]
             },
@@ -2164,14 +2168,82 @@
                     {"op_application": ":=", "op_transform": "max", "val_transform": 0.0}
                 ],
                 "chained": [
-                    {"child_id": 57},
+                    {
+                        "child_id": 57,
+                        "req": {"op_application": ">="}
+                    },
                     {"child_id": 109}
+                ]
+            },
+            {
+                "id": 184,
+                "name": "✦Disengage",
+                "description": "Attempt to get out of melee range.\r\n\r\n**On Minor Failure:** achieve the change in position but the opponent gets an attack of opportunity first\r\n**On Major Failure:** fail to move",
+                "numeric_range": [1, 20],
+                "determinants": [
+                    {
+                        "label": "Enemy Nearby",
+                        "infield": {"role": "target char", "field_mode": "dist"},
+                        "op_application": "<",
+                        "val_required": 3.0
+                    },
+                    {
+                        "label": "Can Fight",
+                        "infield": {"attrib_id": 3},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Opponent Can Fight",
+                        "infield": {"role": "target char", "attrib_id": 3},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Standard Stat Impact",
+                        "infield": {"attrib_id": 12},
+                        "op_transform": "/",
+                        "val_transform": 3.5
+                    },
+                    {
+                        "label": "Standard XL Impact",
+                        "infield": {"attrib_id": 5},
+                        "op_transform": "/",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "label": "Standard Item Impact",
+                        "infield": {"child_of_anchor": true, "attrib_id": 14}
+                    },
+                    {
+                        "label": "Reduced Stat Impact",
+                        "infield": {"role": "target char", "attrib_id": 12},
+                        "op_application": "-",
+                        "op_transform": "/",
+                        "val_transform": 5.0
+                    },
+                    {
+                        "label": "Standard Item Impact",
+                        "infield": {"role": "target char", "child_of_anchor": true, "attrib_id": 13},
+                        "op_application": "-"
+                    },
+                    {
+                        "label": "Standard XL Impact",
+                        "infield": {"role": "target char", "attrib_id": 5},
+                        "op_application": "-",
+                        "op_transform": "/",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "label": "Threshold Adjustment",
+                        "op_transform": "c",
+                        "val_transform": 5.0
+                    },
+                    {"op_application": ":=", "op_transform": "floor"}
                 ]
             },
             {
                 "id": 87,
                 "name": "✦Fireball",
-                "description": "8d6 base fire damage in a radius 4 circle (20 ft). For each enemy in the area, roll **@Fireball Damage.**",
+                "description": "8d6 base fire damage in a radius 4 circle (20 ft). For each enemy in the area, roll **@Fireball Damage.**\r\n\r\n*Adapted from the System Reference Document 5.1 by Wizards of the Coast LLC.*",
                 "outcome_type": "numeric",
                 "numeric_range": [6, 48],
                 "determinants": [
@@ -2360,7 +2432,7 @@
             {
                 "id": 115,
                 "name": "Panic",
-                "description": "Roll to save when a living enemy takes unusually high damage, or health is very low. If the enemy fails to save:\r\n\r\n- **Within melee range:** They fight wildly, making all of their attack rolls *Hard* difficulty\r\n- **Outside of melee range:** They Dodge, or freeze in place if they can't",
+                "description": "Roll to save when a living enemy takes unusually high damage, or health is very low. If the enemy fails to save:\r\n\r\n- **Within melee range:** They fight wildly, making all of their attack rolls *Hard* difficulty, or *Very Hard* on **Major Failure**\r\n- **Outside of melee range:** They Dodge, or freeze in place if they can't",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {"op_application": "m:="},
@@ -2391,10 +2463,10 @@
             {
                 "id": 117,
                 "name": "Populate Room — Cleared Encounter Chance",
-                "description": "If the room has already been cleared, then most likely there will be no new enemies when you enter the room again, or at least they'll hide and not come out to fight. Also, roll when resting.\r\n\r\nFailure indicates that there *are* enemies to encounter, so roll for **Number of Enemies.**",
+                "description": "If the room has already been cleared, then most likely there will be no new enemies that come out to fight when you enter the room again, or when you rest to restore **HP.**\r\n\r\n- **Failure** indicates that there *are* enemies to encounter, so roll for **Number of Enemies.**\r\n- No need to roll when travelling through puzzle rooms that never had enemies to begin with. However, such rooms are not suitable for resting.",
                 "numeric_range": [1, 20],
                 "determinants": [
-                    {"label": "Threshold", "op_transform": "c", "val_transform": 10.0}
+                    {"label": "Threshold", "op_transform": "c", "val_transform": 8.0}
                 ],
                 "chained": [
                     {
@@ -2413,7 +2485,7 @@
                     {"op_application": ":=", "op_transform": "max"},
                     {"op_application": "m:="},
                     {
-                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 29},
+                        "infield": {"role": "preselected", "item_id": 29, "attrib_id": 185},
                         "op_transform": "/",
                         "val_transform": 2.0
                     },
@@ -2435,7 +2507,7 @@
                 "numeric_range": [-1, 1],
                 "determinants": [
                     {
-                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 29}
+                        "infield": {"role": "preselected", "item_id": 29, "attrib_id": 185}
                     },
                     {"op_application": ":=", "op_transform": "min"}
                 ]
@@ -2448,7 +2520,7 @@
                 "numeric_range": [-10, 2],
                 "determinants": [
                     {
-                        "infield": {"role": "preselected", "item_id": 29, "attrib_id": 20}
+                        "infield": {"role": "preselected", "item_id": 29, "attrib_id": 185}
                     },
                     {"op_application": ":=", "op_transform": "min", "val_transform": 0.0}
                 ],
@@ -2571,7 +2643,7 @@
             {
                 "id": 112,
                 "name": "🛟Restart in Entry Cavern",
-                "description": "Player characters can do this instead of die, but only for a limited number of times, especially at higher levels.\r\n\r\nUnable to fight anymore, you manage to drag your body into a hidden shaft and scramble back through it to the **Entry Cavern.**\r\n\r\nAfter a *Long Rest,* your **HP** is reset to max.",
+                "description": "Player characters can do this instead of die, but only for a limited number of times, especially at higher levels.\r\n\r\nUnable to fight anymore, you manage to drag your body into a hidden shaft and scramble back through it to the **Entry Cavern.**\r\n\r\nAfter a *Long Rest,* your **HP** and **MP** are reset to max.",
                 "outcome_type": "determined",
                 "determinants": [
                     {
@@ -2787,7 +2859,7 @@
             {
                 "id": 53,
                 "name": "✦Strike",
-                "description": "Determines whether a melee attack hits. Dexterity increases accuracy, while evasion decreases it.\r\n\r\n- **Any Success:** roll for damage\r\n- **Nat 20:** critical strike — roll damage twice (convenient), or roll only once and edit enemy hp to add the damage again (more correct)\r\n- **Major Failure:** off balance, possibly making it harder to react",
+                "description": "Determines whether a melee attack hits. Dexterity increases accuracy, while evasion decreases it.\r\n\r\n- **Any Success:** roll for damage\r\n- **Nat 20:** critical strike — roll damage twice (convenient), or roll only once and edit enemy hp to add the damage again (more correct)\r\n- **Major Failure:** fumble and be **Off Balance** for one turn",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -2845,7 +2917,34 @@
                         "op_transform": "c",
                         "val_transform": 2.0
                     },
+                    {"op_application": "m:="},
+                    {
+                        "infield": {"role": "target char", "attrib_id": 161}
+                    },
+                    {
+                        "label": "Is Off Balance",
+                        "op_application": "eq1",
+                        "op_transform": "c",
+                        "val_transform": 3.0
+                    },
+                    {
+                        "label": "Bonus against Off Balance",
+                        "op_application": "*",
+                        "op_transform": "c",
+                        "val_transform": 0.5
+                    },
+                    {"op_transform": "mr"},
                     {"op_application": ":=", "op_transform": "floor"}
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 161},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": "Off Balance",
+                        "outcome_success": "failure_major"
+                    }
                 ],
                 "chained": [
                     {
@@ -2891,6 +2990,13 @@
                 "name": "Suffer DoT",
                 "description": "Chance to reduce **HP** by a percentage of **Max HP** depending on **Status Effect Type.**",
                 "numeric_range": [1, 20]
+            },
+            {
+                "id": 186,
+                "name": "Summoned Position",
+                "description": "Roll for a compass position relative to the current coordinates:\r\n\r\n- 1 East\r\n- 2 Southeast\r\n- 3 South\r\n- 4 Southwest\r\n- 5 West\r\n- 6 Northwest\r\n- 7 North\r\n- 8 Northeast",
+                "outcome_type": "numeric",
+                "numeric_range": [1, 8]
             },
             {
                 "id": 169,
@@ -3064,6 +3170,12 @@
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
+                        "label": "Max Range 40ft",
+                        "infield": {"role": "target char", "field_mode": "dist"},
+                        "op_application": "<",
+                        "val_required": 9.0
+                    },
+                    {
                         "label": "Experienced Enough (Cantrip)",
                         "infield": {"attrib_id": 5},
                         "op_application": ">=",
@@ -3089,7 +3201,7 @@
                         "val_transform": 4.0
                     },
                     {
-                        "infield": {"role": "target char", "attrib_id": 16},
+                        "infield": {"role": "target char", "child_of_anchor": true, "attrib_id": 16},
                         "op_application": "-"
                     }
                 ],
@@ -3190,7 +3302,7 @@
     },
     "general data": {
         "piles": [
-            {"item_id": 29, "quantity": 0.0},
+            {"item_id": 29, "quantity": 1.0},
             {"item_id": 113, "quantity": 20.0},
             {"item_id": 145, "quantity": 10.0}
         ]
