@@ -832,7 +832,18 @@ def play_event(id):
     capture_origin(name=event.name)
     
     # Semantic Context
-    subject_id = req.get_int('subject_role_id') or req.get_int('subject_id')
+    sticky_role_entities = session.get('role_entities', {})
+    for key in req:
+        if key.endswith(Participant.ROLE_SUFFIX):
+            role_name = Participant.formkey_to_role(key)
+            val = req.get_int(key)
+            if val:
+                sticky_role_entities[role_name] = val
+    session['role_entities'] = sticky_role_entities
+
+    subject_id = req.get_int('subject_role_id') \
+        or req.get_int('subject_id') \
+        or sticky_role_entities.get(Participant.SUBJECT)
     subject = db.session.get(
         Entity, (game_token, subject_id)) if subject_id else None
 
@@ -841,12 +852,16 @@ def play_event(id):
         Entity, (game_token, owner_id)) if owner_id else None
 
     ctx_char_id = req.get_int('target char_role_id') \
-        or req.get_int('char_id') or session.get('old_char_id')
+        or req.get_int('char_id') \
+        or session.get('old_char_id') \
+        or sticky_role_entities.get(Participant.TARGET)
     ctx_char = db.session.get(
         Character, (game_token, ctx_char_id)) if ctx_char_id else None
 
     ctx_loc_id = req.get_int('at_role_id') \
-        or req.get_int('loc_id') or session.get('old_loc_id')
+        or req.get_int('loc_id') \
+        or session.get('old_loc_id') \
+        or sticky_role_entities.get(Participant.AT)
     if subject and subject.entity_type == Character.TYPENAME:
         ctx_loc_id = subject.location_id
     elif subject and subject.entity_type == Location.TYPENAME:
@@ -996,6 +1011,7 @@ def play_event(id):
         ctx_char=ctx_char,
         ctx_loc=ctx_loc,
         role_entities=eligible_role_entities,
+        sticky_roles=sticky_role_entities,
         fields_not_met=fields_not_met,
         related_entities=related,
         all_chars=Character.query.filter_by(

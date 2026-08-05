@@ -114,12 +114,14 @@
                             {% endif %}
 
                         {% elif eligible|length > 1 %}
+                            {% set default_id = sticky_roles.get(role) | int
+                                if sticky_roles.get(role) else none %}
                             <select name="{{ role }}{{ Participant.ROLE_SUFFIX }}"
                                     class="full-width themed-input"
                                     onchange="refreshFactors()">
                                 <option value="">-- Select {{ role }} --</option>
                                 {% for ent in eligible %}
-                                    <option value="{{ ent.id }}">{{ render.maskable_name(ent) }}</option>
+                                    <option value="{{ ent.id }}" {{ 'selected' if ent.id == default_id }}>{{ render.maskable_name(ent) }}</option>
                                 {% endfor %}
                             </select>
 

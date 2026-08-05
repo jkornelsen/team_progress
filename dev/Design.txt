@@ -7,8 +7,8 @@
 get local items to produce to the correct piles in lever room
     the u5 wall works better -- take a look at how events handle it
 
-pass on selected participants to chained events
-    select as default or could we lock them in?
+corpse was dropped at 1,1 instead of subject's coordinates
+    also when subject is at 1,1 it avoids the subject which it shouldn't do
 
 enum constant event field mode
     limit choices to attrs that have enums
@@ -35,8 +35,7 @@ pages often stop responding to dynamic javascript changes after awhile
 applying a long list of effects sometimes causes one or more to mess up
     maybe wait until each response returns before sending the next request
 
-corpse was dropped at 1,1 instead of subject's coordinates
-    also when subject is at 1,1 it avoids the subject which it shouldn't do
+in event configure for randomly placing an item, hide calculation section and lock (require) roll result
 
 don't show duplicate destinations in play location
     same door positions (null in the example)
@@ -53,8 +52,6 @@ Process 13756 waits for ShareLock on transaction 2605285; blocked by process 517
 CONTEXT:  while updating tuple (0,46) in relation "characters"
 [SQL: UPDATE characters SET position=%(position)s::INTEGER[] WHERE characters.game_token = %(characters_game_token)s AND characters.id = %(characters_id)s]
 [parameters: {'position': [9, 4], 'characters_game_token': '128a971e-9667-4496-9d0d-8ce491b31780', 'characters_id': 8}]
-
-in event configure for randomly placing an item, hide calculation section and lock (require) roll result
 
 ---- scenario ----
 
@@ -77,7 +74,6 @@ tethered one
         still must hear convo (branched) about atlanth's revenge plan
 
 dungeon crawl
-    elementals would make more sense in the depths
     mask all locations other than the Entry Cavern
     goal is to get completness to 8
         "full example run"

@@ -1,7 +1,7 @@
 {
     "overall settings": {
         "title": "Dungeon Crawl",
-        "description": "Your party was responding to a distress signal when suddenly, the ground below collapsed, and all fell down a nearly vertical shaft. No one seems to be injured *(yet)*. Doubtless there are {lightcoral|enemies} in the surrounding caverns—good source of {lightcoral|XP}, an optimist would say.\r\n\r\nStart by adding a set of 1-4 characters to play—see **GM Tools.** Then craft rudimentary supplies before embarking on an escape to the surface or delving deeper.",
+        "description": "Your party was responding to a distress signal when suddenly, the ground below collapsed, and all fell down a nearly vertical shaft. No one seems to be injured *(yet)*. Doubtless there are {lightcoral|enemies} in the surrounding caverns—good source of {lightcoral|XP}, an optimist would say.\r\n\r\nStart by making a set of 1-4 characters to play—see **GM Tools.** Then craft rudimentary supplies before embarking on an escape to the surface or delving deeper.",
         "win_reqs": [
             {"item_id": 29, "attrib_id": 185, "attrib_value": 6.0}
         ],
@@ -240,7 +240,8 @@
                     "Succubus",
                     "Incubus",
                     "Greater Demon",
-                    "Demon Lord"
+                    "Demon Lord",
+                    "Elemental"
                 ]
             },
             {
@@ -257,7 +258,6 @@
                     "Natural Large Non Predator e.g. Elephant",
                     "Plant",
                     "Golem",
-                    "Elemental",
                     "Goblin",
                     "Troll",
                     "Kobold",
@@ -696,7 +696,7 @@
             {
                 "id": 35,
                 "name": "Entry Floor d",
-                "description": "Staircase down, leading to otherworldly enemies that get stronger in the depths: undead, dragons, and demons.",
+                "description": "Staircase down, leading to otherworldly enemies that get stronger in the depths: undead, dragons, demons, and elementals.",
                 "dimensions": [6, 5],
                 "destinations": [
                     {
@@ -910,7 +910,7 @@
             {
                 "id": 150,
                 "name": "U2b Bounce",
-                "description": "Of all the things you were expecting to find underground, this wasn't one of them. Rubbery spheres hit the cave sides in a highly chaotic fashion. Some of their red color has rubbed off onto the stone floor.\r\n\r\n**Setup:** Duplicate the ball for 2 more. Roll **Grid Coordinates** for the starting position of each (without attacking).",
+                "description": "Of all the things you were expecting to find underground, this wasn't one of them. Rubbery spheres hit the cave sides in a highly chaotic fashion. Some of their red color has rubbed off onto the stone floor.\r\n\r\n**Setup:** Duplicate the ball for 1 more. Roll **Grid Coordinates** for the starting position of both balls.",
                 "dimensions": [5, 5],
                 "zones": [
                     {
@@ -1399,7 +1399,7 @@
             {
                 "id": 183,
                 "name": "⚽bouncy ball",
-                "description": "On each turn, roll new **Grid Coordinates.** For any targets along the path to the new coordinates, **Strike.**",
+                "description": "On each turn, roll new **Grid Coordinates.**\r\nRoll **Strike** for any targets adjacent to the new location.",
                 "attribs": [
                     [3, 21.0],
                     [5, 2.0],
@@ -1731,10 +1731,12 @@
                     [7, 1.0],
                     [8, 6.0],
                     [12, 5.0],
+                    [19, 0.0],
                     [63, 2.0],
                     [105, 4.0],
                     [106, 6.0],
-                    [110, false]
+                    [110, false],
+                    [161, "(None)"]
                 ],
                 "abilities": [53, 59, 107, 108],
                 "location_id": 31,
@@ -1781,9 +1783,12 @@
                     [8, 13.0],
                     [10, 0.0],
                     [12, 11.0],
+                    [19, 0.0],
                     [105, 6.0],
                     [106, 9.0],
-                    [110, false]
+                    [110, false],
+                    [161, "(None)"]
+
                 ],
                 "abilities": [52, 59, 108],
                 "location_id": 33,
@@ -1856,9 +1861,12 @@
                     [7, 4.0],
                     [8, 9.0],
                     [12, 8.0],
+                    [19, 0.0],
                     [105, 6.0],
                     [106, 9.0],
-                    [110, true]
+                    [110, true],
+                    [161, "(None)"]
+
                 ],
                 "abilities": [53, 59, 107, 108, 115],
                 "location_id": 97,
@@ -1880,9 +1888,12 @@
                     [7, 4.0],
                     [8, 9.0],
                     [12, 8.0],
+                    [19, 0.0],
                     [105, 6.0],
                     [106, 9.0],
-                    [110, true]
+                    [110, true],
+                    [161, "(None)"]
+
                 ],
                 "abilities": [53, 59, 107, 108, 115],
                 "location_id": 97,
@@ -1904,9 +1915,12 @@
                     [7, 4.0],
                     [8, 15.0],
                     [12, 8.0],
+                    [19, 0.0],
                     [105, 6.0],
                     [106, 9.0],
-                    [110, true]
+                    [110, true],
+                    [161, "(None)"]
+
                 ],
                 "abilities": [53, 59, 107, 108, 115],
                 "location_id": 97,
@@ -2667,6 +2681,11 @@
                         "op_application": ":=",
                         "op_transform": "max",
                         "val_transform": 0.0
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"field_mode": "teleport", "loc_id": 30},
+                        "op_application": ":="
                     }
                 ]
             },
