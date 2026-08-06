@@ -4,6 +4,12 @@
 
 ---- functional, tightening, quality of life ----
 
+attrib mode effects aren't loading preselected subject
+    for example ask out on date: calendar
+
+show and sort characters by party name on loc play screen 
+    look for commonalities if some characters have multiple party names
+
 get local items to produce to the correct piles in lever room
     the u5 wall works better -- take a look at how events handle it
 
@@ -16,6 +22,9 @@ enum constant event field mode
 
 link "working..." text in char inv to the actual production pile
 show spin icon when char inventory is the target owner even if not the host
+
+recipe_id is still often showing up in events when not wanted
+    for example shoot: has ammo
 
 old_loc_id doesn't always get set when going to loc page
     http://localhost:5000/play/location/14 (navigate and reload both failed)
@@ -52,6 +61,38 @@ Process 13756 waits for ShareLock on transaction 2605285; blocked by process 517
 CONTEXT:  while updating tuple (0,46) in relation "characters"
 [SQL: UPDATE characters SET position=%(position)s::INTEGER[] WHERE characters.game_token = %(characters_game_token)s AND characters.id = %(characters_id)s]
 [parameters: {'position': [9, 4], 'characters_game_token': '128a971e-9667-4496-9d0d-8ce491b31780', 'characters_id': 8}]
+
+auto battler mode
+    move all characters and enemies to a location
+        checkbox to allow location to be used for auto fighting
+        link from location play to start an auto fight
+        /play/fight/<fight id>
+        if character is present but missing necessary hp fields then show msg
+        if not two teams then show message "need enemy team -- specify party name"
+    play fight
+        display characters in sections for each party
+        display hp and status effect for each character
+        show a duplicate of the overview log in right column
+        "char1 strike: minor failure"
+    all chars must have an "HP" attrib (case insensitive)
+        and "Max HP"
+        and "Status Effect"
+        selectbox on attrib configure to use as which field for autofighting
+        automatically run certain events per round
+        damage over time before turn, check for death after turn
+        selectbox next to priority: auto run disabled, turn, before, after, reset
+        death would move to death realm loc, reset would heal and move to fighting loc
+        attempt to run all chained events
+    characters would need logic to choose actions
+        use their abilities list
+        in event config specify priority number
+        default is 1 which means choose randomly if multiple can work
+        0 means not automatic
+    seems like we get quite a bit for not very much extra configuration
+        Location autofight checkbox
+        Attrib af_field selectbox
+        Event af_turn_stage selectbox and priority
+    arena scenario
 
 ---- scenario ----
 

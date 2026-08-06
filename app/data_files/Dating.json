@@ -1911,13 +1911,14 @@
                 "name": "Art",
                 "description": "Holding Sydney's hand. His name means \"bear\" in Celtic.\r\n\r\nPlays guitar. Leads the worship music on Sunday mornings and Wednesday evenings.",
                 "location_id": 52,
-                "travel_party": "Church Singles"
+                "party": "Not Romantic, Church Singles"
             },
             {
                 "id": 204,
                 "name": "Baast",
                 "description": "Popular local musician. He's dark, good-looking, and smooth talking. Middle eastern features, but no foreign accent.",
                 "location_id": 44,
+                "party": "Not Romantic",
                 "items": [
                     {"item_id": 162, "quantity": 1.0, "slot": "Accessories"}
                 ]
@@ -1934,6 +1935,7 @@
                     [10, 5.0],
                     [11, 1.0],
                     [12, 4.0],
+                    [14, 0.0],
                     [131, "Wealth"],
                     [132, "Burned"],
                     [135, 0.0],
@@ -1942,7 +1944,7 @@
                 ],
                 "abilities": [134, 136, 139, 166],
                 "location_id": 52,
-                "travel_party": "Church Singles",
+                "party": "Church Singles",
                 "items": [
                     {"item_id": 29, "quantity": 1.0},
                     {"item_id": 30, "quantity": 1.0, "slot": "Torso"},
@@ -1955,7 +1957,8 @@
                 "id": 59,
                 "name": "Claudia's Parents",
                 "description": "No surprise, her family cares about each other. Hispanic family.",
-                "location_id": 40
+                "location_id": 40,
+                "party": "Not Romantic"
             },
             {
                 "id": 61,
@@ -1967,7 +1970,7 @@
                     [12, 7.0]
                 ],
                 "location_id": 52,
-                "travel_party": "Church Singles",
+                "party": "Not Romantic, Church Singles",
                 "items": [
                     {"item_id": 29, "quantity": 1.0, "slot": "Held"}
                 ]
@@ -1976,7 +1979,8 @@
                 "id": 155,
                 "name": "Drechsel",
                 "description": "Bartender. Has a knack for bottles, jars, and mixes.",
-                "location_id": 44
+                "location_id": 44,
+                "party": "Not Romantic"
             },
             {
                 "id": 62,
@@ -2000,7 +2004,7 @@
                 "abilities": [63, 64, 145, 146, 157, 178, 180, 181, 195, 198],
                 "toplevel": true,
                 "location_id": 47,
-                "travel_party": "Drive",
+                "party": "Drive",
                 "items": [
                     {"item_id": 19, "quantity": 1.0, "slot": "Accessories"},
                     {"item_id": 30, "quantity": 1.0, "slot": "Torso"},
@@ -2060,13 +2064,15 @@
                     [9, true]
                 ],
                 "abilities": [66],
-                "location_id": 47
+                "location_id": 47,
+                "party": "Not Romantic"
             },
             {
                 "id": 177,
                 "name": "Minister Breece",
                 "description": "The preacher. Passionate middle-aged man who enjoys making spiritual comparisons to rugby, from his time playing in college.",
                 "location_id": 175,
+                "party": "Not Romantic",
                 "items": [
                     {"item_id": 29, "quantity": 1.0, "slot": "Held"}
                 ]
@@ -2075,7 +2081,8 @@
                 "id": 286,
                 "name": "Prompt",
                 "description": "His parents call him Eddie. Excels at getting computers to work, and spends most of his time in the back room working on them. When it comes to relationships, he looks to you as the one with experience.",
-                "location_id": 84
+                "location_id": 84,
+                "party": "Not Romantic"
             },
             {
                 "id": 142,
@@ -2086,20 +2093,21 @@
                     [144, "Unaware"]
                 ],
                 "location_id": 52,
-                "travel_party": "Church Singles"
+                "party": "Church Singles"
             },
             {
                 "id": 213,
                 "name": "Teria's Father",
                 "description": "Owner of the cafeteria. Lives upstairs with his daughter in a small room. Generally, work is his life. Originally from Japan.",
-                "location_id": 140
+                "location_id": 140,
+                "party": "Not Romantic"
             },
             {
                 "id": 141,
                 "name": "Volvo S60",
                 "description": "A car that shows someone who likes things done right. Faster than waiting for the bus.",
                 "location_id": 47,
-                "travel_party": "Drive",
+                "party": "Drive, Not Romantic",
                 "items": [
                     {"item_id": 170, "quantity": 10.0}
                 ]
@@ -2138,7 +2146,8 @@
                 "attribs": [
                     [14, 6.0]
                 ],
-                "location_id": 46
+                "location_id": 46,
+                "party": "Not Romantic"
             }
         ],
         "events": [
@@ -2288,6 +2297,8 @@
                 "name": "Ask Out On Date",
                 "description": "This is for a literal date, that is, decide together on a future day, then go out somewhere. A second date or repeated planned hangouts are when it becomes \"Dating.\"\r\n\r\n- If they accept, then go to **Date** and set the location.\r\n- The default day is tomorrow, so you can keep that or change it.",
                 "numeric_range": [1, 20],
+                "party_targeting": "exclude_name",
+                "party_name": "Not Romantic",
                 "determinants": [
                     {
                         "infield": {"attrib_id": 12}
@@ -2391,6 +2402,8 @@
                 "name": "Conception",
                 "description": "Success means she **does** get pregnant, even if this is not what you want.\r\n\r\n- *No birth control:* **10/50** (20%) chance\r\n- *Birth control:* **2/50** (4%) chance\r\n- *Double birth control:* still a **1/50** (2%) chance by rolling *Natural Max*",
                 "numeric_range": [1, 50],
+                "party_targeting": "exclude_name",
+                "party_name": "Not Romantic",
                 "determinants": [
                     {
                         "infield": {"attrib_id": 194},
@@ -2447,6 +2460,8 @@
                 "name": "Date Outcome",
                 "description": "Roll at the end of the date. An important way to improve how they feel about you.\r\n\r\nA minor failure means it wasn't a particularly good date, but it's still better than not having gone on a date at all.",
                 "numeric_range": [1, 20],
+                "party_targeting": "exclude_name",
+                "party_name": "Not Romantic",
                 "determinants": [
                     {
                         "infield": {"role": "target char", "field_mode": "qty", "item_id": 179},
@@ -2626,6 +2641,8 @@
                 "name": "How an Advance is Received",
                 "description": "Does the person draw back or are they happy about the initiative taken. For example, attempt to hold their hand. The attempt could be physical or spoken.\r\n\r\nFor actions that are mostly about being physical and erotic rather than emotional, use **Steamy Action** instead.",
                 "numeric_range": [1, 20],
+                "party_targeting": "exclude_name",
+                "party_name": "Not Romantic",
                 "determinants": [
                     {
                         "infield": {"attrib_id": 12}
@@ -3067,6 +3084,8 @@
                 "name": "Propose Next Level",
                 "description": "Attempt to advance the relationship, for example, marriage proposal. If successful, go to that person and change their **Relationship Status.**\r\n\r\n- Many status changes, such as **Love Interest,** can be set unofficially and do not require a roll.\r\n- Before rolling, find **Ask** in the list of links and set **Relationship Status** to the level you're hoping to achieve.\r\n- A **Gift Bonus** such as a fancy dinner helps, as long as it's not too cheap.\r\n- On failure, it would be best to wait before trying again. To try again without waiting, increase the difficulty by one class each time.",
                 "numeric_range": [1, 20],
+                "party_targeting": "exclude_name",
+                "party_name": "Not Romantic",
                 "determinants": [
                     {
                         "label": "Proposed Status",
@@ -3195,6 +3214,8 @@
                 "name": "Steamy Action",
                 "description": "Immediate physical focus takes priority over emotional feelings once the mood is right. This could be a bedroom scene or any physical situation such as dancing or making out.\r\n\r\nAdjust **Intensity of Act.** For daring acts relative to current arousal, increase difficulty.\r\n\r\n*Minor Failure* incurs a small penalty, and *Major Failure* indicates that your attempted action gets rejected.",
                 "numeric_range": [1, 20],
+                "party_targeting": "exclude_name",
+                "party_name": "Not Romantic",
                 "determinants": [
                     {
                         "infield": {"role": "target char", "attrib_id": 11},

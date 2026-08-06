@@ -12,13 +12,15 @@ from app.models import (
     Pile, ItemLimit, AttribVal, EnumEntry, Operation, EntityAbility,
     Recipe, RecipeSource, RecipeByproduct, RecipeAttribReq,
     DestExit, LocDest, LocZone, EntranceReq, ItemRef,
-    Participant, OutcomeType, SuccessTier, EventFactor, EventField, EventLink,
+    Participant, OutcomeType, SuccessTier, PartyTarget,
+    EventFactor, EventField, EventLink,
     Scenario, WinRequirement, IdSequence)
 from app.serialization import clone_entity
 from app.utils import (
     LinkLetters, RequestHelper, parse_coords,
     capture_origin, redirect_back, name_stripped, sort_by_name_stripped)
 from .logic_discovery import run_discovery_scan
+from .logic_navigation import all_parties
 
 logger = logging.getLogger(__name__)
 configure_bp = Blueprint('configure', __name__, url_prefix='/configure')
@@ -605,7 +607,7 @@ def edit_character(id):
         char.description = req.get_str('description')
         char.location_id = req.get_int('location_id', None)
         char.position = parse_coords(req.get_str('pos_str'))
-        char.travel_party = req.get_str('travel_party')
+        char.party = req.get_str('party')
         char.toplevel = 'toplevel' in request.form
 
         # Update Attrib values
@@ -659,7 +661,7 @@ def edit_character(id):
         return redirect_back('configure.index') 
 
     slots_attrib = db.session.get(Attrib, (game_token, EQUIPMENT_SLOTS_ID))
-    all_slots = [
+    slots = [
         e for e in slots_attrib.enum_entries
         ] if slots_attrib else []
 
@@ -673,7 +675,8 @@ def edit_character(id):
             game_token=game_token).order_by(name_stripped()).all(),
         all_events=Event.query.filter_by(
             game_token=game_token).order_by(name_stripped()).all(),
-        all_slots=all_slots
+        slots=slots,
+        party_names=all_parties()
     )
 
 @configure_bp.route('/attrib/<int:id>', methods=['GET', 'POST'])
@@ -766,6 +769,15 @@ def edit_event(id):
         elif event.outcome_type == OutcomeType.SELECT:
             event.selection_attrib_id = req.get_int(
                 'selection_attrib_id', None)
+
+        targeting_raw = req.get_str('party_targeting')
+        targeting, sep, party = targeting_raw.partition(':')
+        if sep and targeting in PartyTarget.USES_NAME:
+            event.party_targeting = targeting
+            event.party_name = party
+        else:
+            event.party_targeting = targeting_raw
+            event.party_name = None
 
         # --- SAVE DETERMINANTS & EFFECTS ---
         # 1. Clear existing factors to perform a clean sync
@@ -930,10 +942,12 @@ def edit_event(id):
         all_events=Event.query.filter_by(
             game_token=game_token).order_by(name_stripped()).all(),
         recipe_map=recipe_map,
+        parties=all_parties(),
         OutcomeType=OutcomeType,
         SuccessTier=SuccessTier,
         Operation=Operation,
-        Participant=Participant
+        Participant=Participant,
+        PartyTarget=PartyTarget
     )
 
 # ------------------------------------------------------------------------

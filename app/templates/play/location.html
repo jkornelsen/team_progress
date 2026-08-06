@@ -399,7 +399,7 @@ const chars = {
         name: "{{ char.name }}", 
         x: {{ char.position[0] if char.position else 0 }}, 
         y: {{ char.position[1] if char.position else 0 }},
-        travel_party: "{{ char.travel_party or '' }}",
+        party: "{{ char.party or '' }}",
         icon: getFirstGrapheme("{{ char.name }}"),
         link: "{{ url_for('play.play_character', id=char.id) }}"
     },
@@ -545,15 +545,15 @@ function syncPartyState() {
     
     const active = getActiveChar();
     const myName = active.char.name.toLowerCase();
-    const myParty = (active.char.travel_party || "").toLowerCase();
+    const myParty = (active.char.party || "").toLowerCase();
 
     // Check if there are any other members in the same party here
     const candidates = Object.keys(chars).filter(id => {
         if (id == active.char_id) return false;
         const c = chars[id];
-        return (myParty !== "" && c.travel_party?.toLowerCase() === myParty) ||
+        return (myParty !== "" && c.party?.toLowerCase() === myParty) ||
                (myParty !== "" && c.name?.toLowerCase() === myParty) ||
-               (c.travel_party?.toLowerCase() === myName);
+               (c.party?.toLowerCase() === myName);
     }).map(id => chars[id]);
 
     // Filter by Proximity -- Flood fill to match cohesive party logic
@@ -580,7 +580,7 @@ function syncPartyState() {
 
     if (nearbyMembers.length > 0) {
         container.style.display = 'block';
-        const displayName = active.char.travel_party || "Followers";
+        const displayName = active.char.party || "Followers";
         const label = container.querySelector('.checkbox-label');
         const isChecked = document.getElementById('move-with-party-chk')?.checked;
         label.innerHTML = `

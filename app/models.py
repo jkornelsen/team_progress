@@ -553,7 +553,7 @@ class Character(Entity):
     game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
     toplevel = db.Column(db.Boolean, default=False)
-    travel_party = db.Column(db.String(100))
+    party = db.Column(db.String(100))
     position = db.Column(ARRAY(db.Integer), default=None)
     location_id = db.Column(db.Integer)
 
@@ -563,7 +563,7 @@ class Character(Entity):
             "toplevel": self.toplevel,
             "location_id": self.location_id,
             "position": self.position,
-            "travel_party": self.travel_party,
+            "party": self.party,
             "items": sorted([p.to_dict() for p in self.piles], 
                            key=lambda x: x['item_id']),
         })
@@ -727,6 +727,15 @@ class RollerType:
 
     ALL = [DND, IRONSWORN]
 
+class PartyTarget:
+    ANY = 'any'
+    NOT_SAME = 'not_same'
+    SAME = 'same'
+    TARGET_NAME = 'target_name'
+    EXCLUDE_NAME = 'exclude_name'
+
+    USES_NAME = [TARGET_NAME, EXCLUDE_NAME]
+
 class Event(Entity):
     """Actions and things that can happen, typically with chance.
     Many events use or change the Attrib values of other entities.
@@ -746,6 +755,8 @@ class Event(Entity):
     numeric_range = db.Column(ARRAY(db.Integer)) # [min, max]
     fixed_base = db.Column(db.Float, default=0.0)
     selection_attrib_id = db.Column(db.Integer)
+    party_targeting = db.Column(db.String(20), default=PartyTarget.ANY)
+    party_name = db.Column(db.String(100))
 
     def to_dict(self):
         data = super().to_dict()
@@ -762,10 +773,12 @@ class Event(Entity):
                 if self.outcome_type == OutcomeType.DETERMINED else None,
             "selection_attrib_id": self.selection_attrib_id
                 if self.outcome_type == OutcomeType.SELECT else None,
+            "party_targeting": self.party_targeting,
+            "party_name": self.party_name,
             "determinants": [d.to_dict() for d in self.determinants],
             "effects": [e.to_dict() for e in self.effects],
             "chained": sorted([l.to_dict() for l in self.chained], 
-                             key=lambda x: x['child_id']),
+                             key=lambda x: x['child_id'])
         })
         return self.to_dict_sparse(data)
 

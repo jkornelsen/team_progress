@@ -79,10 +79,23 @@
 
             <div class="grid-2-col spacious-top">
                 <div class="form-group">
-                    <label for="travel_party">Travel Party or Leader:</label>
-                    <input type="text" id="travel_party" name="travel_party" value="{{ character.travel_party or '' }}" 
-                           placeholder="Party A" class="full-width themed-input">
-                    <small class="label-like">Characters in the same party can move together.</small>
+                    <label for="party">Party or Leader:</label>
+                    <input type="text"
+                           id="party"
+                           name="party"
+                           value="{{ character.party or '' }}" 
+                           class="full-width themed-input"
+                           list="party-suggestions">
+                    <datalist id="party-suggestions">
+                        {% for party in party_names %}
+                            <option value="{{ party }}"></option>
+                        {% endfor %}
+                        {% if not party_names %}
+                            <option value="Main Party"></option>
+                            <option value="Enemies"></option>
+                        {% endif %}
+                    </datalist>
+                    <small class="label-like">Characters in the same party can move and fight together.</small>
                 </div>
                 <div class="flex-column" style="padding-top: 30px;">
                     <label class="checkbox-label">
@@ -250,7 +263,7 @@
 
         <select name="items[{{ index }}][slot_id]">
             <option value="">(Stored)</option>
-            {% for slot in all_slots %}
+            {% for slot in slots %}
                 <option value="{{ slot.id }}" {{ 'selected' if slot.id == selected_slot_id }}>
                     {{ slot.label }}
                 </option>

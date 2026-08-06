@@ -8,7 +8,7 @@ from sqlalchemy.orm.attributes import flag_modified
 from app.models import (
     db, GENERAL_ID, StorageType, Character, Location, Item, Pile,
     AttribVal, LocDest)
-from app.utils import format_num, maskable_name
+from app.utils import format_num, maskable_name, sort_by_name_stripped
 from app.src.logic_user_interaction import add_message
 
 logger = logging.getLogger(__name__)
@@ -236,6 +236,37 @@ def find_best_output_pos(item_id, loc_id, anchor_pos):
 # Party
 # ------------------------------------------------------------------------
 
+def get_party_set(character):
+    if not character or not character.party:
+        return set()
+    return {p.strip().lower() for p in character.party.split(',') if p.strip()}
+
+def is_in_same_party(char_a, char_b):
+    set_a = get_party_set(char_a)
+    set_b = get_party_set(char_b)
+    # Also check if one's name is the other's party
+    name_a = char_a.name.lower()
+    name_b = char_b.name.lower()
+    if name_a in set_b or name_b in set_a:
+        return True
+    return not set_a.isdisjoint(set_b)
+
+def all_parties():
+    game_token = g.game_token
+    party_settings = db.session.query(Character.party).filter(
+        Character.game_token == game_token,
+        Character.party != None,
+        Character.party != ''
+    ).distinct().all()
+
+    unique_parties = set()
+    for (party_str,) in party_settings:
+        if party_str:
+            parts = [p.strip() for p in party_str.split(',')]
+            unique_parties.update(p for p in parts if p)
+
+    return sort_by_name_stripped(list(unique_parties))
+
 def get_neighbors(pos):
     """Returns all 8 adjacent coordinates."""
     x, y = pos
@@ -254,13 +285,13 @@ def get_cohesive_party(main_char, move_party_flag):
 
     game_token = g.game_token
     # 1. Get all potential candidates based on party settings
-    party_name = main_char.travel_party
+    party_name = main_char.party
     my_name = main_char.name
     filters = []
     if party_name:
-        filters.append(Character.travel_party == party_name)
+        filters.append(Character.party == party_name)
         filters.append(Character.name == party_name)
-    filters.append(Character.travel_party == my_name)
+    filters.append(Character.party == my_name)
 
     candidates = Character.query.filter(
         Character.game_token == game_token,
@@ -314,9 +345,9 @@ def get_moving_party(main_char, move_party=False):
     """
     Determines which characters are moving:
     - The main character.
-    - Any characters sharing the same 'travel_party' string.
-    - Any character whose 'name' is the 'travel_party' of the main character.
-    - Any character whose 'travel_party' is the 'name' of the main character.
+    - Any characters sharing the same 'party' string.
+    - Any character whose 'name' is the 'party' of the main character.
+    - Any character whose 'party' is the 'name' of the main character.
     - For grids, only include nearby party members.
     """
     if not move_party:
@@ -326,14 +357,14 @@ def get_moving_party(main_char, move_party=False):
         return get_cohesive_party(main_char, move_party)
 
     game_token = g.game_token
-    party_name = main_char.travel_party
+    party_name = main_char.party
     my_name = main_char.name
 
     filters = []
     if party_name:
-        filters.append(Character.travel_party == party_name) # Shared group name
-        filters.append(Character.name == party_name)         # I am following them
-    filters.append(Character.travel_party == my_name)        # They are following me
+        filters.append(Character.party == party_name) # Shared group name
+        filters.append(Character.name == party_name)  # I am following them
+    filters.append(Character.party == my_name)        # They are following me
 
     group_members = Character.query.filter(
         Character.game_token == game_token,
@@ -580,7 +611,7 @@ def arrive_at_destination(main_char_id, dest_loc_id, move_party=False):
         target_loc.masked = False
 
     db.session.flush()
-    party = " and party" if main_char.travel_party and move_party else ''
+    party = " and party" if main_char.party and move_party else ''
     add_message(f"{main_char.name}{party} traveled to {target_loc.name}.")
     return True, "Arrived."
 

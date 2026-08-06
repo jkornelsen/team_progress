@@ -65,7 +65,7 @@
 
         <!-- 2. Logic Type -->
         <section class="outer-border">
-            <div class="grid-2-col">
+            <div>
                 <div>
                     <label for="outcome_type">Outcome Type:</label>
                     <select id="outcome_type"
@@ -105,7 +105,7 @@
                     </select>
                 </label>
             </div>
-            <div id="fields-dice" class="grid-2-col spacious-top hidden">
+            <div id="fields-dice" class="spacious-top hidden">
                 <div>
                     <label>System:</label>
                     <select name="roller_type" class="full-width themed-input">
@@ -115,7 +115,7 @@
                 </div>
             </div>
 
-            <div class="grid-2-col">
+            <div>
                 <div id="fields-range" class="spacious-top hidden">
                     <div>
                         <label>Die Min:</label>
@@ -129,6 +129,39 @@
                 <div id="fields-base" class="spacious-top hidden">
                     <label>Base Value:</label>
                     <input type="number" name="fixed_base" value="{{ event.fixed_base }}" step="any">
+                </div>
+            </div>
+
+            <div class="spacious-top">
+                <div>
+                    <label>Restrict <i>Target Char</i> By Party:</label>
+                    <select name="party_targeting" class="themed-input">
+                        <option value="{{ PartyTarget.ANY }}" {{
+                            'selected' if event.party_targeting == PartyTarget.ANY
+                            }}>(Any)</option>
+                        <option value="{{ PartyTarget.NOT_SAME }}" {{
+                            'selected' if event.party_targeting == PartyTarget.NOT_SAME
+                            }}>Do Not Target Same</option>
+                        <option value="{{ PartyTarget.SAME }}" {{
+                            'selected' if event.party_targeting == PartyTarget.SAME
+                            }}>Target Same</option>
+                        {% for p_name in parties %}
+                            <option value="{{ PartyTarget.TARGET_NAME }}:{{ p_name }}" {{
+                                'selected' if event.party_targeting == PartyTarget.TARGET_NAME
+                                and event.party_name == p_name
+                            }}>
+                                Only: {{ p_name }}
+                            </option>
+                        {% endfor %}
+                        {% for p_name in parties %}
+                            <option value="{{ PartyTarget.EXCLUDE_NAME }}:{{ p_name }}" {{
+                                'selected' if event.party_targeting == PartyTarget.EXCLUDE_NAME
+                                and event.party_name == p_name
+                            }}>
+                                Exclude: {{ p_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
                 </div>
             </div>
         </section>
@@ -1026,16 +1059,16 @@ document.addEventListener('DOMContentLoaded', function() {
                             'selected' if char_id == c.id }}>{{ c.name }}</option>
                     {% endfor %}
                 </optgroup>
-                <optgroup label="Locations">
-                    {% for l in all_locs %}
-                        <option value="loc:{{ l.id }}" {{
-                            'selected' if loc_id == l.id }}>{{ l.name }}</option>
-                    {% endfor %}
-                </optgroup>
                 <optgroup label="Items">
                     {% for i in all_items %}
                         <option value="item:{{ i.id }}" {{
                             'selected' if item_id == i.id }}>{{ i.name }}</option>
+                    {% endfor %}
+                </optgroup>
+                <optgroup label="Locations">
+                    {% for l in all_locs %}
+                        <option value="loc:{{ l.id }}" {{
+                            'selected' if loc_id == l.id }}>{{ l.name }}</option>
                     {% endfor %}
                 </optgroup>
             </select>

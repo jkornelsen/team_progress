@@ -8,8 +8,8 @@ from sqlalchemy import select, or_, and_
 from sqlalchemy.orm import joinedload
 from app.models import (
     db, Entity, Item, Character, Location, Attrib, Event,
-    Pile, AttribVal, Operation, OutcomeType, SuccessTier, EventFactor,
-    Recipe, RecipeAttribReq,
+    Pile, AttribVal, Recipe, RecipeAttribReq,
+    Operation, OutcomeType, SuccessTier, EventFactor, PartyTarget,
     DestExit, LocDest, EventLink, EntityAbility, EventField,
     Progress, Scenario, WinRequirement, GameMessage,
     GENERAL_ID, StorageType, Participant)
@@ -31,7 +31,8 @@ from .logic_production import (
     execute_production)
 from .logic_navigation import (
     move_group, get_cohesive_party, get_available_destinations, arrive_at_destination,
-    is_in_grid, blocked_by_local_item, find_nearest_available_pos, is_adjacent)
+    is_in_grid, blocked_by_local_item, find_nearest_available_pos, is_adjacent,
+    get_party_set, is_in_same_party)
 from .logic_objectives import validate_requirements
 from .logic_user_interaction import add_message, get_chronicle
 from .presenters import ItemPlayPresenter
@@ -270,10 +271,10 @@ def play_character(id):
     # Identify other party members at this location
     party_members = []
     party_criteria = []
-    if character.travel_party:
-        party_criteria.append(Character.travel_party == character.travel_party)
-        party_criteria.append(Character.name == character.travel_party)
-    party_criteria.append(Character.travel_party == character.name)
+    if character.party:
+        party_criteria.append(Character.party == character.party)
+        party_criteria.append(Character.name == character.party)
+    party_criteria.append(Character.party == character.name)
 
     if party_criteria:
         all_candidates = Character.query.filter(
@@ -914,27 +915,91 @@ def play_event(id):
             search_pool = [ctx_loc] if ctx_loc else other_entities_here
         else:
             search_pool = other_entities_here
-        logger.debug(f"routes_play: search_pool for {role} = {[e.name for e in search_pool]}")
-
+        logger.debug(
+            f"routes_play: search_pool for {role} = "
+            f"{[e.name for e in search_pool]}")
         role_candidates = set(search_pool)
-        factors = [
-            f for f in event.factors if f.infield and f.infield.role == role]
-        for factor in factors:
-            can_use = {
-                ent for ent in search_pool 
-                if is_factor_met(factor, ent, subject_id=subject_id,
-                require_comparison=(factor.usage_type == Participant.DET))
-            }
-            role_candidates &= can_use # Intersection
-            if not can_use:
+
+        # Filter By Party Targeting
+        if role == Participant.TARGET and event.party_targeting \
+                and event.party_targeting != PartyTarget.ANY:
+            targeting = event.party_targeting
+            party_name = (event.party_name or "").lower()
+            filtered_candidates = set()
+            for ent in role_candidates:
+                if ent.entity_type != Character.TYPENAME:
+                    filtered_candidates.add(ent)
+                    continue
+                party_set = get_party_set(ent)
+                is_same = is_in_same_party(subject, ent) if subject else False
+                if targeting == PartyTarget.SAME and not is_same:
+                    continue
+                if targeting == PartyTarget.NOT_SAME and is_same:
+                    continue
+                if targeting == PartyTarget.TARGET_NAME \
+                        and party_name not in party_set:
+                    continue
+                if targeting == PartyTarget.EXCLUDE_NAME \
+                        and party_name in party_set:
+                    continue
+                filtered_candidates.add(ent)
+            if not filtered_candidates:
                 if role not in fields_not_met:
                     fields_not_met[role] = {'positive': [], 'negated': []}
+                party_labels = {
+                    PartyTarget.SAME: "Same Party",
+                    PartyTarget.NOT_SAME: "Same Party",
+                    PartyTarget.TARGET_NAME: f"Party '{event.party_name}'",
+                    PartyTarget.EXCLUDE_NAME: f"Party '{event.party_name}'"
+                }
+                logic_key = 'negated' if targeting in [
+                    PartyTarget.NOT_SAME, PartyTarget.EXCLUDE_NAME
+                    ] else 'positive'
+                fields_not_met[role][logic_key].append(
+                    (None, party_labels[targeting]))
+                logger.info(
+                    f"party restriction not met for {role}:"
+                    f" {targeting} {party_name}")
+            role_candidates = filtered_candidates
+
+        # Filter By Factor Comparisons
+        factors = [
+            f for f in event.factors
+            if f.infield and f.infield.role == role]
+        cand_failures = {}
+        for ent in role_candidates:
+            fails = [
+                f for f in factors
+                if not is_factor_met(
+                    f, ent, subject_id=subject_id,
+                    require_comparison=(f.usage_type == Participant.DET)
+                )
+            ]
+            cand_failures[ent] = fails
+
+        eligible = {ent for ent, fails in cand_failures.items() if not fails}
+        if eligible:
+            role_candidates = eligible
+        elif cand_failures:
+            # Find minimum failures among candidates (closest matches)
+            min_fails = min(len(fails) for fails in cand_failures.values())
+            
+            # Collect unique failed factors from closest candidates in original factor order
+            closest_failed_factors = [
+                f for f in factors
+                if any(f in cand_failures[ent]
+                    for ent in cand_failures
+                    if len(cand_failures[ent]) == min_fails)
+            ]
+            if role not in fields_not_met:
+                fields_not_met[role] = {'positive': [], 'negated': []}
+            for factor in closest_failed_factors:
                 logic_key = 'negated' if factor.negate else 'positive'
-                field = factor.infield
-                fields_not_met[role][logic_key].append((factor, field))
+                fields_not_met[role][logic_key].append((factor, factor.infield))
                 logger.info(
                     f"factor {factor.id} not met: "
-                    f"{role}, {logic_key}, {field.get_field_name()}")
+                    f"{role}, {logic_key}, {factor.infield.get_field_name()}")
+            role_candidates = set()
 
         eligible_role_entities[role] = sort_by_name_stripped(
             list(role_candidates))
