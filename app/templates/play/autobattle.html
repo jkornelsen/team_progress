@@ -1,0 +1,65 @@
+{# =========================================================================
+   1. GLOBAL IMPORTS
+   ========================================================================= #}
+
+{% extends 'layout/base.html' %}
+{% import 'macros/hotkeys.html' as hk %}
+
+{% block content %}
+
+{# =========================================================================
+   2. MAIN CONTENT
+   ========================================================================= #}
+
+<div class="location-container">
+    <header class="entity-header">
+        <span id="context-list" class="label-like">
+            <span class="label-like"></span>
+            {% set target_url = url_for('play.play_location', id=location.id) %}
+            {% call hk.hotlink(target_url, link_letters) %}
+                {{ location.name }}
+            {% endcall %}
+        </span>
+        <div class="flex-between">
+            <h1>⚔️ Auto Battle: {{ location.name }}</h1>
+            {% set target_url = url_for('play.play_autobattle', loc_id=location.id, step=1) %}
+            {{ hk.fixed_text(target_url, "[n]ext round (step)", 'n') }}
+        </div>
+    </header>
+
+    <div class="column-container">
+        <div class="parties-column">
+            {% for p_name, members in parties.items() %}
+                <section class="outer-border">
+                    <h3>{{ p_name }}</h3>
+                    {% for char in members %}
+                        <div class="char-battle-card flex-between" style="padding: 5px; border-bottom: 1px solid #333;">
+                            {% set target_url = url_for('play.play_character', id=char.id) %}
+                            {% call hk.hotlink(target_url, link_letters) %}
+                                {{ char.name }}
+                            {% endcall %}
+                            <span class="{{ 'text-danger' if char.hp <= 0 else '' }}">
+                                HP: {{ char.hp | formatNum }} / {{ char.max_hp | formatNum }}
+                            </span>
+                        </div>
+                    {% endfor %}
+                </section>
+            {% endfor %}
+        </div>
+
+        <div class="log-column">
+            <section class="outer-border">
+                <h3>Battle Log</h3>
+                <div class="scrollable-log" style="height: 400px;">
+                    {% for msg in messages[:15] %}
+                        <div class="log-entry">
+                            <span class="label-like">[{{ msg.timestamp.strftime('%H:%M') }}]</span>
+                            {{ msg.message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+{% endblock %}

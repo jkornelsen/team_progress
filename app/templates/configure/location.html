@@ -74,12 +74,20 @@
                 </div>
                 <div class="flex-column" style="padding-top: 5px;">
                     <label class="checkbox-label">
-                        <input type="checkbox" name="toplevel" {{ 'checked' if location.toplevel }}> 
-                        Show in Overview
+                        <input type="checkbox" name="toplevel" {{
+                            'checked' if location.toplevel }}> 
+                        Show in Overview 📌
                     </label>
                     <label class="checkbox-label">
-                        <input type="checkbox" name="masked" {{ 'checked' if location.masked }}> 
+                        <input type="checkbox" name="masked" {{
+                            'checked' if location.masked }}> 
                         Masked (Hidden until visited)
+                    </label>
+                    <label class="checkbox-label"
+                            title="Enable the auto-combat interface for this location.">
+                        <input type="checkbox" name="enable_autobattle" {{
+                            'checked' if location.enable_autobattle }}> 
+                        Enable Autobattle ⚔️
                     </label>
                 </div>
             </div>

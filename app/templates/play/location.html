@@ -207,6 +207,12 @@
 
         <!-- RIGHT COLUMN: Tactical Grid & Navigation Controls -->
         <div class="tactgrid-column">
+            {% if location.enable_autobattle %}
+                <a href="{{ url_for('play.play_autobattle', loc_id=location.id) }}" 
+                   class="btn-sm go-button" style="display: inline-block; font-size: 1em; vertical-align: middle; margin-left: 10px; margin-bottom: 20px;">
+                   Start Auto Battle ⚔️
+                </a>
+            {% endif %}
             {% if location.has_grid %}
                 <section class="outer-border tactgrid-wrapper">
                     <div class="grid-scroll-container">

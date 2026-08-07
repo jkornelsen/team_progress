@@ -437,6 +437,7 @@ class Location(Entity):
     toplevel = db.Column(db.Boolean, default=False)
     masked = db.Column(db.Boolean, default=False)
     dimensions = db.Column(ARRAY(db.Integer), default=None)
+    enable_autobattle = db.Column(db.Boolean, default=False)
 
     def to_dict(self):
         data = super().to_dict()
@@ -593,6 +594,13 @@ class Character(Entity):
     )
     __mapper_args__ = {'polymorphic_identity': TYPENAME}
 
+class AutobattleField:
+    NONE = 'none'
+    HP = 'hp'
+    MAX_HP = 'max_hp'
+    STATUS = 'status'
+    ALL = [NONE, HP, MAX_HP, STATUS]
+
 class Attrib(Entity):
     """
     Functional or informational stats for other entities.
@@ -610,6 +618,7 @@ class Attrib(Entity):
     game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
     is_binary = db.Column(db.Boolean, default=False)
+    ab_field = db.Column(db.String(20), default=AutobattleField.NONE)
 
     def to_dict(self):
         """Exports the attribute definition (type and states)."""
@@ -617,7 +626,8 @@ class Attrib(Entity):
         data.pop("attribs", None) 
         data.update({
             "is_binary": self.is_binary,
-            "enum_list": [e.label for e in self.enum_entries]
+            "enum_list": [e.label for e in self.enum_entries],
+            "ab_field": self.ab_field
         })
         return self.to_dict_sparse(data)
 
@@ -736,6 +746,14 @@ class PartyTarget:
 
     USES_NAME = [TARGET_NAME, EXCLUDE_NAME]
 
+class AutobattleStage:
+    NONE = 'none'
+    BEFORE = 'before'  # DoTs, regen
+    TURN = 'turn'      # Main actions
+    AFTER = 'after'    # Death checks
+    RESET = 'reset'    # Post-combat healing/teleport
+    ALL = [NONE, BEFORE, TURN, AFTER, RESET]
+
 class Event(Entity):
     """Actions and things that can happen, typically with chance.
     Many events use or change the Attrib values of other entities.
@@ -757,6 +775,8 @@ class Event(Entity):
     selection_attrib_id = db.Column(db.Integer)
     party_targeting = db.Column(db.String(20), default=PartyTarget.ANY)
     party_name = db.Column(db.String(100))
+    ab_stage = db.Column(db.String(20), default=AutobattleStage.NONE)
+    ab_priority = db.Column(db.Integer, default=1)
 
     def to_dict(self):
         data = super().to_dict()
@@ -775,6 +795,8 @@ class Event(Entity):
                 if self.outcome_type == OutcomeType.SELECT else None,
             "party_targeting": self.party_targeting,
             "party_name": self.party_name,
+            "ab_stage": self.ab_stage,
+            "ab_priority": self.ab_priority,
             "determinants": [d.to_dict() for d in self.determinants],
             "effects": [e.to_dict() for e in self.effects],
             "chained": sorted([l.to_dict() for l in self.chained], 

@@ -38,6 +38,25 @@
                 <textarea id="description" name="description" rows="3" class="full-width themed-input">{{ attrib.description or '' }}</textarea>
             </div>
 
+            <div class="spacious-top">
+                <label for="ab_field">Autobattle Role:</label>
+                <select id="ab_field" name="ab_field" class="themed-input">
+                    <option value="{{ AutobattleField.NONE }}" {{
+                            'selected' if attrib.ab_field == AutobattleField.NONE
+                        }}>(None)</option>
+                    <option value="{{ AutobattleField.HP }}" {{
+                            'selected' if attrib.ab_field == AutobattleField.HP
+                        }}>Current HP</option>
+                    <option value="{{ AutobattleField.MAX_HP }}" {{
+                            'selected' if attrib.ab_field == AutobattleField.MAX_HP
+                        }}>Max HP</option>
+                    <option value="{{ AutobattleField.STATUS }}" {{
+                            'selected' if attrib.ab_field == AutobattleField.STATUS
+                        }}>Status Effect</option>
+                </select>
+                <p class="label-like">Designate this attribute as a core stat for automated combat logic.</p>
+            </div>
+
             <div class="type-selection" class="spacious-top">
                 <label>Value Type:</label>
 

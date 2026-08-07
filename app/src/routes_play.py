@@ -1,7 +1,7 @@
 import logging
 import json
 from flask import (
-    Blueprint, render_template, request, redirect, jsonify,
+    Blueprint, render_template, request, redirect, url_for, jsonify,
     g, session, current_app)
 from http import HTTPStatus
 from sqlalchemy import select, or_, and_
@@ -12,6 +12,7 @@ from app.models import (
     Operation, OutcomeType, SuccessTier, EventFactor, PartyTarget,
     DestExit, LocDest, EventLink, EntityAbility, EventField,
     Progress, Scenario, WinRequirement, GameMessage,
+    AutobattleStage,
     GENERAL_ID, StorageType, Participant)
 from app.utils import (
     RequestHelper, ContextIds, format_num, parse_coords, LinkLetters,
@@ -30,10 +31,13 @@ from .logic_production import (
     find_best_host, resolve_recipe_sources, can_perform_recipe,
     execute_production)
 from .logic_navigation import (
-    move_group, get_cohesive_party, get_available_destinations, arrive_at_destination,
+    move_group, get_cohesive_party, get_available_destinations,
+    arrive_at_destination,
     is_in_grid, blocked_by_local_item, find_nearest_available_pos, is_adjacent,
     get_party_set, is_in_same_party)
 from .logic_objectives import validate_requirements
+from .logic_autobattle import (
+    run_battle_round, get_battle_participants, get_char_stat)
 from .logic_user_interaction import add_message, get_chronicle
 from .presenters import ItemPlayPresenter
 
@@ -1171,3 +1175,36 @@ def apply_single_effect(factor_id):
 
     return '', HTTPStatus.NO_CONTENT
 
+# ------------------------------------------------------------------------
+# Auto Battle
+# ------------------------------------------------------------------------
+
+@play_bp.route('/play/autobattle/<int:loc_id>')
+def play_autobattle(loc_id):
+    game_token = g.game_token
+    location = db.get_or_404(Location, (game_token, loc_id))
+    capture_origin(name=location.name)
+    session['old_loc_id'] = loc_id
+    
+    if request.args.get('step'):
+        success, msg = run_battle_round(loc_id)
+        if not success:
+            flash(msg, "warning")
+        return redirect(url_for('play.play_autobattle', loc_id=loc_id))
+
+    parties = get_battle_participants(loc_id)
+    
+    # Enrich the character objects with HP for the template
+    for p_name in parties:
+        for c in parties[p_name]:
+            c.hp = get_char_stat(c, 'hp')
+            c.max_hp = get_char_stat(c, 'max_hp')
+
+    return render_template(
+        'play/autobattle.html',
+        location=location,
+        parties=parties,
+        messages=get_chronicle(20),
+        link_letters=LinkLetters(excluded='m'),
+        AutobattleStage=AutobattleStage
+    )

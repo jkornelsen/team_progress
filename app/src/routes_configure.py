@@ -14,6 +14,7 @@ from app.models import (
     DestExit, LocDest, LocZone, EntranceReq, ItemRef,
     Participant, OutcomeType, SuccessTier, PartyTarget,
     EventFactor, EventField, EventLink,
+    AutobattleStage, AutobattleField,
     Scenario, WinRequirement, IdSequence)
 from app.serialization import clone_entity
 from app.utils import (
@@ -376,6 +377,7 @@ def edit_location(id):
         loc.dimensions = parse_coords(req.get_str('dimensions_str'))
         loc.toplevel = 'toplevel' in request.form
         loc.masked = 'masked' in request.form
+        loc.enable_autobattle = 'enable_autobattle' in request.form
 
         # Destinations (Exits) -- Symmetric Route Saving
         # Fetch existing routes involving this location to determine what to delete/update
@@ -698,6 +700,7 @@ def edit_attrib(id):
 
         attrib.name = req.get_str('name', attrib.name)
         attrib.description = req.get_str('description')
+        attrib.ab_field = req.get_str('ab_field', AutobattleField.NONE)
         
         v_type = req.get_str('value_type')
         attrib.is_binary = (v_type == 'binary')
@@ -732,7 +735,10 @@ def edit_attrib(id):
             return duplicate_entity(attrib.id, 'attrib')
         return redirect_back('configure.index') 
 
-    return render_template('configure/attrib.html', attrib=attrib)
+    return render_template(
+        'configure/attrib.html',
+        attrib=attrib,
+        AutobattleField=AutobattleField)
 
 @configure_bp.route('/event/<int:id>', methods=['GET', 'POST'])
 @configure_bp.route('/event/new', defaults={'id': None}, methods=['GET', 'POST'])
@@ -778,6 +784,8 @@ def edit_event(id):
         else:
             event.party_targeting = targeting_raw
             event.party_name = None
+        event.ab_stage = req.get_str('ab_stage', AutobattleStage.NONE)
+        event.ab_priority = req.get_int('ab_priority', 1)
 
         # --- SAVE DETERMINANTS & EFFECTS ---
         # 1. Clear existing factors to perform a clean sync
@@ -947,7 +955,8 @@ def edit_event(id):
         SuccessTier=SuccessTier,
         Operation=Operation,
         Participant=Participant,
-        PartyTarget=PartyTarget
+        PartyTarget=PartyTarget,
+        AutobattleStage=AutobattleStage
     )
 
 # ------------------------------------------------------------------------

@@ -164,6 +164,34 @@
                     </select>
                 </div>
             </div>
+
+            <div>
+                <div>
+                    <label>Autobattle Stage:</label>
+                    <select name="ab_stage" class="themed-input">
+                        <option value="{{ AutobattleStage.NONE }}" {{
+                            'selected' if event.ab_stage == AutobattleStage.NONE
+                            }}>(Manual Only)</option>
+                        <option value="{{ AutobattleStage.BEFORE }}" {{
+                            'selected' if event.ab_stage == AutobattleStage.BEFORE
+                            }}>Before Turn (DoT)</option>
+                        <option value="{{ AutobattleStage.TURN }}" {{
+                            'selected' if event.ab_stage == AutobattleStage.TURN
+                            }}>Turn Action (Attack/Heal)</option>
+                        <option value="{{ AutobattleStage.AFTER }}" {{
+                            'selected' if event.ab_stage == AutobattleStage.AFTER
+                            }}>After Turn (Death Checks)</option>
+                        <option value="{{ AutobattleStage.RESET }}" {{
+                            'selected' if event.ab_stage == AutobattleStage.RESET
+                            }}>Post-Battle Reset</option>
+                    </select>
+                    <label title="Higher numbers = higher weight in random choice.">
+                        AB Priority:
+                        <input type="number" name="ab_priority"
+                            value="{{ event.ab_priority }}" class="mini-input"  >
+                    </label>
+                </div>
+            </div>
         </section>
 
         <!-- 3. Determinants -->
