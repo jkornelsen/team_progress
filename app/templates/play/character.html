@@ -103,14 +103,16 @@
                 {% endif %}
             </div>
 
+            {% if character.party %}
+            <div class="spacious-top">
+                <span><strong>In:</strong> {{ character.party }}</span>
+            </div>
+            {% endif %}
+
             <div>
                 {% set active_job = character.progress_records | first | default(none) %}
                 {% if active_job %}
                     <span class="text-accent">Working: {{ active_job.product.name }}</span>
-                {% else %}
-                    <!--
-                    <span class="label-like">(No ongoing production)</span>
-                    -->
                 {% endif %}
             </div>
         </section>

@@ -1049,8 +1049,6 @@ def play_event(id):
                     game_token=game_token,
                     id=field.item_id,
                     masked=False).first())
-            if field.char_id:
-                add_ent(db.session.get(Character, (game_token, field.char_id)))
             if field.recipe_id:
                 rec = db.session.get(Recipe, (game_token, field.recipe_id))
                 if rec:
@@ -1059,6 +1057,10 @@ def play_event(id):
                         id=rec.product_id,
                         masked=False).first()
                     )
+            if field.char_id:
+                add_ent(db.session.get(Character, (game_token, field.char_id)))
+            if field.loc_id:
+                add_ent(db.session.get(Location, (game_token, field.loc_id)))
 
     # Chained events
     for link in event.chained:

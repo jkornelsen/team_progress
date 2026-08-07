@@ -6,6 +6,7 @@
 
 attrib mode effects aren't loading preselected subject
     for example ask out on date: calendar
+    but el cajon hp effect worked
 
 show and sort characters by party name on loc play screen 
     look for commonalities if some characters have multiple party names
@@ -20,11 +21,21 @@ enum constant event field mode
     limit choices to attrs that have enums
     needed to compare (or set) cumulative value to off balance in strike
 
+recipe_id is still often showing up in events when not wanted
+    for example shoot: has ammo
+
+in event configure for randomly placing an item, hide calculation section and lock (require) roll result
+
 link "working..." text in char inv to the actual production pile
 show spin icon when char inventory is the target owner even if not the host
 
-recipe_id is still often showing up in events when not wanted
-    for example shoot: has ammo
+auto battle
+    start/stop button like item production
+    stop and disable start if less than 2 teams have at least 1 hp remaining
+    hide autobattle fields in event and attrib config if no locations have ab enabled
+    in event config specify priority number
+        default is 1 which means choose randomly if multiple can work
+        0 means not automatic
 
 old_loc_id doesn't always get set when going to loc page
     http://localhost:5000/play/location/14 (navigate and reload both failed)
@@ -44,8 +55,6 @@ pages often stop responding to dynamic javascript changes after awhile
 applying a long list of effects sometimes causes one or more to mess up
     maybe wait until each response returns before sending the next request
 
-in event configure for randomly placing an item, hide calculation section and lock (require) roll result
-
 don't show duplicate destinations in play location
     same door positions (null in the example)
     maybe shouldn't allow in database
@@ -61,13 +70,6 @@ Process 13756 waits for ShareLock on transaction 2605285; blocked by process 517
 CONTEXT:  while updating tuple (0,46) in relation "characters"
 [SQL: UPDATE characters SET position=%(position)s::INTEGER[] WHERE characters.game_token = %(characters_game_token)s AND characters.id = %(characters_id)s]
 [parameters: {'position': [9, 4], 'characters_game_token': '128a971e-9667-4496-9d0d-8ce491b31780', 'characters_id': 8}]
-
-auto battle
-    start/stop button like item production
-    hide autobattle fields in event and attrib config if no locations have ab enabled
-    in event config specify priority number
-        default is 1 which means choose randomly if multiple can work
-        0 means not automatic
 
 ---- scenario ----
 
