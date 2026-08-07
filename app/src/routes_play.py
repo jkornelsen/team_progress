@@ -253,7 +253,7 @@ def play_location(id):
         ctx_char=current_char,
         active_char_id=active_char_id,
         travel_with_party=session.get('travel_with_party', False),
-        link_letters=LinkLetters(excluded='ctmoedw')
+        link_letters=LinkLetters(excluded='ctmoedwu')
     )
 
 @play_bp.route('/play/char/<int:id>')
@@ -1206,7 +1206,7 @@ def play_autobattle(loc_id):
         'play/autobattle.html',
         location=location,
         parties=parties,
-        messages=get_chronicle(20),
-        link_letters=LinkLetters(excluded='m'),
+        messages=get_chronicle(12),
+        link_letters=LinkLetters(excluded='smn'),
         AutobattleStage=AutobattleStage
     )

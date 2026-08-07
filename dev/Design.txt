@@ -30,12 +30,18 @@ link "working..." text in char inv to the actual production pile
 show spin icon when char inventory is the target owner even if not the host
 
 auto battle
-    start/stop button like item production
     stop and disable start if less than 2 teams have at least 1 hp remaining
     hide autobattle fields in event and attrib config if no locations have ab enabled
     in event config specify priority number
         default is 1 which means choose randomly if multiple can work
+        otherwise higher priority means always try that one first?
+        determinant comparisons must fail clearly so we can try the next one
         0 means not automatic
+    on reset (when enemy team all dies) main party gains some hp like a short rest
+        to figure out which team is enemies,
+        add "enemy team" checkbox in ab play and default to "enemies" party
+        or checkbox for the "main team" that needs to stay alive
+        or selectbox to specify team type (main vs enemy) for each
 
 old_loc_id doesn't always get set when going to loc page
     http://localhost:5000/play/location/14 (navigate and reload both failed)

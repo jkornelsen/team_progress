@@ -208,10 +208,12 @@
         <!-- RIGHT COLUMN: Tactical Grid & Navigation Controls -->
         <div class="tactgrid-column">
             {% if location.enable_autobattle %}
-                <a href="{{ url_for('play.play_autobattle', loc_id=location.id) }}" 
+                {% set target_url = url_for('play.play_autobattle', loc_id=location.id) %}
+                <a href="{{ target_url|safe }}" 
                    class="btn-sm go-button" style="display: inline-block; font-size: 1em; vertical-align: middle; margin-left: 10px; margin-bottom: 20px;">
-                   Auto Battle ⚔️
+                   ⚔️ A{{ hk.bracket('u') }}to Battle
                 </a>
+                <script>linkForKey["u"] = "{{ target_url|safe }}";</script>
             {% endif %}
             {% if location.has_grid %}
                 <section class="outer-border tactgrid-wrapper">

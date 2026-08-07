@@ -1,0 +1,204 @@
+{
+    "overall settings": {
+        "title": "Aegis",
+        "description": "Protect against threats to subjects of the realm through ⚔️{SandyBrown|auto battle.}",
+        "win_reqs": [
+            {"item_id": 20, "quantity": 5.0}
+        ],
+        "tag_introduce_order": 57,
+        "tag_best_order": 55,
+        "tag_progress_type": "Idle",
+        "tag_complete": "02 Under Construction"
+    },
+    "entities": {
+        "attribs": [
+            {"id": 13, "name": "Bounty"},
+            {"id": 12, "name": "Death Counted", "is_binary": true},
+            {
+                "id": 2,
+                "name": "Equipment Slots",
+                "description": "Equipment slots for characters.",
+                "enum_list": ["Main Hand", "Body", "Mount"]
+            },
+            {"id": 6, "name": "HP", "ab_field": "hp"},
+            {"id": 7, "name": "Max HP", "ab_field": "max_hp"},
+            {"id": 19, "name": "Riding Speed"}
+        ],
+        "items": [
+            {
+                "id": 11,
+                "name": "Gold",
+                "description": "Earn by killing enemies. Bounty is per pelt so chance of pelt getting destroyed means no bounty for that wolf.",
+                "storage_type": "u",
+                "toplevel": true
+            },
+            {
+                "id": 18,
+                "name": "Horse",
+                "description": "Required for a knight to mount.",
+                "attribs": [
+                    [19, 2.0]
+                ],
+                "q_limit": 1.0,
+                "slot": "Mount"
+            },
+            {
+                "id": 17,
+                "name": "Jewels",
+                "description": "Bandits hoard these (random drop qty chance). Used to hire mercenaries.",
+                "storage_type": "u",
+                "toplevel": true
+            },
+            {
+                "id": 20,
+                "name": "Times Defended Castle",
+                "description": "How many times you've successfully defended the castle.",
+                "storage_type": "u",
+                "q_limit": 5.0,
+                "toplevel": true
+            }
+        ],
+        "locations": [
+            {
+                "id": 16,
+                "name": "Castle",
+                "description": "Tower defense:\r\n\r\n- start distance at 30\r\n- allow arrows to hit far away\r\n- hot oil to require being closer",
+                "toplevel": true,
+                "destinations": [
+                    {"loc2_id": 21}
+                ]
+            },
+            {
+                "id": 15,
+                "name": "Ravine",
+                "description": "A mounted knights patrol chases bandits who have been using this area to rob villagers and then get away. Small chance of catching a bandit without being mounted.",
+                "toplevel": true
+            },
+            {
+                "id": 21,
+                "name": "Tavern",
+                "description": "Where mercenaries can be hired from.",
+                "toplevel": true
+            },
+            {
+                "id": 3,
+                "name": "Woods",
+                "description": "After reports of wolves frightening young girls, a bounty has been offered for each pelt.",
+                "toplevel": true
+            }
+        ],
+        "characters": [
+            {
+                "id": 4,
+                "name": "fighter",
+                "attribs": [
+                    [6, 10.0],
+                    [7, 10.0],
+                    [12, true],
+                    [13, 0.0]
+                ],
+                "abilities": [8, 10, 14],
+                "location_id": 3,
+                "party": "Main Party"
+            },
+            {
+                "id": 5,
+                "name": "wolf",
+                "attribs": [
+                    [6, 0.0],
+                    [7, 15.0],
+                    [12, true],
+                    [13, 2.0]
+                ],
+                "abilities": [10, 14],
+                "location_id": 3,
+                "party": "Enemies"
+            }
+        ],
+        "events": [
+            {
+                "id": 10,
+                "name": "Drop",
+                "auto_apply": true,
+                "outcome_type": "determined",
+                "ab_stage": "after",
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 6},
+                        "op_application": "<"
+                    },
+                    {
+                        "infield": {"attrib_id": 12},
+                        "op_application": "==",
+                        "val_required": false
+                    },
+                    {
+                        "infield": {"attrib_id": 13}
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 12},
+                        "op_application": ":=",
+                        "op_transform": "c"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 11}
+                    }
+                ]
+            },
+            {
+                "id": 14,
+                "name": "Reset Char",
+                "auto_apply": true,
+                "outcome_type": "determined",
+                "ab_stage": "reset",
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 7}
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 6},
+                        "op_application": ":="
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 12},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": false
+                    }
+                ]
+            },
+            {
+                "id": 8,
+                "name": "Strike",
+                "auto_apply": true,
+                "numeric_range": [1, 20],
+                "party_targeting": "not_same",
+                "ab_stage": "turn",
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 6},
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "val_transform": 3.0,
+                        "outcome_success": "success_any"
+                    }
+                ]
+            }
+        ]
+    },
+    "general data": {
+        "piles": [
+            {"item_id": 11, "quantity": 14.0}
+        ]
+    },
+    "progress": []
+}

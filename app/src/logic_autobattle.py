@@ -8,12 +8,14 @@ from app.models import (
 from .logic_event import (
     roll_for_outcome, resolve_effects, process_all_auto_effects,
     get_chain_results)
+from .logic_user_interaction import add_message
 
 logger = logging.getLogger(__name__)
 
 def get_battle_participants(loc_id):
     """Groups characters at a location by party."""
-    chars = Character.query.filter_by(game_token=g.game_token, location_id=loc_id).all()
+    chars = Character.query.filter_by(
+        game_token=g.game_token, location_id=loc_id).all()
     parties = {}
     for c in chars:
         p_name = c.party or "Unformatted"
@@ -55,11 +57,17 @@ def execute_event_chain(event_id, role_entities, depth=0):
         # Defaulting to 1d20 for system rolls if unspecified
         result_val, result_str, tier = roll_for_system_outcome(event_id)
     else:
-        result_val, result_str, tier = roll_for_outcome(event_id, role_entities, difficulty=0.5)
+        result_val, result_str, tier = roll_for_outcome(
+            event_id, role_entities, difficulty=0.5)
+    if result_val is None:
+        #add_message(result_str)
+        return
 
     # 2. Apply the effects (HP changes, status updates, etc.)
-    # resolve_effects gives us the ledger (virtual state change) needed to evaluate the next link
-    resolved_effects, ledger = resolve_effects(event, role_entities, result_val, tier)
+    # resolve_effects gives us the ledger (virtual state change)
+    # needed to evaluate the next link
+    resolved_effects, ledger = resolve_effects(
+            event, role_entities, result_val, tier)
     process_all_auto_effects(event, role_entities, result_val, tier)
     
     # 3. Check for Chained Events
@@ -68,7 +76,7 @@ def execute_event_chain(event_id, role_entities, depth=0):
     chains = get_chain_results(event, role_entities, result_val, tier, ledger)
     
     if chains:
-        # If multiple branches are eligible, the AI picks one (usually there is only one)
+        # If multiple branches are eligible, pick one randomly
         next_event = random.choice(chains)
         execute_event_chain(next_event['child_id'], role_entities, depth + 1)
 
@@ -88,50 +96,50 @@ def run_battle_round(loc_id):
     all_chars.sort(key=lambda x: x.id)
 
     for actor in all_chars:
-        # Skip if already dead
-        if get_char_stat(actor, AutobattleField.HP) <= 0:
-            continue
-            
-        # 1. Action Selection
+        # Action Selection
         # Find abilities marked for 'turn' stage with priority > 0
-        available_actions = [
-            e for e in actor.abilities 
-            if e.ab_stage == AutobattleStage.TURN and e.ab_priority > 0
-        ]
-        if not available_actions:
-            continue
-            
-        # Weigh by priority
-        action = random.choices(
-            available_actions, 
-            weights=[e.ab_priority for e in available_actions], 
-            k=1
-        )[0]
+        if get_char_stat(actor, AutobattleField.HP) > 0:
+            available_actions = [
+                e for e in actor.abilities 
+                if e.ab_stage == AutobattleStage.TURN and e.ab_priority > 0
+            ]
+            if available_actions:
+                # Weigh by priority
+                action = random.choices(
+                    available_actions, 
+                    weights=[e.ab_priority for e in available_actions], 
+                    k=1
+                )[0]
 
-        # 2. Target Selection
-        # Find someone NOT in the actor's party with HP > 0
-        enemies = []
-        for p_name, members in parties.items():
-            if p_name != actor.party:
-                enemies.extend([m for m in members if get_char_stat(m, AutobattleField.HP) > 0])
-        
-        if not enemies:
-            continue
-            
-        target = random.choice(enemies)
+                # Target Selection
+                # Find someone NOT in the actor's party with HP > 0
+                enemies = []
+                for p_name, members in parties.items():
+                    if p_name != actor.party:
+                        enemies.extend([
+                            m for m in members
+                            if get_char_stat(m, AutobattleField.HP) > 0])
+                
+                if enemies:
+                    target = random.choice(enemies)
 
-        # 3. Execution
-        role_entities = {
-            Participant.SUBJECT: actor.id,
-            Participant.TARGET: target.id,
-            Participant.AT: loc_id
-        }
-        execute_event_chain(action.id, role_entities)
+                    # Execution
+                    role_entities = {
+                        Participant.SUBJECT: actor.id,
+                        Participant.TARGET: target.id,
+                        Participant.AT: loc_id
+                    }
+                    execute_event_chain(action.id, role_entities)
 
-        # --- STAGE: AFTER TURN (Death Checks/Cleanup) ---
-        after_actions = [e for e in actor.abilities if e.ab_stage == AutobattleStage.AFTER]
+        # After Turn (Death Checks/Cleanup)
+        after_actions = [
+            e for e in actor.abilities
+            if e.ab_stage == AutobattleStage.AFTER]
         for act in after_actions:
-            execute_event_chain(act.id, {Participant.SUBJECT: actor.id, Participant.AT: loc_id})
+            execute_event_chain(
+                act.id, {
+                    Participant.SUBJECT: actor.id,
+                    Participant.AT: loc_id})
 
     db.session.commit()
     return True, "Round completed."

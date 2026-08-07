@@ -1243,6 +1243,14 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
 
     for m in modifiers:
         if m['is_comparison']:
+            if not m['is_met']:
+                subject_id = role_entities.get(Participant.SUBJECT)
+                subject = db.session.get(Entity, (game_token, subject_id))
+                subject_name = f"{subject.name} " if subject else ""
+                message_str = f"Requirements not met: {m['field_name']}" \
+                              f"{m['op_app_display']}{m['val_required']}"
+                message_str = f"{subject_name}{event.name}: {message_str}"
+                return None, message_str, None
             continue
 
         op = m['op_app']
@@ -1333,7 +1341,10 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
         display_str = breakdown_str
         message_str = f"Outcome {format_for_display(result_val)}"
 
-    add_message(f"{event.name}: {message_str}")
+    subject_id = role_entities.get(Participant.SUBJECT)
+    subject = db.session.get(Entity, (game_token, subject_id))
+    subject_name = f"{subject.name} " if subject else ""
+    add_message(f"{subject_name}{event.name}: {message_str}")
     return result_val, display_str, tier
 
 def roll_coordinate(loc_id):
