@@ -615,13 +615,15 @@ function syncFieldIdsState(modeSelect) {
     const recipeSelect = container.querySelector('.id-recipe');
     const locSelect = container.querySelector('.id-loc');
     const sourceItemSelect = container.querySelector('.id-source-item');
+    const enumSelect = container.querySelector('.id-enum-entry');
 
     const selectors = [
         [attrSelect, USES_ATTRIB.includes(mode)],
         [itemSelect, USES_ITEM.includes(mode)],
         [recipeSelect, USES_RECIPE.includes(mode)],
         [locSelect, USES_LOC.includes(mode)],
-        [sourceItemSelect, USES_SOURCE_ITEM.includes(mode)]
+        [sourceItemSelect, USES_SOURCE_ITEM.includes(mode)],
+        [enumSelect, mode === '{{ Participant.ENUM }}'],
     ];
 
     for (const [elemSelect, isVisible] of selectors) {
@@ -635,6 +637,9 @@ function syncFieldIdsState(modeSelect) {
     }
     if (USES_SOURCE_ITEM.includes(mode)) {
         syncSourceItemState(recipeSelect);
+    }
+    if (mode === '{{ Participant.ENUM }}') {
+        syncEnumEntriesState(attrSelect);
     }
     syncEventFieldState(modeSelect);
     syncFieldAttribState(attrSelect);
@@ -718,6 +723,40 @@ function syncSourceItemState(recipeSelect, initialSourceItemId = null) {
         opt.textContent = item.name;
         if (String(item.id) === String(currentId)) opt.selected = true;
         sourceItemSelect.appendChild(opt);
+    });
+}
+
+/**
+ * Fills the Enum Entry dropdown based on the chosen Attribute
+ */
+function syncEnumEntriesState(attrSelect) {
+    const container = attrSelect.closest('.field-input-group');
+    const enumSelect = container.querySelector('.id-enum-entry');
+    const modeSelect = container.querySelector('.field-mode-select');
+    
+    if (!enumSelect || modeSelect.value !== '{{ Participant.ENUM }}') return;
+
+    const attrId = attrSelect.value;
+    const attrData = ATTRIB_REGISTRY[attrId];
+    const currentEntryId = enumSelect.dataset.currentId;
+
+    enumSelect.innerHTML = '';
+
+    if (!attrData || !attrData.enums) {
+        const opt = document.createElement('option');
+        opt.textContent = "(No enum labels for this attribute)";
+        opt.value = "";
+        enumSelect.appendChild(opt);
+        return;
+    }
+
+    attrData.enums.forEach((label, index) => {
+        const id = attrData.enum_ids[index];
+        const opt = document.createElement('option');
+        opt.value = id;
+        opt.textContent = label;
+        if (String(id) === String(currentEntryId)) opt.selected = true;
+        enumSelect.appendChild(opt);
     });
 }
 
@@ -998,6 +1037,8 @@ document.addEventListener('DOMContentLoaded', function() {
             {% elif 'infield' in prefix %}
             <option value="{{ Participant.DIST }}" {{ 'selected'
                 if field_mode == Participant.DIST }}>Distance</option>
+            <option value="{{ Participant.ENUM }}" {{ 'selected'
+                if field_mode == Participant.ENUM }}>Enum Constant</option>
             {% endif %}
         </select>
 
@@ -1014,12 +1055,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     class="id-attr full-width {{
                         'hidden' if field_mode not in Participant.USES_ATTRIB }}" 
                     style="min-width: 30ch; max-width: 50ch;"
-                    onchange="syncFieldAttribState(this)">
+                    onchange="syncFieldAttribState(this); syncEnumEntriesState(this)">
                 <option value="">-- Select Attribute --</option>
                 {% for a in all_attribs %}
                     <option value="{{ a.id }}" {{
                         'selected' if attrib_id == a.id }}>{{ a.name }}</option>
                 {% endfor %}
+            </select>
+
+            <!-- Enum Entry -->
+            <select name="{{ prefix }}[enumentry_id]" 
+                    data-current-id="{{
+                        field_data.enumentry_id if field_data else '' }}"
+                    class="id-enum-entry full-width {{
+                        'hidden' if field_mode != Participant.ENUM }}"
+                    style="min-width: 30ch; max-width: 50ch;">
+                <!-- Populated by JS syncEnumEntriesState -->
             </select>
             
             <!-- Item -->
@@ -1037,7 +1088,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
             <!-- Recipe -->
             <select name="{{ prefix }}[recipe_id]"
-                    data-current-id="{{ field_data.recipe_id if field_data else '' }}"
+                    data-current-id="{{
+                        field_data.recipe_id if field_data else '' }}"
                     class="id-recipe {{
                         'hidden' if field_mode not in Participant.USES_RECIPE }}" 
                     style="min-width: 30ch; max-width: 50ch;"
@@ -1047,7 +1099,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
             <!-- Source/Byproduct Item (for SOURCE_QTY / BYP_QTY modes) -->
             <select name="{{ prefix }}[source_item_id]"
-                    data-current-id="{{ field_data.source_item_id if field_data else '' }}"
+                    data-current-id="{{
+                        field_data.source_item_id if field_data else '' }}"
                     class="id-source-item {{
                         'hidden' if field_mode not in Participant.USES_SOURCE_ITEM }}"
                     style="min-width: 30ch; max-width: 50ch;">
@@ -1057,7 +1110,8 @@ document.addEventListener('DOMContentLoaded', function() {
             <!-- Character -->
             <select name="{{ prefix }}[char_id]" 
                     class="id-char full-width {{
-                    'hidden' if field_mode != Participant.TELEPORT or role != Participant.PRESELECTED }}">
+                    'hidden' if field_mode != Participant.TELEPORT
+                    or role != Participant.PRESELECTED }}">
                 <option value="">-- Select Character --</option>
                 {% for c in all_chars %}
                     <option value="{{ c.id }}" {{

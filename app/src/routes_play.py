@@ -37,7 +37,7 @@ from .logic_navigation import (
     get_party_set, is_in_same_party)
 from .logic_objectives import validate_requirements
 from .logic_autobattle import (
-    run_battle_round, get_battle_participants, get_char_stat)
+    run_battle_round, run_battle_reset, get_battle_participants, get_char_stat)
 from .logic_user_interaction import add_message, get_chronicle
 from .presenters import ItemPlayPresenter
 
@@ -1188,12 +1188,6 @@ def play_autobattle(loc_id):
     capture_origin(name=location.name)
     session['old_loc_id'] = loc_id
     
-    if request.args.get('step'):
-        success, msg = run_battle_round(loc_id)
-        if not success:
-            flash(msg, "warning")
-        return redirect(url_for('play.play_autobattle', loc_id=loc_id))
-
     parties = get_battle_participants(loc_id)
     
     # Enrich the character objects with HP for the template
@@ -1207,6 +1201,69 @@ def play_autobattle(loc_id):
         location=location,
         parties=parties,
         messages=get_chronicle(12),
-        link_letters=LinkLetters(excluded='smn'),
+        link_letters=LinkLetters(excluded='snmoe'),
         AutobattleStage=AutobattleStage
     )
+
+@play_bp.route('/play/autobattle/<int:loc_id>/step', methods=['POST'])
+def autobattle_step(loc_id):
+    game_token = g.game_token
+    # 1. Run the round logic
+    success, msg = run_battle_round(loc_id)
+    
+    # 2. Fetch the latest state
+    parties = get_battle_participants(loc_id)
+    char_stats = {}
+    active_party_count = 0
+    
+    for p_name, members in parties.items():
+        alive_in_party = 0
+        for c in members:
+            hp = get_char_stat(c, 'hp')
+            max_hp = get_char_stat(c, 'max_hp')
+            char_stats[c.id] = {
+                "hp": format_num(hp),
+                "max_hp": format_num(max_hp),
+                "is_dead": hp <= 0
+            }
+            if hp > 0:
+                alive_in_party += 1
+        if alive_in_party > 0:
+            active_party_count += 1
+
+    # 3. Fetch recent messages formatted for the log
+    messages = [{
+        "time": m.timestamp.strftime('%H:%M'),
+        "text": m.message,
+        "count": m.count
+    } for m in get_chronicle(12)]
+
+    return jsonify({
+        "success": success,
+        "char_stats": char_stats,
+        "log": messages,
+        "battle_continues": active_party_count >= 2
+    })
+
+@play_bp.route('/play/autobattle/<int:loc_id>/reset', methods=['POST'])
+def autobattle_reset(loc_id):
+    run_battle_reset(loc_id)
+    
+    # Return fresh stats so the UI updates (e.g., health bars fill back up)
+    parties = get_battle_participants(loc_id)
+    char_stats = {}
+    for p_name, members in parties.items():
+        for c in members:
+            hp = get_char_stat(c, 'hp')
+            max_hp = get_char_stat(c, 'max_hp')
+            char_stats[c.id] = {
+                "hp": format_num(hp),
+                "max_hp": format_num(max_hp),
+                "is_dead": hp <= 0
+            }
+            
+    return jsonify({
+        "char_stats": char_stats,
+        "log": [{"time": m.timestamp.strftime('%H:%M'), "text": m.message, "count": m.count} 
+                for m in get_chronicle(12)]
+    })

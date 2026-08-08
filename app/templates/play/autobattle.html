@@ -58,7 +58,7 @@
                    class="btn-sm" style="text-decoration: none; border: 1px solid #444; padding: 7px 12px; border-radius: 4px;">
                     {{ hk.bracket('n') }}ext round (step)
                 </a>
-                <script>linkForKey["n"] = "{{ target_url|safe }}";</script>
+                <script>linkForKey["n"] = "#manual-step-link";</script>
             </div>
             {% for p_name, members in parties.items() %}
                 <section class="outer-border">
@@ -69,8 +69,9 @@
                             {% call hk.hotlink(target_url, link_letters) %}
                                 {{ char.name }}
                             {% endcall %}
-                            <span class="{{ 'text-danger' if char.hp <= 0 else '' }}">
-                                HP: {{ char.hp | formatNum }} / {{ char.max_hp | formatNum }}
+                            <span id="hp-wrapper-{{ char.id }}" class="{{ 'text-danger' if char.hp <= 0 else '' }}">
+                                HP: <span id="hp-val-{{ char.id }}">{{ char.hp | formatNum }}</span> 
+                                / <span id="hp-max-{{ char.id }}">{{ char.max_hp | formatNum }}</span>
                             </span>
                         </div>
                     {% endfor %}
@@ -100,15 +101,16 @@
    4. SCRIPTS
    ========================================================================= #}
 
+<script src="{{ url_for('static', filename='js/api.js') }}"></script>
 <script>
     const AUTO_BATTLE_KEY = "auto_battle_active_{{ location.id }}";
     const battleBtn = document.getElementById('battle-toggle-btn');
     const status = document.getElementById('auto-status');
     const manualStep = document.getElementById('manual-step-link');
+    const logContainer = document.querySelector('.scrollable-log');
     
-    // 0.5s is doable, but 1.0s gives the user a moment to read the log 
-    // and lets the browser handle the reload more smoothly.
-    const STEP_DELAY = 800; 
+    const STEP_DELAY = 1500; 
+    const RESET_DELAY = 5000; 
 
     function isRunning() {
         return localStorage.getItem(AUTO_BATTLE_KEY) === 'true';
@@ -127,37 +129,96 @@
 
     function updateUI() {
         const active = isRunning();
-        battleBtn.innerHtml = active ? "stop auto-battle" : `{{ hk.bracket('s') }}tart auto-battle`;
+        battleBtn.innerHTML = active ? `{{ hk.bracket('s') }}top auto-battle`
+                                     : `{{ hk.bracket('s') }}tart auto-battle`;
         battleBtn.className = active ? "dangerous-button" : "go-button";
         status.classList.toggle('hidden', !active);
         manualStep.classList.toggle('disabled', active);
     }
 
-    function runNextStep() {
-        // Check if battle is still valid (at least 2 parties with HP > 0)
-        const activeParties = document.querySelectorAll('.parties-column .outer-border').length;
-        
-        // Simple client-side check: Are there still enemies and players?
-        // Note: The backend already checks this, but we check here to stop the loop.
-        const partiesWithLife = Array.from(document.querySelectorAll('.parties-column .outer-border')).filter(p => {
-            return Array.from(p.querySelectorAll('span')).some(s => !s.classList.contains('text-danger'));
-        }).length;
+    async function runNextStep() {
+        if (!isRunning()) return;
 
-        if (partiesWithLife < 2) {
-            console.log("Battle concluded. Stopping.");
+        const data = await apiPost("{{ url_for('play.autobattle_step', loc_id=location.id) }}", null, "Round failed");
+        
+        if (data) {
+            updateBattleUI(data);
+
+            // --- Battle Still Ongoing ---
+            if (data.battle_continues) {
+                setTimeout(() => {
+                    if (isRunning()) runNextStep();
+                }, STEP_DELAY);
+            } 
+            // --- Battle Finished: Start Reset Cycle ---
+            else {
+                // Wait 3 seconds, then start a new battle
+                setTimeout(async () => {
+                    const resetData = await apiPost("{{ url_for('play.autobattle_reset', loc_id=location.id) }}", null, "Reset failed");
+                    if (resetData) {
+                        updateBattleUI(resetData); // Refresh bars and log
+                    }
+                    if (isRunning()) {
+                        runNextStep();
+                    }
+                }, RESET_DELAY); 
+            }
+        } else {
+            // Error occurred
             localStorage.setItem(AUTO_BATTLE_KEY, 'false');
             updateUI();
             return;
         }
-
-        setTimeout(() => {
-            if (isRunning()) {
-                window.location.href = "{{ url_for('play.play_autobattle', loc_id=location.id, step=1) }}";
-            }
-        }, STEP_DELAY);
     }
 
-    // On Page Load
+    // Manual step handler
+    manualStep.addEventListener('click', (e) => {
+        if (isRunning()) {
+            e.preventDefault();
+            return;
+        }
+        e.preventDefault();
+        // Temporarily set running to true to reuse the logic, then flip back
+        localStorage.setItem(AUTO_BATTLE_KEY, 'true');
+        runNextStep();
+        localStorage.setItem(AUTO_BATTLE_KEY, 'false');
+        updateUI();
+    });
+
+    function updateBattleUI(data) {
+        // 1. Update Character Stats
+        if (data.char_stats) {
+            for (const [id, stats] of Object.entries(data.char_stats)) {
+                const valEl = document.getElementById(`hp-val-${id}`);
+                const wrapper = document.getElementById(`hp-wrapper-${id}`);
+                if (valEl) valEl.innerText = stats.hp;
+                if (wrapper) {
+                    wrapper.classList.toggle('text-danger', stats.is_dead);
+                }
+            }
+        }
+
+        // 2. Update Log
+        if (data.log) {
+            let logHtml = '';
+            const total = data.log.length;
+            data.log.forEach((m, i) => {
+                let colorClass = '';
+                if (i < 4) colorClass = 'text-dim';
+                else if (i >= total - 4) colorClass = 'text-accent';
+
+                logHtml += `
+                    <div class="log-entry ${colorClass}">
+                        <span class="label-like">[${m.time}]</span>
+                        ${m.text}
+                        ${m.count > 1 ? `<span class="count">x${m.count}</span>` : ''}
+                    </div>`;
+            });
+            logContainer.innerHTML = logHtml;
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+    }
+
     window.addEventListener('load', () => {
         updateUI();
         if (isRunning()) {
@@ -165,12 +226,11 @@
         }
     });
 
-    // Re-use scroll persistence from overview
-    const log = document.querySelector('.scrollable-log');
+    // Scroll persistence
     const SCROLL_KEY = 'battle_log_scroll_{{ location.id }}';
-    if (log) {
-        log.scrollTop = localStorage.getItem(SCROLL_KEY) || log.scrollHeight;
-        log.addEventListener('scroll', () => localStorage.setItem(SCROLL_KEY, log.scrollTop));
+    if (logContainer) {
+        logContainer.scrollTop = localStorage.getItem(SCROLL_KEY) || logContainer.scrollHeight;
+        logContainer.addEventListener('scroll', () => localStorage.setItem(SCROLL_KEY, logContainer.scrollTop));
     }
 </script>
 {% endblock %}

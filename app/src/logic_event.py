@@ -5,7 +5,7 @@ from flask import g, request, session
 from app.models import (
     db, GENERAL_ID, Entity, Item, Location, Character, Attrib, Event,
     StorageType, Operation, OutcomeType, SuccessTier, RollerType, Participant,
-    AttribVal, Pile, LocDest, Recipe)
+    AttribVal, EnumEntry, Pile, LocDest, Recipe)
 from app.utils import maskable_name
 from app.serialization import clone_entity
 from .logic_piles import (
@@ -358,6 +358,13 @@ def get_entity_value(anchor_id, field_def, subject_id=None, ledger=None):
         ).first()
         return pile.quantity if pile else 0.0
 
+    # Constant Enum Value
+    if field_def.field_mode == Participant.ENUM:
+        if not field_def.enumentry_id:
+            return 0.0
+        entry = db.session.get(EnumEntry, field_def.enumentry_id)
+        return float(entry.order_index) if entry else 0.0
+
     return 0.0
 
 def can_use_field(field, entity):
@@ -510,7 +517,14 @@ def calculate_determinants(event, role_entities):
             val = get_entity_value(anchor_id, infield, subject_id)
 
             # Source Display Name
-            if infield.field_mode in Participant.REQUIRES_PRESELECTED:
+            if infield.field_mode == Participant.ENUM:
+                source_display = "Constant"
+                entry = db.session.get(EnumEntry, infield.enumentry_id)
+                if entry:
+                    breakdown_text = f"{entry.label} ({entry.order_index})"
+                else:
+                    breakdown_text = format_for_display(val)
+            elif infield.field_mode in Participant.REQUIRES_PRESELECTED:
                 if infield.item_id:
                     blueprint_item = db.session.get(Item, (game_token, infield.item_id))
                     source_display = \

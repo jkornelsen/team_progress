@@ -143,3 +143,24 @@ def run_battle_round(loc_id):
 
     db.session.commit()
     return True, "Round completed."
+
+def run_battle_reset(loc_id):
+    """Executes 'reset' stage events for all characters at the location."""
+    parties = get_battle_participants(loc_id)
+    all_chars = [c for p in parties.values() for c in p]
+
+    for actor in all_chars:
+        reset_actions = [
+            e for e in actor.abilities
+            if e.ab_stage == AutobattleStage.RESET
+        ]
+        for act in reset_actions:
+            execute_event_chain(
+                act.id, {
+                    Participant.SUBJECT: actor.id,
+                    Participant.AT: loc_id
+                }
+            )
+    
+    db.session.commit()
+    return True

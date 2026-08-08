@@ -840,6 +840,7 @@ def edit_event(id):
                         fld_char_id = fld.get_int('char_id', None)
                         fld_loc_id = fld.get_int('loc_id', None)
                         fld_source_item_id = fld.get_int('source_item_id', None)
+                        fld_enumentry_id = fld.get_int('enumentry_id', None)
 
                         setattr(factor, field_key, EventField(
                             game_token=game_token,
@@ -852,6 +853,7 @@ def edit_event(id):
                             char_id=fld_char_id,
                             loc_id=fld_loc_id,
                             source_item_id=fld_source_item_id,
+                            enumentry_id=fld_enumentry_id
                         ))
                     else:
                         setattr(factor, field_key, None)

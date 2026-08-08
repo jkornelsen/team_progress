@@ -17,10 +17,6 @@ get local items to produce to the correct piles in lever room
 corpse was dropped at 1,1 instead of subject's coordinates
     also when subject is at 1,1 it avoids the subject which it shouldn't do
 
-enum constant event field mode
-    limit choices to attrs that have enums
-    needed to compare (or set) cumulative value to off balance in strike
-
 recipe_id is still often showing up in events when not wanted
     for example shoot: has ammo
 
@@ -108,6 +104,22 @@ dungeon crawl
         special arrow only once per fight or once per floor
     druid
         roar to fear or taunt enemies or buff self
+
+aegis
+    merchant location
+        sells mounts and fighting equipment upgrades for gold
+        "not mounted" item
+    pin town location to overview to arrange locations
+        maybe countryside location for woods and ravine
+    tower defense
+        siegemen
+            climbers
+            maybe up to 5 enemy melee troops with high health
+            instructions for duplicating if more than 2 or 3
+        archers
+            two enemies
+            maybe an event to choose who your troops prioritize
+            would get run after DoT but before main turn
 
 moon base
     mine helium-3 with location production

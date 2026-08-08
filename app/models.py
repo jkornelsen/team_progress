@@ -1320,16 +1320,17 @@ class Participant:
     DIST = 'dist'          # Distance from subject grid pos (read-only)
     PLACE = 'place'        # Create pile at position (write-only)
     TELEPORT = 'teleport'  # Move char to location and position
+    ENUM = 'enum'          # Attrib constant value
 
     ALL_MODES = [
         ATTR, QTY, LIMIT, RATE_AMT, RATE_DUR, SOURCE_QTY, BYP_QTY,
-        DIST, PLACE, TELEPORT]
-    USES_ATTRIB = {ATTR}
+        DIST, PLACE, TELEPORT, ENUM]
+    USES_ATTRIB = {ATTR, ENUM}
     USES_ITEM = {QTY, LIMIT, RATE_AMT, RATE_DUR, SOURCE_QTY, BYP_QTY, PLACE}
     USES_RECIPE = {RATE_AMT, RATE_DUR, SOURCE_QTY, BYP_QTY}
     # Modes that do not allow selecting a context role to determine the entity
     REQUIRES_PRESELECTED = {
-        LIMIT, RATE_AMT, RATE_DUR, SOURCE_QTY, BYP_QTY, PLACE}
+        LIMIT, RATE_AMT, RATE_DUR, SOURCE_QTY, BYP_QTY, PLACE, ENUM}
     USES_SOURCE_ITEM = {SOURCE_QTY, BYP_QTY}
     USES_LOC = {TELEPORT, PLACE}
 
@@ -1433,6 +1434,7 @@ class EventField(db.Model, DictHydrator):
 
     item_id = db.Column(db.Integer, nullable=True)
     attrib_id = db.Column(db.Integer, nullable=True)
+    enumentry_id = db.Column(db.Integer, nullable=True)
     char_id = db.Column(db.Integer, nullable=True)
     loc_id = db.Column(db.Integer, nullable=True)
     recipe_id = db.Column(db.Integer, nullable=True)
@@ -1445,6 +1447,7 @@ class EventField(db.Model, DictHydrator):
             "child_of_anchor": self.child_of_anchor,
             "item_id": self.item_id,
             "attrib_id": self.attrib_id,
+            "enumentry_id": self.enumentry_id,
             "char_id": self.char_id,
             "loc_id": self.loc_id,
             "recipe_id": self.recipe_id,

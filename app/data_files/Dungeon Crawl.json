@@ -133,12 +133,13 @@
             {
                 "id": 161,
                 "name": "Status Effect Type",
-                "description": "- **Bleeding:** from cutting weapons\r\n- **Stunned:** reduces damage for the next turn\r\n- **Off Balance:** minor reaction penalty\r\n- **Burning:** fire does extra damage to undead\r\n- **Poisoned:** works against living enemies",
+                "description": "- **Bleeding:** from cutting weapons\r\n- **Stunned:** reduces damage for the next turn\r\n- **Off Balance:** minor reaction penalty\r\n- **Rooted:** prevents normal movement\r\n- **Burning:** fire does extra damage to undead\r\n- **Poisoned:** works against living enemies",
                 "enum_list": [
                     "(None)",
                     "Bleeding",
                     "Stunned",
                     "Off Balance",
+                    "Rooted",
                     "Burning",
                     "Poisoned"
                 ]
@@ -387,6 +388,19 @@
                 "description": "Can be forged into weapons."
             },
             {
+                "id": 195,
+                "name": "🪢Knots",
+                "recipes": [
+                    {
+                        "id": 196,
+                        "rate_duration": 10,
+                        "sources": [
+                            {"item_id": 153, "q_required": 1.0}
+                        ]
+                    }
+                ]
+            },
+            {
                 "id": 132,
                 "name": "👕Leather Armour",
                 "attribs": [
@@ -542,6 +556,15 @@
                 "q_limit": 1.0,
                 "slot": "Main Hand"
             },
+            {
+                "id": 197,
+                "name": "🪨Stone",
+                "description": "Can be thrown.",
+                "attribs": [
+                    [14, 0.0]
+                ],
+                "slot": "Main Hand"
+            },
             {"id": 111, "name": "🪦Tomb"},
             {
                 "id": 137,
@@ -553,6 +576,11 @@
                 "storage_type": "l"
             },
             {"id": 145, "name": "U1 Lever Result", "storage_type": "u"},
+            {
+                "id": 194,
+                "name": "U3 Bridge Gap",
+                "description": "The ropes do not go all the way across."
+            },
             {
                 "id": 154,
                 "name": "U3 Bridge Repaired",
@@ -983,6 +1011,11 @@
                         "item_id": 153,
                         "quantity": 10.0,
                         "position": [1, 1]
+                    },
+                    {
+                        "item_id": 194,
+                        "quantity": 1.0,
+                        "position": [2, 4]
                     }
                 ],
                 "destinations": [
@@ -1025,8 +1058,9 @@
                     },
                     {
                         "coords": [2, 4, 2, 4],
-                        "label": "Broken Bridge",
-                        "color": "DarkSlateGray"
+                        "label": "Crossing",
+                        "color": "DarkSlateGray",
+                        "prevents_travel": false
                     }
                 ]
             },
@@ -1849,7 +1883,7 @@
                     [106, 11.0],
                     [161, "(None)"]
                 ],
-                "abilities": [53, 107, 108, 112, 123, 127, 172, 184],
+                "abilities": [53, 107, 108, 112, 123, 127, 172, 184, 198],
                 "toplevel": true,
                 "location_id": 97,
                 "position": [6, 9],
@@ -1906,7 +1940,7 @@
                     [106, 10.0],
                     [161, "(None)"]
                 ],
-                "abilities": [51, 52, 53, 108, 112, 169],
+                "abilities": [51, 52, 53, 108, 112, 169, 184],
                 "toplevel": true,
                 "location_id": 30,
                 "position": [2, 6],
@@ -1920,11 +1954,11 @@
                 "name": "🚦Traffic Light",
                 "description": "The source of the flashing colors.",
                 "attribs": [
-                    [3, 30.0],
+                    [3, 35.0],
                     [5, 5.0],
                     [6, 6.0],
                     [7, 8.0],
-                    [8, 30.0],
+                    [8, 35.0],
                     [12, 6.0],
                     [19, 0.0],
                     [110, false],
@@ -2088,7 +2122,7 @@
             {
                 "id": 107,
                 "name": "✦Charge",
-                "description": "A common way to start a melee fight.\r\n\r\n- **On Any Success:** move into melee range and strike\r\n- **On Nat 20:** strike an additional time\r\n- **On Failure:** do not strike\r\n- **On Major Failure:** do not move",
+                "description": "A common way to start a melee fight.\r\n\r\n- **On Any Success:** move into melee range and strike\r\n- **On Nat 20:** strike an additional time\r\n- **On Failure:** do not strike; the opponent is not yet engaged even though melee distance\r\n- **On Major Failure:** do not move",
                 "numeric_range": [1, 20],
                 "party_targeting": "not_same",
                 "determinants": [
@@ -2097,6 +2131,12 @@
                         "infield": {"role": "target char", "field_mode": "dist"},
                         "op_application": "<",
                         "val_required": 7.0
+                    },
+                    {
+                        "label": "Can Move",
+                        "infield": {"attrib_id": 161},
+                        "op_application": "!=",
+                        "val_required": "Rooted"
                     },
                     {
                         "label": "Can Fight",
@@ -2280,7 +2320,7 @@
             {
                 "id": 184,
                 "name": "✦Disengage",
-                "description": "Attempt to get out of melee range.\r\n\r\n**On Minor Failure:** achieve the change in position but the opponent gets an attack of opportunity first\r\n**On Major Failure:** fail to move",
+                "description": "Attempt to get out of melee range. A normal speed character can run 4 tiles (20 ft), although out of breath, you'd have to roll at increased difficulty to attack \r\n\r\n**On Minor Failure:** achieve the change in position but the opponent gets an attack of opportunity first\r\n**On Major Failure:** fail to move",
                 "numeric_range": [1, 20],
                 "party_targeting": "not_same",
                 "determinants": [
@@ -2728,8 +2768,14 @@
                 "description": "Roll every turn for which color. The light damages everyone standing on that color.",
                 "auto_apply": true,
                 "outcome_type": "numeric",
-                "numeric_range": [0, 4],
+                "numeric_range": [1, 10],
                 "determinants": [
+                    {
+                        "label": "70% chance",
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "val_transform": 3.0
+                    },
                     {"op_application": ":=", "op_transform": "min"},
                     {
                         "infield": {"attrib_id": 165}
@@ -2845,6 +2891,21 @@
                         "infield": {"role": "target char", "child_of_anchor": true, "attrib_id": 13},
                         "op_application": "-"
                     },
+                    {"op_application": "m:="},
+                    {
+                        "infield": {"role": "target char", "attrib_id": 161}
+                    },
+                    {
+                        "infield": {"field_mode": "enum", "attrib_id": 161, "enumentry_id": 114},
+                        "op_application": "eq1"
+                    },
+                    {
+                        "label": "Rooted Penalty",
+                        "op_application": "*",
+                        "op_transform": "c",
+                        "val_transform": 2.0
+                    },
+                    {"op_transform": "mr"},
                     {"op_application": ":=", "op_transform": "floor"}
                 ],
                 "effects": [
@@ -3038,9 +3099,8 @@
                         "infield": {"role": "target char", "attrib_id": 161}
                     },
                     {
-                        "label": "Is Off Balance",
+                        "infield": {"field_mode": "enum", "attrib_id": 161, "enumentry_id": 13},
                         "op_application": "eq1",
-                        "op_transform": "c",
                         "val_transform": 3.0
                     },
                     {
@@ -3059,6 +3119,13 @@
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": "Off Balance",
+                        "outcome_success": "failure_major"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 19},
+                        "op_application": ":=",
+                        "op_transform": "c",
                         "outcome_success": "failure_major"
                     }
                 ],
@@ -3131,6 +3198,113 @@
                 "description": "Roll for a compass position relative to the current coordinates.",
                 "outcome_type": "selection",
                 "selection_attrib_id": 192
+            },
+            {
+                "id": 198,
+                "name": "✦Throw",
+                "description": "**On Major Failure:** the item is destroyed\r\nNo penalty for close melee range.\r\nCan be used by clever animals.",
+                "numeric_range": [1, 20],
+                "party_targeting": "not_same",
+                "determinants": [
+                    {
+                        "label": "Max Range 20ft",
+                        "infield": {"role": "target char", "field_mode": "dist"},
+                        "op_application": "<",
+                        "val_required": 5.0
+                    },
+                    {
+                        "label": "Can Fight",
+                        "infield": {"attrib_id": 3},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Opponent Can Fight",
+                        "infield": {"role": "target char", "attrib_id": 3},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Has Item",
+                        "infield": {"field_mode": "qty", "item_id": 197},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Standard Stat Impact",
+                        "infield": {"attrib_id": 12},
+                        "op_transform": "/",
+                        "val_transform": 3.5
+                    },
+                    {
+                        "label": "Standard XL Impact",
+                        "infield": {"attrib_id": 5},
+                        "op_transform": "/",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "label": "Standard Item Impact",
+                        "infield": {"child_of_anchor": true, "attrib_id": 14}
+                    },
+                    {
+                        "label": "Standard Stat Impact",
+                        "infield": {"role": "target char", "attrib_id": 12},
+                        "op_application": "-",
+                        "op_transform": "/",
+                        "val_transform": 3.5
+                    },
+                    {
+                        "label": "Standard XL Impact",
+                        "infield": {"role": "target char", "attrib_id": 5},
+                        "op_application": "-",
+                        "op_transform": "/",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "label": "Standard Item Impact",
+                        "infield": {"role": "target char", "child_of_anchor": true, "attrib_id": 13},
+                        "op_application": "-"
+                    },
+                    {"op_application": "m:="},
+                    {
+                        "infield": {"role": "target char", "attrib_id": 161}
+                    },
+                    {
+                        "infield": {"field_mode": "enum", "attrib_id": 161, "enumentry_id": 114},
+                        "op_application": "eq1"
+                    },
+                    {
+                        "label": "Rooted Penalty",
+                        "op_application": "*",
+                        "op_transform": "c",
+                        "val_transform": 2.0
+                    },
+                    {"op_transform": "mr"},
+                    {"op_application": ":=", "op_transform": "floor"}
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"field_mode": "qty", "item_id": 197},
+                        "op_application": "-",
+                        "op_transform": "c"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "at", "field_mode": "qty", "item_id": 197},
+                        "op_transform": "c",
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "at", "field_mode": "qty", "item_id": 197},
+                        "op_transform": "c",
+                        "outcome_success": "failure_minor"
+                    }
+                ],
+                "chained": [
+                    {
+                        "child_id": 54,
+                        "req": {"outcome_success": "success_any"}
+                    }
+                ]
             },
             {
                 "id": 169,
@@ -3234,7 +3408,35 @@
             {
                 "id": 152,
                 "name": "U3 Repair Bridge",
-                "numeric_range": [1, 20]
+                "outcome_type": "determined",
+                "fixed_base": 1.0,
+                "determinants": [
+                    {
+                        "infield": {"field_mode": "qty", "item_id": 195, "recipe_id": 196},
+                        "op_application": ">=",
+                        "val_required": 5.0
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"field_mode": "qty", "item_id": 195},
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "val_transform": 5.0
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "at", "field_mode": "qty", "item_id": 194},
+                        "op_application": "-"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 154},
+                        "op_application": ":=",
+                        "op_transform": "c"
+                    }
+                ]
             },
             {
                 "id": 178,
@@ -3371,6 +3573,24 @@
                     {
                         "infield": {"role": "target char", "child_of_anchor": true, "attrib_id": 16},
                         "op_application": "-"
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 161},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": "Rooted",
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "target char", "attrib_id": 19},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 2.0,
+                        "outcome_success": "success_any"
                     }
                 ],
                 "chained": [
