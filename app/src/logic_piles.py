@@ -65,7 +65,7 @@ def get_accessible_quantity(item_id, owner_id):
 
     return total
 
-def adjust_accessible_quantity(item_id, owner_id, delta):
+def adjust_accessible_quantity(item_id, owner_id, delta, position=None):
     """
     Applies a net change (positive or negative) to an owner's accessible
     stock by pulling from / adding to the actual piles that make up that
@@ -108,7 +108,7 @@ def adjust_accessible_quantity(item_id, owner_id, delta):
                         remaining
                     )
     else:
-        adjust_quantity(item_id, owner_id, delta)
+        adjust_quantity(item_id, owner_id, delta, position)
 
 def set_quantity(item_id, owner_id, new_value, position=None, slot=None):
     """

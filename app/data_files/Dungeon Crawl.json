@@ -133,12 +133,14 @@
             {
                 "id": 161,
                 "name": "Status Effect Type",
-                "description": "- **Bleeding:** from cutting weapons\r\n- **Stunned:** reduces damage for the next turn\r\n- **Off Balance:** minor reaction penalty\r\n- **Rooted:** prevents normal movement\r\n- **Burning:** fire does extra damage to undead\r\n- **Poisoned:** works against living enemies",
+                "description": "- **Bleeding:** from cutting weapons\r\n- **Stunned:** reduces damage for the next turn\r\n- **Panicked:** attack rolls *Hard* difficulty\r\n- **Off Balance:** minor reaction penalty\r\n- **Out Of Breath:** running increases attack difficulty for one turn\r\n- **Rooted:** prevents normal movement\r\n- **Burning:** fire does extra damage to undead\r\n- **Poisoned:** works against living enemies",
                 "enum_list": [
                     "(None)",
                     "Bleeding",
                     "Stunned",
+                    "Panicked",
                     "Off Balance",
+                    "Out Of Breath",
                     "Rooted",
                     "Burning",
                     "Poisoned"
@@ -388,6 +390,27 @@
                 "description": "Can be forged into weapons."
             },
             {
+                "id": 201,
+                "name": "🗡️Iron Sword",
+                "description": "Standard melee weapon.",
+                "attribs": [
+                    [14, 0.0],
+                    [16, 0.0]
+                ],
+                "q_limit": 1.0,
+                "slot": "Main Hand",
+                "recipes": [
+                    {
+                        "id": 200,
+                        "rate_duration": 8,
+                        "sources": [
+                            {"item_id": 130, "q_required": 1.0, "preserve": true},
+                            {"item_id": 131, "q_required": 1.0}
+                        ]
+                    }
+                ]
+            },
+            {
                 "id": 195,
                 "name": "🪢Knots",
                 "recipes": [
@@ -575,7 +598,13 @@
                 "abilities": [144],
                 "storage_type": "l"
             },
-            {"id": 145, "name": "U1 Lever Result", "storage_type": "u"},
+            {
+                "id": 145,
+                "name": "U1 Lever State",
+                "description": "1 if successfully pulled",
+                "storage_type": "u",
+                "q_limit": 1.0
+            },
             {
                 "id": 194,
                 "name": "U3 Bridge Gap",
@@ -913,7 +942,7 @@
                 "description": "The final room on each floor is a boss encounter. After defeating the enemies here, level up your party to 2.",
                 "dimensions": [9, 10],
                 "entrance_reqs": [
-                    {"item_id": 145, "val_required": 10.0}
+                    {"item_id": 145, "val_required": 1.0}
                 ],
                 "zones": [
                     {
@@ -1189,7 +1218,7 @@
             {
                 "id": 100,
                 "name": "U4c Castle",
-                "description": "**Setup:**\r\n\r\n- Place **goblin archers** on the castle walls at 1,3 and 9,3\r\n- Place a **goblin fighter** at the top of the ramp",
+                "description": "**Setup:**\r\n\r\n- Place **goblin archers** on the castle walls at 1,3 and 9,3\r\n- Place a **goblin fighter** at the top of the ramp at 5,1",
                 "dimensions": [10, 7],
                 "destinations": [
                     {
@@ -1616,12 +1645,19 @@
                     [19, 0.0],
                     [105, 5.0],
                     [106, 8.0],
+                    [110, true],
                     [161, "(None)"]
                 ],
-                "abilities": [52, 59, 169],
+                "abilities": [52, 53, 59, 108, 115, 169, 184],
                 "location_id": 94,
                 "position": [2, 5],
-                "party": "Enemies"
+                "party": "Enemies",
+                "items": [
+                    {"item_id": 24, "quantity": 2.0, "slot": "Quiver"},
+                    {"item_id": 25, "quantity": 1.0},
+                    {"item_id": 26, "quantity": 1.0, "slot": "Main Hand"},
+                    {"item_id": 132, "quantity": 1.0, "slot": "Body Armor"}
+                ]
             },
             {
                 "id": 170,
@@ -1639,12 +1675,19 @@
                     [19, 0.0],
                     [105, 5.0],
                     [106, 8.0],
+                    [110, true],
                     [161, "(None)"]
                 ],
-                "abilities": [52, 59, 169],
+                "abilities": [52, 53, 59, 108, 115, 169, 184],
                 "location_id": 94,
                 "position": [8, 5],
-                "party": "Enemies"
+                "party": "Enemies",
+                "items": [
+                    {"item_id": 24, "quantity": 2.0, "slot": "Quiver"},
+                    {"item_id": 25, "quantity": 1.0},
+                    {"item_id": 26, "quantity": 1.0, "slot": "Main Hand"},
+                    {"item_id": 132, "quantity": 1.0, "slot": "Body Armor"}
+                ]
             },
             {
                 "id": 171,
@@ -1662,35 +1705,47 @@
                     [19, 0.0],
                     [105, 5.0],
                     [106, 8.0],
+                    [110, true],
                     [161, "(None)"]
                 ],
-                "abilities": [52, 59, 169],
+                "abilities": [52, 53, 59, 108, 115, 169, 184],
                 "location_id": 94,
                 "position": [1, 1],
-                "party": "Enemies"
+                "party": "Enemies",
+                "items": [
+                    {"item_id": 24, "quantity": 2.0, "slot": "Quiver"},
+                    {"item_id": 25, "quantity": 1.0},
+                    {"item_id": 26, "quantity": 1.0, "slot": "Main Hand"},
+                    {"item_id": 132, "quantity": 1.0, "slot": "Body Armor"}
+                ]
             },
             {
                 "id": 173,
                 "name": "goblin fighter",
                 "description": "These little green guys don't need much introduction, being unfortunately common in folklore.",
                 "attribs": [
-                    [3, 23.0],
+                    [3, 28.0],
                     [4, 4.0],
                     [5, 4.0],
-                    [6, 6.0],
+                    [6, 8.0],
                     [7, 7.0],
-                    [8, 23.0],
+                    [8, 28.0],
                     [10, 4.0],
-                    [12, 9.0],
+                    [12, 7.0],
                     [19, 0.0],
-                    [105, 5.0],
-                    [106, 8.0],
+                    [105, 6.0],
+                    [106, 10.0],
+                    [110, true],
                     [161, "(None)"]
                 ],
-                "abilities": [59],
+                "abilities": [53, 59, 107, 108, 115, 184],
                 "location_id": 174,
                 "position": [3, 2],
-                "party": "Enemies"
+                "party": "Enemies",
+                "items": [
+                    {"item_id": 132, "quantity": 1.0, "slot": "Body Armor"},
+                    {"item_id": 201, "quantity": 1.0, "slot": "Main Hand"}
+                ]
             },
             {
                 "id": 179,
@@ -1885,7 +1940,7 @@
                 ],
                 "abilities": [53, 107, 108, 112, 123, 127, 172, 184, 198],
                 "toplevel": true,
-                "location_id": 97,
+                "location_id": 30,
                 "position": [6, 9],
                 "party": "Main Party",
                 "items": [
@@ -1940,7 +1995,7 @@
                     [106, 10.0],
                     [161, "(None)"]
                 ],
-                "abilities": [51, 52, 53, 108, 112, 169, 184],
+                "abilities": [51, 52, 53, 108, 112, 169, 184, 199],
                 "toplevel": true,
                 "location_id": 30,
                 "position": [2, 6],
@@ -2384,6 +2439,110 @@
                 ]
             },
             {
+                "id": 199,
+                "name": "✦Double Shot",
+                "description": "Attempt to hit two different enemies (cannot be the same one).\r\nAim at the more evasive opponent.\r\nIf any opponent is within melee range, roll at *Hard* difficulty.\r\n**On Any Success:** roll damage for each target\r\n**On Major Failure:** lose 2 ammo",
+                "numeric_range": [1, 20],
+                "party_targeting": "not_same",
+                "determinants": [
+                    {
+                        "label": "Max Range 35ft",
+                        "infield": {"role": "target char", "field_mode": "dist"},
+                        "op_application": "<",
+                        "val_required": 8.0
+                    },
+                    {
+                        "label": "Experienced Enough",
+                        "infield": {"attrib_id": 5},
+                        "op_application": ">=",
+                        "val_required": 4.0
+                    },
+                    {
+                        "label": "Can Fight",
+                        "infield": {"attrib_id": 3},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Opponent Can Fight",
+                        "infield": {"role": "target char", "attrib_id": 3},
+                        "op_application": ">="
+                    },
+                    {
+                        "label": "Has Ammo",
+                        "infield": {"field_mode": "qty", "item_id": 24, "recipe_id": 73},
+                        "op_application": ">=",
+                        "val_required": 2.0
+                    },
+                    {
+                        "label": "Standard Stat Impact",
+                        "infield": {"attrib_id": 12},
+                        "op_transform": "/",
+                        "val_transform": 3.5
+                    },
+                    {
+                        "label": "Standard XL Impact",
+                        "infield": {"attrib_id": 5},
+                        "op_transform": "/",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "label": "Standard Item Impact",
+                        "infield": {"child_of_anchor": true, "attrib_id": 14}
+                    },
+                    {
+                        "label": "Standard Stat Impact",
+                        "infield": {"role": "target char", "attrib_id": 12},
+                        "op_application": "-",
+                        "op_transform": "/",
+                        "val_transform": 3.5
+                    },
+                    {
+                        "label": "Standard XL Impact",
+                        "infield": {"role": "target char", "attrib_id": 5},
+                        "op_application": "-",
+                        "op_transform": "/",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "label": "Standard Item Impact",
+                        "infield": {"role": "target char", "child_of_anchor": true, "attrib_id": 13},
+                        "op_application": "-"
+                    },
+                    {"op_application": "m:="},
+                    {
+                        "infield": {"role": "target char", "attrib_id": 161}
+                    },
+                    {
+                        "infield": {"field_mode": "enum", "attrib_id": 161, "enumentry_id": 114},
+                        "op_application": "eq1"
+                    },
+                    {
+                        "label": "Rooted Penalty",
+                        "op_application": "*",
+                        "op_transform": "c",
+                        "val_transform": 2.0
+                    },
+                    {"op_transform": "mr"},
+                    {"op_application": ":=", "op_transform": "floor"}
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"field_mode": "qty", "item_id": 24},
+                        "op_application": "-",
+                        "op_transform": "c",
+                        "val_transform": 2.0,
+                        "outcome_success": "failure_major"
+                    }
+                ],
+                "chained": [
+                    {
+                        "child_id": 54,
+                        "req": {"outcome_success": "success_any"}
+                    }
+                ]
+            },
+            {
                 "id": 87,
                 "name": "✦Fireball",
                 "description": "8d6 base fire damage in a radius 4 circle (20 ft). For each enemy in the area, roll **@Fireball Damage.**\r\n\r\n*Adapted from the System Reference Document 5.1 by Wizards of the Coast LLC.*",
@@ -2578,7 +2737,7 @@
             {
                 "id": 115,
                 "name": "Panic",
-                "description": "Roll to save when a living enemy takes unusually high damage, or health is very low. If the enemy fails to save:\r\n\r\n- **Within melee range:** They fight wildly, making all of their attack rolls *Hard* difficulty, or *Very Hard* on **Major Failure**\r\n- **Outside of melee range:** They Dodge, or freeze in place if they can't",
+                "description": "Roll to save when a living enemy takes unusually high damage, or health is very low. If the enemy fails to save:\r\n\r\n- **Within melee range:** They fight wildly, making all of their attack rolls *Hard* difficulty, two turns on **Major Failure**\r\n- **Outside of melee range:** They Dodge, or freeze in place if they can't",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {"op_application": "m:="},
@@ -2604,6 +2763,31 @@
                     },
                     {"label": "Threshold", "op_transform": "c", "val_transform": 6.0},
                     {"op_application": ":=", "op_transform": "floor"}
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 161},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": "Panicked",
+                        "outcome_success": "failure_any"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 19},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "outcome_success": "failure_minor"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 19},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 2.0,
+                        "outcome_success": "failure_major"
+                    }
                 ]
             },
             {
@@ -3228,10 +3412,16 @@
                         "op_application": ">="
                     },
                     {
-                        "label": "Standard Stat Impact",
+                        "label": "Somewhat Smaller Impact",
                         "infield": {"attrib_id": 12},
                         "op_transform": "/",
-                        "val_transform": 3.5
+                        "val_transform": 5.5
+                    },
+                    {
+                        "label": "Much Smaller Impact",
+                        "infield": {"attrib_id": 6},
+                        "op_transform": "/",
+                        "val_transform": 10.0
                     },
                     {
                         "label": "Standard XL Impact",
@@ -3395,6 +3585,10 @@
                     {
                         "infield": {"role": "at", "field_mode": "qty", "item_id": 140},
                         "op_application": "*"
+                    },
+                    {
+                        "infield": {"attrib_id": 143},
+                        "op_application": "eq1"
                     }
                 ],
                 "effects": [
@@ -3706,8 +3900,7 @@
     "general data": {
         "piles": [
             {"item_id": 29, "quantity": 1.0},
-            {"item_id": 113, "quantity": 20.0},
-            {"item_id": 145, "quantity": 10.0}
+            {"item_id": 113, "quantity": 20.0}
         ]
     },
     "progress": []

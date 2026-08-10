@@ -11,12 +11,6 @@ attrib mode effects aren't loading preselected subject
 show and sort characters by party name on loc play screen 
     look for commonalities if some characters have multiple party names
 
-get local items to produce to the correct piles in lever room
-    the u5 wall works better -- take a look at how events handle it
-
-corpse was dropped at 1,1 instead of subject's coordinates
-    also when subject is at 1,1 it avoids the subject which it shouldn't do
-
 recipe_id is still often showing up in events when not wanted
     for example shoot: has ammo
 
@@ -98,8 +92,6 @@ dungeon crawl
     goal is to get completness to 8
         "full example run"
     archer abilities
-        double shot
-            attempt to hit two different enemies (cannot be the same one)
         interrupting or knockback or crippling shot
         special arrow only once per fight or once per floor
     druid
@@ -116,10 +108,17 @@ aegis
             climbers
             maybe up to 5 enemy melee troops with high health
             instructions for duplicating if more than 2 or 3
-        archers
+        enemy archers
             two enemies
             maybe an event to choose who your troops prioritize
             would get run after DoT but before main turn
+            but how to run -- can an event return which targets meet requirements?
+            or always prioritize lowest hp targets
+        mercenaries are all archers helping aegis
+            knights can pour hot oil or engage in melee when attackers reach walls
+    party name "aegis"
+        two knights
+        track distance for each enemy away from aegis, who always stay together
 
 moon base
     mine helium-3 with location production

@@ -1096,8 +1096,23 @@ def do_effect_change(eff, roll_val, role_entities):
         current = get_accessible_quantity(field_def.item_id, out_entity_id)
         new_qty = impact if op == Operation.ASSIGN \
             else apply_operation(current, impact, op)
+
+        # Dropping items on a Location's floor should land at the
+        # triggering character's feet.
+        position = None
+        out_entity = db.session.get(Entity, (game_token, out_entity_id))
+        if out_entity and out_entity.entity_type == Location.TYPENAME:
+            item = db.session.get(Item, (game_token, field_def.item_id))
+            if item and item.storage_type != StorageType.UNIVERSAL:
+                subject_id = resolve_anchor_id(
+                    Participant.SUBJECT, role_entities)
+                subject = db.session.get(Entity, (game_token, subject_id)) \
+                    if subject_id else None
+                if subject and subject.position:
+                    position = subject.position
+
         adjust_accessible_quantity(
-            field_def.item_id, out_entity_id, new_qty - current)
+            field_def.item_id, out_entity_id, new_qty - current, position)
 
     # Destination C: Item Limit (Blueprint)
     elif field_def.field_mode == Participant.LIMIT:

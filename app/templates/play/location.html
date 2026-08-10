@@ -716,15 +716,21 @@ document.addEventListener('keydown', (event) => {
         'ArrowRight': [1, 0],
         {% endif %}
 
-        // NumPad
+        // NumPad with Num Lock ON -> event.key
         '7': [-1, -1], '8': [0, -1], '9': [1, -1],
         '4': [-1, 0],                '6': [1, 0],
         '1': [-1, 1],  '2': [0, 1],  '3': [1, 1],
+
+        // NumPad with Num Lock OFF -> event.code
+        'Numpad7': [-1, -1], 'Numpad8': [0, -1], 'Numpad9': [1, -1],
+        'Numpad4': [-1, 0],                      'Numpad6': [1, 0],
+        'Numpad1': [-1, 1],  'Numpad2': [0, 1],  'Numpad3': [1, 1],
     };
-    if (moveKeys[key]) {
+    const moveDir = moveKeys[event.key] || moveKeys[event.code];
+    if (moveDir) {
         event.preventDefault();
-        const [dx, dy] = moveKeys[key];
-        move(dx, dy);
+        const [dx, dy] = moveDir;
+        move(dx, dy)
         return; // Exit so it doesn't check linkForKey
     }
     {% endif %}

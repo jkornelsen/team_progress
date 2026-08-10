@@ -137,7 +137,7 @@ def get_placement_capacity(
     Returns the total space available across all eligible output placements,
     expressed as a number of whole batches. Returns float('inf') if unlimited.
     """
-    if recipe.rate_amount <= 0:
+    if recipe.rate_amount <= 0 or not recipe.is_producer:
         return float('inf'), float('inf')
 
     game_token = g.game_token
