@@ -34,7 +34,7 @@ from .logic_navigation import (
     move_group, get_cohesive_party, get_available_destinations,
     arrive_at_destination,
     is_in_grid, blocked_by_local_item, find_nearest_available_pos, is_adjacent,
-    get_party_set, is_in_same_party)
+    get_party_set, is_in_same_party, assign_parties_and_sort)
 from .logic_objectives import validate_requirements
 from .logic_autobattle import (
     run_battle_round, run_battle_reset, get_battle_participants, get_char_stat)
@@ -107,6 +107,7 @@ def play_location(id):
     characters_here = Character.query.filter_by(
         game_token=game_token, location_id=id
     ).order_by(name_stripped()).all()
+    characters_here = assign_parties_and_sort(characters_here)
     
     inventory_piles = sort_by_name_stripped(
         Pile.query.filter_by(game_token=game_token, owner_id=id).all(),

@@ -4,6 +4,17 @@ from app.models import (
     db, WinRequirement, Pile, Character, Item, AttribVal, GENERAL_ID)
 from app.utils import format_num, maskable_name
 
+def ge_positive(current, required):
+    """
+    Greater or equal, adjusting for when requirement is not positive.
+    """
+    if required > 0:
+        return current >= required
+    if required < 0:
+        return current <= required
+    # Require 0
+    return not current
+
 def validate_requirements(scenario):
     """
     Evaluates all win requirements for a session.
@@ -31,7 +42,7 @@ def validate_requirements(scenario):
                     game_token=game_token, item_id=r.item_id, owner_id=GENERAL_ID
                 ).first()
                 current_qty = pile.quantity if pile else 0
-                is_fulfilled = current_qty >= r.quantity
+                is_fulfilled = ge_positive(current_qty, r.quantity)
                 desc = f"🌐 {maskable_name(r.item)} {q_required}"
 
             # B. Item at a specific Location
@@ -40,7 +51,7 @@ def validate_requirements(scenario):
                     game_token=game_token, item_id=r.item_id, owner_id=r.loc_id
                 ).all()
                 current_qty = sum(p.quantity for p in piles)
-                is_fulfilled = current_qty >= r.quantity
+                is_fulfilled = ge_positive(current_qty, r.quantity)
                 desc = f"📍 {q_required} {maskable_name(r.item)} at {maskable_name(r.loc)}"
 
             # C. Item owned by a Character (Carried)
@@ -49,7 +60,7 @@ def validate_requirements(scenario):
                     game_token=game_token, item_id=r.item_id, owner_id=r.char_id
                 ).first()
                 current_qty = pile.quantity if pile else 0
-                is_fulfilled = current_qty >= r.quantity
+                is_fulfilled = ge_positive(current_qty, r.quantity)
                 desc = f"👤 {r.char.name} must carry {q_required} {maskable_name(r.item)}"
 
         # --- CASE 2: LOCATION GOALS (Char at Loc) ---
@@ -90,8 +101,12 @@ def validate_requirements(scenario):
                        f"'{state_name}'"
             else:
                 is_fulfilled = any(
-                    val >= r.attrib_value for val in current_vals)
-                desc = f"{subject_prefix} needs {r.attrib.name} ≥ " \
+                    ge_positive(val, r.attrib_value)
+                    for val in current_vals)
+                sign = "≥" if r.attrib_value > 0 \
+                    else "≤" if r.attrib_value < 0 \
+                    else "="
+                desc = f"{subject_prefix} needs {r.attrib.name} {sign} " \
                        f"{format_num(r.attrib_value)}"
 
         if not is_fulfilled:

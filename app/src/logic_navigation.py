@@ -376,6 +376,64 @@ def get_moving_party(main_char, move_party=False):
     party.update(group_members)
     return list(party)
 
+def assign_parties_and_sort(characters):
+    """
+    Groups characters by major shared parties using greedy set coverage,
+    assigns `assigned_party` dynamically, and sorts by party then name.
+    """
+    if not characters:
+        return []
+
+    # 1. Map parties to characters and store original display capitalization
+    party_to_chars = collections.defaultdict(set)
+    party_display_names = {}
+
+    for char in characters:
+        char.assigned_party = None
+        if not char or not getattr(char, 'party', None):
+            continue
+        for p in char.party.split(','):
+            p_clean = p.strip()
+            if p_clean:
+                p_norm = p_clean.lower()
+                party_to_chars[p_norm].add(char)
+                if p_norm not in party_display_names:
+                    party_display_names[p_norm] = p_clean
+
+    # Only consider parties grouping 2 or more characters
+    party_to_chars = {p: chars for p, chars in party_to_chars.items() if len(chars) >= 2}
+
+    # 2. Greedily pick parties covering the most remaining unassigned characters
+    unassigned = set(characters)
+
+    while unassigned and party_to_chars:
+        best_party = max(
+            party_to_chars.keys(),
+            key=lambda p: len(party_to_chars[p] & unassigned)
+        )
+        newly_covered = party_to_chars[best_party] & unassigned
+
+        if not newly_covered:
+            break
+
+        display_name = party_display_names[best_party]
+        for char in newly_covered:
+            char.assigned_party = display_name
+            unassigned.remove(char)
+
+        del party_to_chars[best_party]
+
+    # 3. Sort: grouped characters first (by party name), unassigned last, all secondary-sorted by name
+    characters.sort(
+        key=lambda c: (
+            0 if c.assigned_party else 1,
+            c.assigned_party.lower() if c.assigned_party else '',
+            c.name.lower() if hasattr(c, 'name') else ''
+        )
+    )
+
+    return characters
+
 # ------------------------------------------------------------------------
 # Character Movement At Location
 # ------------------------------------------------------------------------

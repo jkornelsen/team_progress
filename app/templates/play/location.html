@@ -63,13 +63,16 @@
                         {% set target_url = url_for('play.play_character', id=char.id) %}
                         {% call hk.hotlink(target_url, link_letters) %}
                             {{ char.name }}
-                            {% if location.has_grid and char.position %}
-                                <span class="label-like char-pos-display"
-                                      data-char-id="{{ char.id }}">
-                                    [{{ char.position | join(",") }}]
-                                </span>
-                            {% endif %}
                         {% endcall %}
+                        {% if location.has_grid and char.position %}
+                            <span class="label-like char-pos-display"
+                                  data-char-id="{{ char.id }}">
+                                [{{ char.position | join(",") }}]
+                            </span>
+                        {% endif %}
+                        {% if char.assigned_party %}
+                            <span class="label-like">{{ char.assigned_party }}</span>
+                        {% endif %}
                     </li>
                 {% else %}
                     <li class="text-dim">(None)</li>

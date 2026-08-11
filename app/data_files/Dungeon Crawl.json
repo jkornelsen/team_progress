@@ -3,12 +3,12 @@
         "title": "Dungeon Crawl",
         "description": "Your party was responding to a distress signal when suddenly, the ground below collapsed, and all fell down a nearly vertical shaft. No one seems to be injured *(yet)*. Doubtless there are {lightcoral|enemies} in the surrounding caverns—good source of {lightcoral|XP}, an optimist would say.\r\n\r\nStart by making a set of 1-4 characters to play—see **GM Tools.** Then craft rudimentary supplies before embarking on an escape to the surface or delving deeper.",
         "win_reqs": [
-            {"item_id": 29, "attrib_id": 185, "attrib_value": 6.0}
+            {"item_id": 29, "attrib_id": 185, "attrib_value": -6.0}
         ],
         "tag_introduce_order": 54,
         "tag_best_order": 40,
         "tag_progress_type": "RPG",
-        "tag_complete": "07 Complete Framework / Needs Playthrough"
+        "tag_complete": "09 Example Adventure"
     },
     "entities": {
         "attribs": [
@@ -126,7 +126,7 @@
                 "description": "Reserves of physical energy used for big actions."
             },
             {
-                "id": 19,
+                "id": 162,
                 "name": "Status Effect Turns",
                 "description": "Turns remaining for the status to last."
             },
@@ -661,6 +661,7 @@
                 "name": "D1a Same Enemy",
                 "description": "The first room down from the entry floor, where the main dive begins. Again, there is a skittering in the shadows. Probably a rat like last time, although the squeaking noises feel thinner, grating.",
                 "dimensions": [4, 7],
+                "masked": true,
                 "destinations": [
                     {
                         "loc2_id": 34,
@@ -682,8 +683,9 @@
             {
                 "id": 34,
                 "name": "D1b",
-                "description": "From here on, your group will have to set up room layouts and decide on what enemies and items are found. There are [GM Tools](/play/location/76) available.\r\n\r\nIf this is not what you want, then head toward the surface instead.",
+                "description": "From here on, your group will have to set up room layouts and decide on what enemies and items are found. There are [GM Tools](/play/location/76) available.\r\n\r\nIn *Scenario Settings,* change **Barometer Depth** required to **6.**\r\n\r\nIf this is not what you want, then head toward the surface instead.",
                 "dimensions": [5, 6],
+                "masked": true,
                 "zones": [
                     {
                         "coords": [1, 1, 3, 3]
@@ -745,6 +747,7 @@
                 "name": "Entry Floor b Enemy",
                 "description": "North of Entry Cavern. There is a skittering noise in the shadows. (This is the only enemy on the entry floor).",
                 "dimensions": [3, 6],
+                "masked": true,
                 "items": [
                     {
                         "item_id": 116,
@@ -770,6 +773,7 @@
                 "name": "Entry Floor c",
                 "description": "Staircase up, leading to earthbound enemies that get stronger nearer the surface: animals, plants, humanoid races, constructs.",
                 "dimensions": [5, 8],
+                "masked": true,
                 "zones": [
                     {
                         "coords": [3, 4, 5, 7]
@@ -787,6 +791,7 @@
                 "name": "Entry Floor d",
                 "description": "Staircase down, leading to otherworldly enemies that get stronger in the depths: undead, dragons, demons, and elementals.",
                 "dimensions": [6, 5],
+                "masked": true,
                 "destinations": [
                     {
                         "loc2_id": 37,
@@ -822,6 +827,7 @@
                 "description": "Not much room to move around inside.\r\n\r\nUse the exit once the **Put Inside** turn count expires or **El Cajón** dies. Move adjacent to **El Cajón** according to **Summoned Position.**",
                 "abilities": [186],
                 "dimensions": [2, 2],
+                "masked": true,
                 "zones": [
                     {
                         "coords": [1, 1, 2, 2],
@@ -835,6 +841,7 @@
                 "name": "Surface",
                 "description": "You've escaped the dungeon! Breathe fresh air and remember the sight of green grass and trees.",
                 "dimensions": [8, 8],
+                "masked": true,
                 "destinations": [
                     {
                         "loc2_id": 101,
@@ -883,6 +890,7 @@
                 "name": "U1a Moss",
                 "description": "The first room up from the entry floor, where the main climb begins. There is a narrow passage, with a suspicious-looking moss all but blocking the middle, and spores are being shot at you from the far end.",
                 "dimensions": [3, 8],
+                "masked": true,
                 "destinations": [
                     {
                         "loc2_id": 36,
@@ -906,6 +914,7 @@
                 "name": "U1b Scales",
                 "description": "There don't seem to be any enemies in this room. Instead, there are a couple of scales and a lever.",
                 "dimensions": [8, 4],
+                "masked": true,
                 "items": [
                     {
                         "item_id": 134,
@@ -941,6 +950,7 @@
                 "name": "U1c Pack",
                 "description": "The final room on each floor is a boss encounter. After defeating the enemies here, level up your party to 2.",
                 "dimensions": [9, 10],
+                "masked": true,
                 "entrance_reqs": [
                     {"item_id": 145, "val_required": 1.0}
                 ],
@@ -964,6 +974,7 @@
                 "name": "U2a Water",
                 "description": "Congratulations, you've made it to the second floor! Update the [Barometer](/play/item/29).\r\n\r\nIn this room, enemies are behind deep water. Flying and aquatic creatures don't mind it, but anyone else would have to swim one tile per turn, completely preventing them from fighting, with the risk of dousing torches to boot.\r\n\r\nOn the other side is shallow water, where you can wade 2 tiles per turn (10 ft) instead of walking 3 tiles.\r\n\r\n**Setup:**\r\n\r\n- Place a level 2 **🍄‍🟫Spore colony** behind the deep water at position 1,5. To do this, relocate the existing one and upgrade their HP stats. It cannot shoot at targets where line of sight is blocked by the central pillar.\r\n- Place a level 2 **🐺Wolf** next to it at position 2,4. The wolf will wait unless it gets attacked from range or hears targets approaching.",
                 "dimensions": [7, 9],
+                "masked": true,
                 "destinations": [
                     {
                         "loc2_id": 97,
@@ -1002,6 +1013,7 @@
                 "name": "U2b Bounce",
                 "description": "Of all the things you were expecting to find underground, this wasn't one of them. Rubbery spheres hit the cave sides in a highly chaotic fashion. Some of their red color has rubbed off onto the stone floor.\r\n\r\n**Setup:** Duplicate the ball for 1 more. Roll **Grid Coordinates** for the starting position of both balls.",
                 "dimensions": [5, 5],
+                "masked": true,
                 "zones": [
                     {
                         "coords": [2, 2, 4, 4],
@@ -1016,6 +1028,7 @@
                 "name": "U2c Cardboard",
                 "description": "Alright, all you have to do before levelling up your party is defeat the... wait, does that thing even fight?",
                 "dimensions": [5, 3],
+                "masked": true,
                 "destinations": [
                     {
                         "loc2_id": 150,
@@ -1035,6 +1048,7 @@
                 "description": "The way through the third floor is blocked by a deep fissure. A rope bridge crosses, but the middle must be repaired.",
                 "abilities": [152],
                 "dimensions": [4, 7],
+                "masked": true,
                 "items": [
                     {
                         "item_id": 153,
@@ -1098,6 +1112,7 @@
                 "name": "U3b Grass",
                 "description": "A patch of coarse grass survives for grazing. So there must be a shaft somewhere to let in light occasionally.",
                 "dimensions": [9, 8],
+                "masked": true,
                 "entrance_reqs": [
                     {"item_id": 154, "val_required": 1.0}
                 ],
@@ -1121,6 +1136,7 @@
                 "name": "U3c Traffic",
                 "description": "Bright blinking lights are a stark contrast to the normally dim, colorless dungeon.",
                 "dimensions": [7, 5],
+                "masked": true,
                 "destinations": [
                     {
                         "loc2_id": 155,
@@ -1156,6 +1172,7 @@
                 "name": "U4a Hail",
                 "description": "Arrows are coming down from fortifications on both sides! You can run to move 4 tiles (20 ft) in a turn, although out of breath, you'd have to roll at increased difficulty to attack. It would also be at least *Hard* difficulty trying to shoot up at the fortifications.\r\n\r\nFor most locations, you must clear the enemies or possibly sneak past, but these enemies are behind walls, so you can take the exit immediately.",
                 "dimensions": [9, 9],
+                "masked": true,
                 "destinations": [
                     {
                         "loc2_id": 99,
@@ -1203,6 +1220,7 @@
                 "name": "U4b Stables",
                 "description": "The goblins keep wolves here, preferring to eat any horses they find.\r\n\r\n**Setup:** Place 1 level 4 wolf at position 5,1",
                 "dimensions": [5, 5],
+                "masked": true,
                 "zones": [
                     {
                         "coords": [4, 1, 5, 2],
@@ -1220,6 +1238,7 @@
                 "name": "U4c Castle",
                 "description": "**Setup:**\r\n\r\n- Place **goblin archers** on the castle walls at 1,3 and 9,3\r\n- Place a **goblin fighter** at the top of the ramp at 5,1",
                 "dimensions": [10, 7],
+                "masked": true,
                 "destinations": [
                     {
                         "loc2_id": 174,
@@ -1269,8 +1288,9 @@
             {
                 "id": 95,
                 "name": "U5a Swamp",
-                "description": "Final floor to clear—only a few rooms to go. This one is covered with stagnant shallow water, slowing normal movement to 2 tiles except for aquatic creatures. Water plants provide half cover when behind them, causing shots to be *Hard* difficulty from either side.",
+                "description": "Final floor—only a few rooms to go. This one is covered with stagnant shallow water, slowing normal movement to 2 tiles except for aquatic creatures. Water plants provide half cover when behind them, causing shots to be *Hard* difficulty from either side.",
                 "dimensions": [5, 6],
+                "masked": true,
                 "destinations": [
                     {
                         "loc2_id": 100,
@@ -1327,6 +1347,7 @@
                 "name": "U5b Blocked",
                 "description": "So close, but a wall completely blocks all progress. The stone is weak at one point.",
                 "dimensions": [4, 5],
+                "masked": true,
                 "items": [
                     {
                         "item_id": 177,
@@ -1358,6 +1379,7 @@
                 "name": "U5c Amazing",
                 "description": "Final boss. Some maze corridors are narrow and may be challenging to navigate with a party.",
                 "dimensions": [10, 10],
+                "masked": true,
                 "destinations": [
                     {
                         "loc2_id": 175,
@@ -1402,11 +1424,11 @@
                     [7, 4.0],
                     [8, 9.0],
                     [12, 8.0],
-                    [19, 0.0],
                     [105, 6.0],
                     [106, 9.0],
                     [110, true],
-                    [161, "(None)"]
+                    [161, "(None)"],
+                    [162, 0.0]
                 ],
                 "abilities": [53, 59, 108, 115],
                 "location_id": 76,
@@ -1429,10 +1451,10 @@
                     [8, 10.0],
                     [10, 1.0],
                     [12, 6.0],
-                    [19, 0.0],
                     [105, 6.0],
                     [106, 10.0],
-                    [161, "(None)"]
+                    [161, "(None)"],
+                    [162, 0.0]
                 ],
                 "abilities": [53, 108],
                 "location_id": 76
@@ -1450,10 +1472,10 @@
                     [8, 8.0],
                     [10, 1.0],
                     [12, 10.0],
-                    [19, 0.0],
                     [105, 5.0],
                     [106, 8.0],
-                    [161, "(None)"]
+                    [161, "(None)"],
+                    [162, 0.0]
                 ],
                 "abilities": [53, 108],
                 "location_id": 76
@@ -1472,7 +1494,10 @@
                     [10, 3.0],
                     [12, 4.0],
                     [105, 7.0],
-                    [106, 12.0]
+                    [106, 12.0],
+                    [161, "(None)"],
+                    [162, 0.0]
+
                 ],
                 "abilities": [53, 108],
                 "location_id": 76
@@ -1490,10 +1515,10 @@
                     [8, 8.0],
                     [10, 4.0],
                     [12, 7.0],
-                    [19, 0.0],
                     [105, 5.0],
                     [106, 8.0],
-                    [161, "(None)"]
+                    [161, "(None)"],
+                    [162, 0.0]
                 ],
                 "abilities": [108],
                 "location_id": 76
@@ -1509,11 +1534,11 @@
                     [7, 4.0],
                     [8, 21.0],
                     [12, 8.0],
-                    [19, 0.0],
                     [105, 6.0],
                     [106, 9.0],
                     [110, false],
-                    [161, "(None)"]
+                    [161, "(None)"],
+                    [162, 0.0]
                 ],
                 "abilities": [50, 53, 109],
                 "location_id": 150,
@@ -1535,11 +1560,11 @@
                     [7, 4.0],
                     [8, 30.0],
                     [12, 4.0],
-                    [19, 0.0],
                     [105, 6.0],
                     [106, 9.0],
                     [110, false],
-                    [161, "(None)"]
+                    [161, "(None)"],
+                    [162, 0.0]
                 ],
                 "abilities": [59, 107, 157, 158, 159],
                 "location_id": 98,
@@ -1561,11 +1586,11 @@
                     [7, 4.0],
                     [8, 30.0],
                     [12, 4.0],
-                    [19, 0.0],
                     [105, 6.0],
                     [106, 9.0],
                     [110, false],
                     [161, "(None)"],
+                    [162, 0.0],
                     [191, 30.0]
                 ],
                 "abilities": [159, 190],
@@ -1588,11 +1613,11 @@
                     [7, 4.0],
                     [8, 27.0],
                     [12, 8.0],
-                    [19, 0.0],
                     [105, 6.0],
                     [106, 9.0],
                     [110, true],
-                    [161, "(None)"]
+                    [161, "(None)"],
+                    [162, 0.0]
                 ],
                 "abilities": [59, 107, 108, 115, 158],
                 "location_id": 155,
@@ -1614,11 +1639,11 @@
                     [7, 4.0],
                     [8, 27.0],
                     [12, 8.0],
-                    [19, 0.0],
                     [105, 6.0],
                     [106, 9.0],
                     [110, true],
-                    [161, "(None)"]
+                    [161, "(None)"],
+                    [162, 0.0]
                 ],
                 "abilities": [59, 107, 108, 115, 158],
                 "location_id": 155,
@@ -1642,11 +1667,11 @@
                     [8, 23.0],
                     [10, 4.0],
                     [12, 9.0],
-                    [19, 0.0],
                     [105, 5.0],
                     [106, 8.0],
                     [110, true],
-                    [161, "(None)"]
+                    [161, "(None)"],
+                    [162, 0.0]
                 ],
                 "abilities": [52, 53, 59, 108, 115, 169, 184],
                 "location_id": 94,
@@ -1672,11 +1697,11 @@
                     [8, 23.0],
                     [10, 4.0],
                     [12, 9.0],
-                    [19, 0.0],
                     [105, 5.0],
                     [106, 8.0],
                     [110, true],
-                    [161, "(None)"]
+                    [161, "(None)"],
+                    [162, 0.0]
                 ],
                 "abilities": [52, 53, 59, 108, 115, 169, 184],
                 "location_id": 94,
@@ -1702,11 +1727,11 @@
                     [8, 23.0],
                     [10, 4.0],
                     [12, 9.0],
-                    [19, 0.0],
                     [105, 5.0],
                     [106, 8.0],
                     [110, true],
-                    [161, "(None)"]
+                    [161, "(None)"],
+                    [162, 0.0]
                 ],
                 "abilities": [52, 53, 59, 108, 115, 169, 184],
                 "location_id": 94,
@@ -1732,11 +1757,11 @@
                     [8, 28.0],
                     [10, 4.0],
                     [12, 7.0],
-                    [19, 0.0],
                     [105, 6.0],
                     [106, 10.0],
                     [110, true],
-                    [161, "(None)"]
+                    [161, "(None)"],
+                    [162, 0.0]
                 ],
                 "abilities": [53, 59, 107, 108, 115, 184],
                 "location_id": 174,
@@ -1758,11 +1783,11 @@
                     [7, 6.0],
                     [8, 38.0],
                     [12, 8.0],
-                    [19, 0.0],
                     [105, 6.0],
                     [106, 8.0],
                     [110, true],
-                    [161, "(None)"]
+                    [161, "(None)"],
+                    [162, 0.0]
                 ],
                 "abilities": [59, 115, 180, 184],
                 "location_id": 95,
@@ -1784,11 +1809,11 @@
                     [7, 6.0],
                     [8, 38.0],
                     [12, 8.0],
-                    [19, 0.0],
                     [105, 6.0],
                     [106, 8.0],
                     [110, true],
-                    [161, "(None)"]
+                    [161, "(None)"],
+                    [162, 0.0]
                 ],
                 "abilities": [59, 115, 180, 184],
                 "location_id": 95,
@@ -1802,19 +1827,19 @@
             {
                 "id": 166,
                 "name": "🐂Minotaur",
-                "description": "Bull above, two powerful legs below. As you approach, he'll look for a corridor that gives him a positional advantage, perhaps a corner.",
+                "description": "Bull above, two powerful legs below. As you approach, he'll look for a corner that gives him a positional advantage.",
                 "attribs": [
-                    [3, 50.0],
-                    [5, 5.0],
+                    [3, 52.0],
+                    [5, 7.0],
                     [6, 8.0],
                     [7, 4.0],
-                    [8, 50.0],
+                    [8, 52.0],
                     [12, 8.0],
-                    [19, 0.0],
-                    [105, 6.0],
-                    [106, 9.0],
+                    [105, 7.0],
+                    [106, 10.0],
                     [110, true],
-                    [161, "(None)"]
+                    [161, "(None)"],
+                    [162, 0.0]
                 ],
                 "abilities": [53, 59, 107, 108, 158],
                 "location_id": 101,
@@ -1836,11 +1861,11 @@
                     [7, 4.0],
                     [8, 18.0],
                     [12, 7.0],
-                    [19, 0.0],
                     [105, 6.0],
                     [106, 8.0],
                     [110, true],
-                    [161, "(None)"]
+                    [161, "(None)"],
+                    [162, 0.0]
                 ],
                 "abilities": [53, 59, 115],
                 "party": "Enemies",
@@ -1851,7 +1876,7 @@
             },
             {
                 "id": 42,
-                "name": "moss",
+                "name": "🌱moss",
                 "description": "Slightly sentient green covering the stone floor. Cannot move but can attack in melee. Some advanced species of moss may be able to teleport short distances, but this one can't.",
                 "attribs": [
                     [3, 16.0],
@@ -1864,7 +1889,9 @@
                     [12, 5.0],
                     [105, 7.0],
                     [106, 9.0],
-                    [110, false]
+                    [110, false],
+                    [161, "(None)"],
+                    [162, 0.0]
                 ],
                 "abilities": [53, 108, 109],
                 "position": [3, 3],
@@ -1884,9 +1911,9 @@
                     [7, 2.0],
                     [8, 15.0],
                     [12, 7.0],
-                    [19, 0.0],
                     [110, true],
-                    [161, "(None)"]
+                    [161, "(None)"],
+                    [162, 0.0]
                 ],
                 "abilities": [53, 107, 108, 109, 115],
                 "location_id": 32,
@@ -1908,12 +1935,12 @@
                     [7, 1.0],
                     [8, 6.0],
                     [12, 5.0],
-                    [19, 0.0],
                     [63, 2.0],
                     [105, 4.0],
                     [106, 6.0],
                     [110, false],
-                    [161, "(None)"]
+                    [161, "(None)"],
+                    [162, 0.0]
                 ],
                 "abilities": [53, 59, 107, 108],
                 "location_id": 31,
@@ -1933,10 +1960,10 @@
                     [8, 11.0],
                     [10, 4.0],
                     [12, 5.0],
-                    [19, 0.0],
                     [105, 7.0],
                     [106, 11.0],
-                    [161, "(None)"]
+                    [161, "(None)"],
+                    [162, 0.0]
                 ],
                 "abilities": [53, 107, 108, 112, 123, 127, 172, 184, 198],
                 "toplevel": true,
@@ -1961,11 +1988,11 @@
                     [8, 13.0],
                     [10, 0.0],
                     [12, 11.0],
-                    [19, 0.0],
                     [105, 6.0],
                     [106, 9.0],
                     [110, false],
-                    [161, "(None)"]
+                    [161, "(None)"],
+                    [162, 0.0]
                 ],
                 "abilities": [52, 59, 108],
                 "location_id": 33,
@@ -1990,10 +2017,10 @@
                     [8, 10.0],
                     [10, 3.0],
                     [12, 9.0],
-                    [19, 0.0],
                     [105, 6.0],
                     [106, 10.0],
-                    [161, "(None)"]
+                    [161, "(None)"],
+                    [162, 0.0]
                 ],
                 "abilities": [51, 52, 53, 108, 112, 169, 184, 199],
                 "toplevel": true,
@@ -2015,9 +2042,9 @@
                     [7, 8.0],
                     [8, 35.0],
                     [12, 6.0],
-                    [19, 0.0],
                     [110, false],
                     [161, "(None)"],
+                    [162, 0.0],
                     [165, "Red"]
                 ],
                 "abilities": [59, 108, 164],
@@ -2040,11 +2067,11 @@
                     [7, 4.0],
                     [8, 9.0],
                     [12, 8.0],
-                    [19, 0.0],
                     [105, 6.0],
                     [106, 9.0],
                     [110, true],
-                    [161, "(None)"]
+                    [161, "(None)"],
+                    [162, 0.0]
                 ],
                 "abilities": [53, 59, 107, 108, 115],
                 "location_id": 97,
@@ -2066,11 +2093,11 @@
                     [7, 4.0],
                     [8, 9.0],
                     [12, 8.0],
-                    [19, 0.0],
                     [105, 6.0],
                     [106, 9.0],
                     [110, true],
-                    [161, "(None)"]
+                    [161, "(None)"],
+                    [162, 0.0]
                 ],
                 "abilities": [53, 59, 107, 108, 115],
                 "location_id": 97,
@@ -2092,11 +2119,11 @@
                     [7, 4.0],
                     [8, 15.0],
                     [12, 8.0],
-                    [19, 0.0],
                     [105, 6.0],
                     [106, 9.0],
                     [110, true],
-                    [161, "(None)"]
+                    [161, "(None)"],
+                    [162, 0.0]
                 ],
                 "abilities": [53, 59, 107, 108, 115],
                 "location_id": 97,
@@ -2128,12 +2155,14 @@
                     },
                     {
                         "infield": {"attrib_id": 5},
-                        "op_transform": "/",
-                        "val_transform": 2.0
+                        "op_transform": "*",
+                        "val_transform": 0.5
                     },
                     {
                         "infield": {"child_of_anchor": true, "attrib_id": 122}
-                    }
+                    },
+                    {"label": "Threshold", "op_transform": "c"},
+                    {"op_application": ":=", "op_transform": "floor"}
                 ],
                 "effects": [
                     {
@@ -2146,7 +2175,7 @@
             {
                 "id": 172,
                 "name": "✦Call Moss",
-                "description": "**On Any Success,** the caller summons 1 moss on a random adjacent tile. Only one may be summoned at a time. Druids can use this ability while in a beast form.\r\n\r\nThe moss may either hold its position and last indefinitely, or **Strike** and then dissolve.",
+                "description": "**On Any Success,** the caller summons [moss](/configure/character/42) for your party on an adjacent tile. Only one may be summoned at a time. Druids can use this ability while in a beast form.\r\n\r\n**On Minor Failure,** the moss is still summoned but placement is random.\r\n\r\nThe moss may either hold its position and last indefinitely, or **Strike** and then dissolve.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -2163,14 +2192,14 @@
                     },
                     {
                         "infield": {"attrib_id": 5},
-                        "op_transform": "/",
-                        "val_transform": 2.0
+                        "op_transform": "*",
+                        "val_transform": 0.5
                     }
                 ],
                 "chained": [
                     {
                         "child_id": 186,
-                        "req": {"outcome_success": "success_any"}
+                        "req": {"outcome_success": "failure_minor"}
                     }
                 ]
             },
@@ -2212,8 +2241,8 @@
                     {
                         "label": "Standard XL Impact",
                         "infield": {"attrib_id": 5},
-                        "op_transform": "/",
-                        "val_transform": 2.0
+                        "op_transform": "*",
+                        "val_transform": 0.5
                     },
                     {
                         "label": "Standard Item Impact",
@@ -2235,9 +2264,24 @@
                         "label": "Standard XL Impact",
                         "infield": {"role": "target char", "attrib_id": 5},
                         "op_application": "-",
-                        "op_transform": "/",
-                        "val_transform": 2.0
+                        "op_transform": "*",
+                        "val_transform": 0.5
                     },
+                    {"op_application": "m:="},
+                    {
+                        "infield": {"role": "target char", "attrib_id": 161}
+                    },
+                    {
+                        "infield": {"field_mode": "enum", "attrib_id": 161, "enumentry_id": 13},
+                        "op_application": "eq1"
+                    },
+                    {
+                        "label": "Bonus against Off Balance",
+                        "op_application": "*",
+                        "op_transform": "c",
+                        "val_transform": 0.5
+                    },
+                    {"op_transform": "mr"},
                     {
                         "label": "Threshold Adjustment",
                         "op_transform": "c",
@@ -2404,8 +2448,8 @@
                     {
                         "label": "Standard XL Impact",
                         "infield": {"attrib_id": 5},
-                        "op_transform": "/",
-                        "val_transform": 2.0
+                        "op_transform": "*",
+                        "val_transform": 0.5
                     },
                     {
                         "label": "Standard Item Impact",
@@ -2427,8 +2471,8 @@
                         "label": "Standard XL Impact",
                         "infield": {"role": "target char", "attrib_id": 5},
                         "op_application": "-",
-                        "op_transform": "/",
-                        "val_transform": 2.0
+                        "op_transform": "*",
+                        "val_transform": 0.5
                     },
                     {
                         "label": "Threshold Adjustment",
@@ -2482,8 +2526,8 @@
                     {
                         "label": "Standard XL Impact",
                         "infield": {"attrib_id": 5},
-                        "op_transform": "/",
-                        "val_transform": 2.0
+                        "op_transform": "*",
+                        "val_transform": 0.5
                     },
                     {
                         "label": "Standard Item Impact",
@@ -2500,8 +2544,8 @@
                         "label": "Standard XL Impact",
                         "infield": {"role": "target char", "attrib_id": 5},
                         "op_application": "-",
-                        "op_transform": "/",
-                        "val_transform": 2.0
+                        "op_transform": "*",
+                        "val_transform": 0.5
                     },
                     {
                         "label": "Standard Item Impact",
@@ -2570,8 +2614,8 @@
                     {
                         "label": "Standard XL Impact",
                         "infield": {"attrib_id": 5},
-                        "op_transform": "/",
-                        "val_transform": 2.0
+                        "op_transform": "*",
+                        "val_transform": 0.5
                     },
                     {
                         "label": "Magical Weapon",
@@ -2605,8 +2649,8 @@
                         "infield": {"role": "preselected", "field_mode": "qty", "item_id": 88},
                         "outfield": {"role": "target char", "attrib_id": 3},
                         "op_application": ":=",
-                        "op_transform": "/",
-                        "val_transform": 2.0
+                        "op_transform": "*",
+                        "val_transform": 0.5
                     }
                 ]
             },
@@ -2619,7 +2663,7 @@
             {
                 "id": 158,
                 "name": "✦Knockback",
-                "description": "Reverse spin or (for horned creatures) headbutt to knock back a target 3 tiles. Travel with the target to stay in melee range. If the target runs into something, then roll for damage. Does not crit.\r\n\r\n- **Any Success:** knock back, stay in melee distance, and roll for damage if the target runs into terrain, a stationary object, or another character\r\n- **Minor Failure:** knockback still succeeds, but don't stay in melee distance\r\n- **Major Failure:** the failed backspin puts the performer badly off balance, preventing all action for a turn",
+                "description": "Reverse spin or (for horned creatures) headbutt to knock back a target 2 tiles. Travel with the target to stay in melee range. If the target runs into something up to 3 tiles away, then roll for damage. Does not crit.\r\n\r\n- **Any Success:** knock back, stay in melee distance, and roll for damage if the target runs into terrain, a stationary object, or another character\r\n- **Minor Failure:** knockback still succeeds, but don't stay in melee distance\r\n- **Major Failure:** the failed backspin puts the performer badly off balance, preventing all action for a turn",
                 "numeric_range": [1, 20],
                 "party_targeting": "not_same",
                 "determinants": [
@@ -2647,8 +2691,8 @@
                     {
                         "label": "Standard XL Impact",
                         "infield": {"attrib_id": 5},
-                        "op_transform": "/",
-                        "val_transform": 2.0
+                        "op_transform": "*",
+                        "val_transform": 0.5
                     },
                     {
                         "label": "Standard Item Impact",
@@ -2670,8 +2714,8 @@
                         "label": "Standard XL Impact",
                         "infield": {"role": "target char", "attrib_id": 5},
                         "op_application": "-",
-                        "op_transform": "/",
-                        "val_transform": 2.0
+                        "op_transform": "*",
+                        "val_transform": 0.5
                     },
                     {
                         "label": "Threshold Adjustment",
@@ -2707,7 +2751,7 @@
                         "label": "Significant XL Impact",
                         "infield": {"attrib_id": 5},
                         "op_transform": "*",
-                        "val_transform": 1.3
+                        "val_transform": 0.8
                     },
                     {"op_application": ":=", "op_transform": "floor"}
                 ],
@@ -2775,14 +2819,14 @@
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"attrib_id": 19},
+                        "outfield": {"attrib_id": 162},
                         "op_application": ":=",
                         "op_transform": "c",
                         "outcome_success": "failure_minor"
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"attrib_id": 19},
+                        "outfield": {"attrib_id": 162},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": 2.0,
@@ -2816,8 +2860,8 @@
                     {"op_application": "m:="},
                     {
                         "infield": {"role": "preselected", "item_id": 29, "attrib_id": 185},
-                        "op_transform": "/",
-                        "val_transform": 2.0
+                        "op_transform": "*",
+                        "val_transform": 0.5
                     },
                     {"op_application": ":=", "op_transform": "abs"},
                     {"op_application": ":=", "op_transform": "floor"},
@@ -2904,8 +2948,8 @@
                     {
                         "label": "Standard XL Impact",
                         "infield": {"attrib_id": 5},
-                        "op_transform": "/",
-                        "val_transform": 2.0
+                        "op_transform": "*",
+                        "val_transform": 0.5
                     },
                     {
                         "label": "Standard Item Impact",
@@ -2927,8 +2971,8 @@
                         "label": "Standard XL Impact",
                         "infield": {"role": "target char", "attrib_id": 5},
                         "op_application": "-",
-                        "op_transform": "/",
-                        "val_transform": 2.0
+                        "op_transform": "*",
+                        "val_transform": 0.5
                     },
                     {
                         "label": "Threshold Adjustment",
@@ -3049,8 +3093,8 @@
                     {
                         "label": "Standard XL Impact",
                         "infield": {"attrib_id": 5},
-                        "op_transform": "/",
-                        "val_transform": 2.0
+                        "op_transform": "*",
+                        "val_transform": 0.5
                     },
                     {
                         "label": "Standard Item Impact",
@@ -3067,8 +3111,8 @@
                         "label": "Standard XL Impact",
                         "infield": {"role": "target char", "attrib_id": 5},
                         "op_application": "-",
-                        "op_transform": "/",
-                        "val_transform": 2.0
+                        "op_transform": "*",
+                        "val_transform": 0.5
                     },
                     {
                         "label": "Standard Item Impact",
@@ -3130,8 +3174,8 @@
                     {
                         "label": "Standard XL Impact",
                         "infield": {"attrib_id": 5},
-                        "op_transform": "/",
-                        "val_transform": 2.0
+                        "op_transform": "*",
+                        "val_transform": 0.5
                     },
                     {
                         "label": "Standard Item Impact",
@@ -3179,8 +3223,8 @@
                     {
                         "label": "Standard XL Impact",
                         "infield": {"attrib_id": 5},
-                        "op_transform": "/",
-                        "val_transform": 2.0
+                        "op_transform": "*",
+                        "val_transform": 0.5
                     },
                     {
                         "label": "Standard Stat Impact",
@@ -3193,8 +3237,8 @@
                         "label": "Standard XL Impact",
                         "infield": {"role": "target char", "attrib_id": 5},
                         "op_application": "-",
-                        "op_transform": "/",
-                        "val_transform": 2.0
+                        "op_transform": "*",
+                        "val_transform": 0.5
                     },
                     {
                         "label": "Standard Item Impact",
@@ -3247,8 +3291,8 @@
                     {
                         "label": "Standard XL Impact",
                         "infield": {"attrib_id": 5},
-                        "op_transform": "/",
-                        "val_transform": 2.0
+                        "op_transform": "*",
+                        "val_transform": 0.5
                     },
                     {
                         "label": "Standard Item Impact",
@@ -3270,8 +3314,8 @@
                         "label": "Standard XL Impact",
                         "infield": {"role": "target char", "attrib_id": 5},
                         "op_application": "-",
-                        "op_transform": "/",
-                        "val_transform": 2.0
+                        "op_transform": "*",
+                        "val_transform": 0.5
                     },
                     {
                         "label": "Threshold Adjustment",
@@ -3307,7 +3351,7 @@
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"attrib_id": 19},
+                        "outfield": {"attrib_id": 162},
                         "op_application": ":=",
                         "op_transform": "c",
                         "outcome_success": "failure_major"
@@ -3336,8 +3380,8 @@
                     {
                         "label": "Standard XL Impact",
                         "infield": {"attrib_id": 5},
-                        "op_transform": "/",
-                        "val_transform": 2.0
+                        "op_transform": "*",
+                        "val_transform": 0.5
                     },
                     {
                         "label": "Standard Item Impact",
@@ -3371,7 +3415,7 @@
                 ]
             },
             {
-                "id": 162,
+                "id": 202,
                 "name": "Suffer DoT",
                 "description": "Chance to reduce **HP** by a percentage of **Max HP** depending on **Status Effect Type.**",
                 "numeric_range": [1, 20]
@@ -3426,8 +3470,8 @@
                     {
                         "label": "Standard XL Impact",
                         "infield": {"attrib_id": 5},
-                        "op_transform": "/",
-                        "val_transform": 2.0
+                        "op_transform": "*",
+                        "val_transform": 0.5
                     },
                     {
                         "label": "Standard Item Impact",
@@ -3444,8 +3488,8 @@
                         "label": "Standard XL Impact",
                         "infield": {"role": "target char", "attrib_id": 5},
                         "op_application": "-",
-                        "op_transform": "/",
-                        "val_transform": 2.0
+                        "op_transform": "*",
+                        "val_transform": 0.5
                     },
                     {
                         "label": "Standard Item Impact",
@@ -3539,8 +3583,8 @@
                     {
                         "label": "Standard XL Impact",
                         "infield": {"attrib_id": 5},
-                        "op_transform": "/",
-                        "val_transform": 2.0
+                        "op_transform": "*",
+                        "val_transform": 0.5
                     },
                     {
                         "label": "Standard Item Impact",
@@ -3557,8 +3601,8 @@
                         "label": "Standard XL Impact",
                         "infield": {"role": "target char", "attrib_id": 5},
                         "op_application": "-",
-                        "op_transform": "/",
-                        "val_transform": 2.0
+                        "op_transform": "*",
+                        "val_transform": 0.5
                     },
                     {
                         "label": "Standard Item Impact",
@@ -3752,8 +3796,8 @@
                     },
                     {
                         "infield": {"attrib_id": 5},
-                        "op_transform": "/",
-                        "val_transform": 2.0
+                        "op_transform": "*",
+                        "val_transform": 0.5
                     },
                     {
                         "infield": {"child_of_anchor": true, "attrib_id": 122}
@@ -3780,7 +3824,7 @@
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "target char", "attrib_id": 19},
+                        "outfield": {"role": "target char", "attrib_id": 162},
                         "op_application": ":=",
                         "op_transform": "c",
                         "val_transform": 2.0,
@@ -3829,8 +3873,8 @@
                     {
                         "label": "Standard XL Impact",
                         "infield": {"attrib_id": 5},
-                        "op_transform": "/",
-                        "val_transform": 2.0
+                        "op_transform": "*",
+                        "val_transform": 0.5
                     },
                     {
                         "label": "Standard Item Impact",
@@ -3852,8 +3896,8 @@
                         "label": "Standard XL Impact",
                         "infield": {"role": "target char", "attrib_id": 5},
                         "op_application": "-",
-                        "op_transform": "/",
-                        "val_transform": 2.0
+                        "op_transform": "*",
+                        "val_transform": 0.5
                     },
                     {
                         "label": "Threshold Adjustment",
@@ -3873,7 +3917,7 @@
                     },
                     {
                         "get_val_from": "outcome",
-                        "outfield": {"role": "target char", "attrib_id": 19},
+                        "outfield": {"role": "target char", "attrib_id": 162},
                         "op_application": ":=",
                         "op_transform": "c",
                         "outcome_success": "success_any"
