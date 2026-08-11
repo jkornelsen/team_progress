@@ -152,8 +152,9 @@
             } 
             // --- Battle Finished: Start Reset Cycle ---
             else {
-                // Wait 3 seconds, then start a new battle
+                // Wait, then start a new battle
                 setTimeout(async () => {
+                    if (!isRunning()) return;
                     const resetData = await apiPost("{{ url_for('play.autobattle_reset', loc_id=location.id) }}", null, "Reset failed");
                     if (resetData) {
                         updateBattleUI(resetData); // Refresh bars and log

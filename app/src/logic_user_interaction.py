@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 # 1. Chronicle (Game Message Log)
 # ------------------------------------------------------------------------
 
-def add_message(text):
+def add_message(text, group_duplicates=True):
     """
     Adds a message to the game log. 
     If the exact same message was sent recently, increments the count 
@@ -21,14 +21,16 @@ def add_message(text):
     if not text:
         return
 
-    # 1. Check for a very recent duplicate (within the last 2 minutes)
-    recent_threshold = datetime.now(timezone.utc) - timedelta(minutes=2)
-    
-    duplicate = GameMessage.query.filter(
-        GameMessage.game_token == game_token,
-        GameMessage.message == text,
-        GameMessage.timestamp >= recent_threshold
-    ).order_by(desc(GameMessage.timestamp)).first()
+    duplicate = False
+    if group_duplicates:
+        # 1. Check for a very recent duplicate (within the last 2 minutes)
+        recent_threshold = datetime.now(timezone.utc) - timedelta(minutes=2)
+        
+        duplicate = GameMessage.query.filter(
+            GameMessage.game_token == game_token,
+            GameMessage.message == text,
+            GameMessage.timestamp >= recent_threshold
+        ).order_by(desc(GameMessage.timestamp)).first()
 
     if duplicate:
         duplicate.count += 1

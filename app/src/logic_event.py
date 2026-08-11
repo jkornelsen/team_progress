@@ -1214,7 +1214,8 @@ def do_effect_change(eff, roll_val, role_entities):
 # Outcome Resolution
 # ------------------------------------------------------------------------
 
-def roll_for_outcome(event_id, role_entities, difficulty=0.0):
+def roll_for_outcome(
+        event_id, role_entities, difficulty=0.0, group_messages=True):
     """
     Performs the random roll based on user-provided difficulty and Event rules.
     Returns: (numeric_result, string_display, tier)
@@ -1373,7 +1374,7 @@ def roll_for_outcome(event_id, role_entities, difficulty=0.0):
     subject_id = role_entities.get(Participant.SUBJECT)
     subject = db.session.get(Entity, (game_token, subject_id))
     subject_name = f"{subject.name} " if subject else ""
-    add_message(f"{subject_name}{event.name}: {message_str}")
+    add_message(f"{subject_name}{event.name}: {message_str}", group_messages)
     return result_val, display_str, tier
 
 def roll_coordinate(loc_id):

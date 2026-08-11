@@ -6,7 +6,7 @@ Produce, interact, and explore, driven by storytelling and chance. Model ideas u
 
 A good place to start is the pre-built quest **Bacon for Dinner.** If you're not a divergent thinker, you may still enjoy the **Rays** scenario, designed like a standard idler.
 
-The original idea behind this game was to be an *incremental-plus,* with roleplaying mechanics to provide the flexibility other idlers lack. Like, employees from a rival factory might suddenly attack with staplers. A lot of the scenarios ended up as primarily either incremental or RPG, so I included a progress type tag on the browse page.
+The original idea behind this game was to be an *incremental-plus,* with roleplaying mechanics to provide the flexibility other idlers lack. Like, employees from a rival factory might suddenly attack with staplers. A lot of the scenarios ended up as primarily either incremental or RPG rather than both.
 
 ## Right for you?
 
@@ -20,7 +20,7 @@ You'll probably "get" this game if you have done any of these:
 
 ## Suggestions for Playing
 
-- For dynamic role-playing scenarios such as **Dating,** track the narrative in a separate markdown document, optionally enhanced by AI.
+- For the **Dating** scenario, track the narrative in a separate markdown document, optionally enhanced by AI.
 
 - Anytime the story calls for a value that isn't handled automatically, go ahead and make the change in settings—don't worry that you might be bypassing the "official" game.
 

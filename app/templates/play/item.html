@@ -409,6 +409,42 @@
                 <div class="button-group">
                     {% set has_controls = false %}
 
+                    {% if owner.entity_type == 'character' %}
+                        <!-- Equipment -->
+                        {% if pile.slot_id or available_slots %}
+                            <div class="action-box border-top-dim spacious-top" style="padding-top: 15px;">
+                                {% if pile.slot_id %}
+                                    {% set has_controls = true %}
+                                    <div class="action-box">
+                                        <span class="label-like">Slot: <strong>{{ pile.slot_label }}</strong></span>
+                                        <button id="unequip-btn" class="go-button">une{{ hk.bracket('q') }}uip</button>
+                                    </div>
+                                {% elif item.slot_id %}
+                                    <div class="action-box">
+                                        <span class="label-like">(not equipped)</span>
+                                        <input type="hidden" id="equip-slot" value="{{ item.slot_id }}">
+                                        <button id="equip-btn" class="go-button">e{{ hk.bracket('q') }}uip to {{ item.slot_label }}</button>
+                                    </div>
+                                {% else %}
+                                    {% if available_slots %}
+                                        {% set has_controls = true %}
+                                        <div class="action-box">
+                                            <select id="equip-slot" class="full-width themed-input">
+                                                {% for slot in available_slots %}
+                                                    <option value="{{ slot.id }}" {{ 'selected' if slot.id == session.get('default_slot_id') }}>
+                                                        {{ slot.label }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                            <button id="equip-btn" class="go-button">e{{ hk.bracket('q') }}uip</button>
+                                        </div>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    {% endif %}
+
+                    <fieldset class="group-box">
                     <div class="action-box border-bottom-dim" style="padding-bottom: 10px; margin-bottom: 15px;">
                         <label for="action-qty" class="label-like">Quantity:</label>
                         <input type="number" id="action-qty" 
@@ -467,40 +503,8 @@
                                 </button>
                             </div>
                         {% endif %}
-
-                        <!-- Equipment -->
-                        {% if pile.slot_id or available_slots %}
-                            <div class="action-box border-top-dim spacious-top" style="padding-top: 15px;">
-                                {% if pile.slot_id %}
-                                    {% set has_controls = true %}
-                                    <div class="action-box">
-                                        <span class="label-like">Slot: <strong>{{ pile.slot_label }}</strong></span>
-                                        <button id="unequip-btn" class="go-button">une{{ hk.bracket('q') }}uip</button>
-                                    </div>
-                                {% elif item.slot_id %}
-                                    <div class="action-box">
-                                        <span class="label-like">(not equipped)</span>
-                                        <input type="hidden" id="equip-slot" value="{{ item.slot_id }}">
-                                        <button id="equip-btn" class="go-button">e{{ hk.bracket('q') }}uip to {{ item.slot_label }}</button>
-                                    </div>
-                                {% else %}
-                                    {% if available_slots %}
-                                        {% set has_controls = true %}
-                                        <div class="action-box">
-                                            <select id="equip-slot" class="full-width themed-input">
-                                                {% for slot in available_slots %}
-                                                    <option value="{{ slot.id }}" {{ 'selected' if slot.id == session.get('default_slot_id') }}>
-                                                        {{ slot.label }}
-                                                    </option>
-                                                {% endfor %}
-                                            </select>
-                                            <button id="equip-btn" class="go-button">e{{ hk.bracket('q') }}uip</button>
-                                        </div>
-                                    {% endif %}
-                                {% endif %}
-                            </div>
-                        {% endif %}
                     {% endif %}
+                    </fieldset>
                 </div>
                 {% if not has_controls %}
                     <div class="action-box">

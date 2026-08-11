@@ -20,18 +20,12 @@ link "working..." text in char inv to the actual production pile
 show spin icon when char inventory is the target owner even if not the host
 
 auto battle
-    stop and disable start if less than 2 teams have at least 1 hp remaining
     hide autobattle fields in event and attrib config if no locations have ab enabled
     in event config specify priority number
         default is 1 which means choose randomly if multiple can work
         otherwise higher priority means always try that one first?
         determinant comparisons must fail clearly so we can try the next one
         0 means not automatic
-    on reset (when enemy team all dies) main party gains some hp like a short rest
-        to figure out which team is enemies,
-        add "enemy team" checkbox in ab play and default to "enemies" party
-        or checkbox for the "main team" that needs to stay alive
-        or selectbox to specify team type (main vs enemy) for each
 
 old_loc_id doesn't always get set when going to loc page
     http://localhost:5000/play/location/14 (navigate and reload both failed)
@@ -98,27 +92,27 @@ dungeon crawl
         roar to fear or taunt enemies or buff self
 
 aegis
-    merchant location
-        sells mounts and fighting equipment upgrades for gold
+    merchant sells mounts
         "not mounted" item
-    pin town location to overview to arrange locations
-        maybe countryside location for woods and ravine
     tower defense
-        siegemen
-            climbers
-            maybe up to 5 enemy melee troops with high health
-            instructions for duplicating if more than 2 or 3
-        enemy archers
-            two enemies
-            maybe an event to choose who your troops prioritize
-            would get run after DoT but before main turn
-            but how to run -- can an event return which targets meet requirements?
-            or always prioritize lowest hp targets
+        two climber siegemen
+        two enemy archers
         mercenaries are all archers helping aegis
             knights can pour hot oil or engage in melee when attackers reach walls
-    party name "aegis"
-        two knights
-        track distance for each enemy away from aegis, who always stay together
+            maybe 3 mercenaries available in the tavern
+                or more but exponentially more expensive
+    items
+        lance
+            reach
+            multiplies damage by movement speed
+            lancing could require an "open ground" location attribute
+            or riding requires open ground and lancing requires riding
+        health potions
+            storage limit of maybe 3 in each pack
+        need at least 1 or 2 rare drops or this scenario doesn't really work
+            from bandits
+            jewelled shield -- higher evasion
+            jewelled oil lamp to set the hot oil on fire
 
 moon base
     mine helium-3 with location production

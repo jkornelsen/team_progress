@@ -12,29 +12,53 @@
     },
     "entities": {
         "attribs": [
+            {"id": 30, "name": "Accuracy"},
+            {"id": 40, "name": "Armour Pen"},
             {"id": 13, "name": "Bounty"},
+            {"id": 29, "name": "Damage"},
+            {"id": 34, "name": "Damage Reduction"},
             {"id": 12, "name": "Death Counted", "is_binary": true},
+            {"id": 27, "name": "Dex"},
             {
                 "id": 2,
                 "name": "Equipment Slots",
                 "description": "Equipment slots for characters.",
-                "enum_list": ["Main Hand", "Body", "Mount"]
+                "enum_list": ["Main Hand", "Off Hand", "Body", "Mount"]
             },
+            {"id": 33, "name": "Evasion"},
             {"id": 6, "name": "HP", "ab_field": "hp"},
             {"id": 7, "name": "Max HP", "ab_field": "max_hp"},
-            {"id": 19, "name": "Riding Speed"}
+            {"id": 19, "name": "Riding Speed"},
+            {"id": 26, "name": "Str"}
         ],
         "items": [
             {
+                "id": 38,
+                "name": "Distance",
+                "description": "How far away the two parties are. Melee attacks require close range.",
+                "storage_type": "u",
+                "toplevel": true
+            },
+            {
                 "id": 11,
-                "name": "Gold",
+                "name": "🪙Gold",
                 "description": "Earn by killing enemies. Bounty is per pelt so chance of pelt getting destroyed means no bounty for that wolf.",
                 "storage_type": "u",
                 "toplevel": true
             },
             {
+                "id": 35,
+                "name": "👕Hide",
+                "attribs": [
+                    [33, 3.0],
+                    [34, 0.0]
+                ],
+                "q_limit": 1.0,
+                "slot": "Body"
+            },
+            {
                 "id": 18,
-                "name": "Horse",
+                "name": "🐎Horse",
                 "description": "Required for a knight to mount.",
                 "attribs": [
                     [19, 2.0]
@@ -43,11 +67,127 @@
                 "slot": "Mount"
             },
             {
+                "id": 32,
+                "name": "🛡️Iron Shield",
+                "description": "Basic melee weapon.",
+                "attribs": [
+                    [33, 1.0]
+                ],
+                "q_limit": 1.0,
+                "slot": "Off Hand"
+            },
+            {
+                "id": 28,
+                "name": "🗡️Iron Sword",
+                "description": "Basic melee weapon.",
+                "attribs": [
+                    [29, 1.0],
+                    [30, 1.0],
+                    [40, 0.0]
+                ],
+                "q_limit": 1.0,
+                "slot": "Main Hand"
+            },
+            {
                 "id": 17,
-                "name": "Jewels",
+                "name": "💍Jewels",
                 "description": "Bandits hoard these (random drop qty chance). Used to hire mercenaries.",
                 "storage_type": "u",
                 "toplevel": true
+            },
+            {
+                "id": 36,
+                "name": "👕Leather Armour",
+                "attribs": [
+                    [34, 1.0]
+                ],
+                "q_limit": 1.0,
+                "slot": "Body"
+            },
+            {
+                "id": 47,
+                "name": "Mem1",
+                "description": "Memory for event calculations",
+                "storage_type": "u"
+            },
+            {
+                "id": 48,
+                "name": "Mem2",
+                "description": "Memory for event calculations",
+                "storage_type": "u"
+            },
+            {"id": 43, "name": "Merchant", "storage_type": "l", "q_limit": 1.0},
+            {
+                "id": 45,
+                "name": "👕Splint Mail",
+                "attribs": [
+                    [34, 2.0]
+                ],
+                "q_limit": 1.0,
+                "slot": "Body",
+                "recipes": [
+                    {
+                        "id": 46,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 11, "q_required": 50.0},
+                            {"item_id": 43, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 41,
+                "name": "🗡️Steel Mace",
+                "attribs": [
+                    [29, 1.0],
+                    [30, 2.0],
+                    [40, 3.0]
+                ],
+                "q_limit": 1.0,
+                "slot": "Main Hand",
+                "recipes": [
+                    {
+                        "id": 44,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 11, "q_required": 100.0},
+                            {"item_id": 43, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 39,
+                "name": "🗡️Steel Sword",
+                "attribs": [
+                    [29, 2.0],
+                    [30, 2.0],
+                    [40, 0.0]
+                ],
+                "q_limit": 1.0,
+                "slot": "Main Hand",
+                "recipes": [
+                    {
+                        "id": 42,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 11, "q_required": 20.0},
+                            {"item_id": 43, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": 31,
+                "name": "🦷Teeth and Claws",
+                "attribs": [
+                    [29, 1.0],
+                    [30, 1.0],
+                    [40, 0.0]
+                ],
+                "q_limit": 1.0,
+                "slot": "Main Hand"
             },
             {
                 "id": 20,
@@ -61,58 +201,116 @@
         "locations": [
             {
                 "id": 16,
-                "name": "Castle",
+                "name": "🏰Castle",
                 "description": "Tower defense:\r\n\r\n- start distance at 30\r\n- allow arrows to hit far away\r\n- hot oil to require being closer",
-                "toplevel": true,
                 "destinations": [
-                    {"loc2_id": 21}
+                    {"loc2_id": 21},
+                    {"loc2_id": 22}
+                ]
+            },
+            {"id": 23, "name": "Countryside"},
+            {
+                "id": 24,
+                "name": "💰Merchant Stall",
+                "items": [
+                    {"item_id": 43, "quantity": 1.0}
                 ]
             },
             {
                 "id": 15,
                 "name": "Ravine",
                 "description": "A mounted knights patrol chases bandits who have been using this area to rob villagers and then get away. Small chance of catching a bandit without being mounted.",
-                "toplevel": true
+                "destinations": [
+                    {"loc2_id": 23}
+                ]
             },
             {
                 "id": 21,
-                "name": "Tavern",
+                "name": "🍺Tavern",
                 "description": "Where mercenaries can be hired from.",
-                "toplevel": true
+                "destinations": [
+                    {"loc2_id": 22}
+                ]
+            },
+            {
+                "id": 22,
+                "name": "Town",
+                "toplevel": true,
+                "destinations": [
+                    {"loc2_id": 23},
+                    {"loc2_id": 24}
+                ]
             },
             {
                 "id": 3,
-                "name": "Woods",
+                "name": "🌳Woods",
                 "description": "After reports of wolves frightening young girls, a bounty has been offered for each pelt.",
-                "toplevel": true
+                "destinations": [
+                    {"loc2_id": 23}
+                ]
             }
         ],
         "characters": [
             {
                 "id": 4,
-                "name": "fighter",
+                "name": "Ivanhoe",
                 "attribs": [
-                    [6, 10.0],
-                    [7, 10.0],
-                    [12, true],
-                    [13, 0.0]
+                    [6, 15.0],
+                    [7, 15.0],
+                    [12, false],
+                    [13, 0.0],
+                    [26, 9.0],
+                    [27, 8.0]
                 ],
-                "abilities": [8, 10, 14],
+                "abilities": [8, 14],
+                "toplevel": true,
                 "location_id": 3,
-                "party": "Main Party"
+                "party": "Aegis",
+                "items": [
+                    {"item_id": 28, "quantity": 1.0, "slot": "Main Hand"},
+                    {"item_id": 32, "quantity": 1.0, "slot": "Off Hand"},
+                    {"item_id": 36, "quantity": 1.0, "slot": "Body"}
+                ]
+            },
+            {
+                "id": 25,
+                "name": "Tristan",
+                "attribs": [
+                    [6, 17.0],
+                    [7, 17.0],
+                    [12, false],
+                    [13, 0.0],
+                    [26, 10.0],
+                    [27, 7.0]
+                ],
+                "abilities": [8, 14],
+                "toplevel": true,
+                "location_id": 3,
+                "party": "Aegis",
+                "items": [
+                    {"item_id": 28, "quantity": 1.0, "slot": "Main Hand"},
+                    {"item_id": 32, "quantity": 1.0, "slot": "Off Hand"},
+                    {"item_id": 36, "quantity": 1.0, "slot": "Body"}
+                ]
             },
             {
                 "id": 5,
-                "name": "wolf",
+                "name": "🐺wolf",
                 "attribs": [
-                    [6, 0.0],
-                    [7, 15.0],
-                    [12, true],
-                    [13, 2.0]
+                    [6, 40.0],
+                    [7, 40.0],
+                    [12, false],
+                    [13, 2.0],
+                    [26, 6.0],
+                    [27, 10.0]
                 ],
-                "abilities": [10, 14],
+                "abilities": [8, 10, 14],
                 "location_id": 3,
-                "party": "Enemies"
+                "party": "Enemies",
+                "items": [
+                    {"item_id": 31, "quantity": 1.0, "slot": "Main Hand"},
+                    {"item_id": 35, "quantity": 1.0, "slot": "Body"}
+                ]
             }
         ],
         "events": [
@@ -182,13 +380,151 @@
                 "numeric_range": [1, 20],
                 "party_targeting": "not_same",
                 "ab_stage": "turn",
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 27},
+                        "op_transform": "*",
+                        "val_transform": 0.8
+                    },
+                    {
+                        "infield": {"child_of_anchor": true, "attrib_id": 30}
+                    },
+                    {
+                        "infield": {"role": "target char", "attrib_id": 27},
+                        "op_application": "-",
+                        "op_transform": "*",
+                        "val_transform": 0.8
+                    },
+                    {
+                        "infield": {"role": "target char", "child_of_anchor": true, "attrib_id": 33},
+                        "op_application": "-"
+                    },
+                    {"op_application": ":=", "op_transform": "floor"}
+                ],
                 "effects": [
                     {
+                        "label": "Tally Damage in Mem1",
                         "get_val_from": "outcome",
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 47},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 0.0
+                    },
+                    {
+                        "label": "Armour Pen in Mem2 (Full)",
+                        "infield": {"role": "target char", "child_of_anchor": true, "attrib_id": 34},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 48},
+                        "op_application": ":=",
+                        "op_transform": "+",
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "infield": {"child_of_anchor": true, "attrib_id": 40},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 48},
+                        "op_application": "-",
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "label": "Is Pen Full Benefit?",
+                        "get_val_from": "outfield",
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 48},
+                        "op_application": ":=",
+                        "op_transform": "mask",
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "label": "Pen Impact",
+                        "infield": {"child_of_anchor": true, "attrib_id": 40},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 48},
+                        "op_application": "*",
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "label": "Apply Pen Impact (Full)",
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 48},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 47},
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "label": "Armour Pen in Mem2 (Partial)",
+                        "infield": {"child_of_anchor": true, "attrib_id": 40},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 48},
+                        "op_application": ":=",
+                        "op_transform": "+",
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "infield": {"role": "target char", "child_of_anchor": true, "attrib_id": 34},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 48},
+                        "op_application": "-",
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "label": "Is Partial Pen",
+                        "get_val_from": "outfield",
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 48},
+                        "op_application": ":=",
+                        "op_transform": "mask",
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "label": "Pen Impact",
+                        "infield": {"role": "target char", "child_of_anchor": true, "attrib_id": 34},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 48},
+                        "op_application": "*",
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "label": "Apply Pen Impact (Partial)",
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 48},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 47},
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "infield": {"attrib_id": 26},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 47},
+                        "op_transform": "/",
+                        "val_transform": 2.0,
+                        "outcome_success": "success_minor"
+                    },
+                    {
+                        "infield": {"attrib_id": 26},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 47},
+                        "outcome_success": "success_major"
+                    },
+                    {
+                        "infield": {"child_of_anchor": true, "attrib_id": 29},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 47},
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "infield": {"role": "target char", "child_of_anchor": true, "attrib_id": 34},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 47},
+                        "op_application": "-",
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "label": "Can't Heal From Getting Hit",
+                        "get_val_from": "outfield",
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 47},
+                        "op_application": ":=",
+                        "op_transform": "max",
+                        "val_transform": 0.0,
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "label": "Damage Total",
+                        "get_val_from": "outfield",
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 47},
+                        "op_application": ":=",
+                        "op_transform": "floor",
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "label": "Apply Damage",
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 47},
                         "outfield": {"role": "target char", "attrib_id": 6},
                         "op_application": "-",
-                        "op_transform": "c",
-                        "val_transform": 3.0,
                         "outcome_success": "success_any"
                     }
                 ]
@@ -197,7 +533,7 @@
     },
     "general data": {
         "piles": [
-            {"item_id": 11, "quantity": 14.0}
+            {"item_id": 11, "quantity": 0.0}
         ]
     },
     "progress": []

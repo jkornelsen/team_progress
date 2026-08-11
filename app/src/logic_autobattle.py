@@ -37,6 +37,11 @@ def get_char_stat(char, field_type):
     ).first()
     return val.value if val else 0
 
+def get_missing_hp(char):
+    max_hp = get_char_stat(char, AutobattleField.MAX_HP)
+    current_hp = get_char_stat(char, AutobattleField.HP)
+    return max_hp - current_hp
+
 def execute_event_chain(event_id, role_entities, depth=0):
     """
     Executes an event and recursively follows any eligible chains.
@@ -58,7 +63,7 @@ def execute_event_chain(event_id, role_entities, depth=0):
         result_val, result_str, tier = roll_for_system_outcome(event_id)
     else:
         result_val, result_str, tier = roll_for_outcome(
-            event_id, role_entities, difficulty=0.5)
+            event_id, role_entities, difficulty=0.5, group_messages=False)
     if result_val is None:
         #add_message(result_str)
         return
@@ -121,7 +126,9 @@ def run_battle_round(loc_id):
                             if get_char_stat(m, AutobattleField.HP) > 0])
                 
                 if enemies:
-                    target = random.choice(enemies)
+                    # Sort enemies by missing HP descending (most damaged first)
+                    enemies.sort(key=get_missing_hp, reverse=True)
+                    target = enemies[0]
 
                     # Execution
                     role_entities = {
