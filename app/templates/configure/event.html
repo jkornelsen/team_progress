@@ -477,7 +477,7 @@ function syncEventFieldState(element) {
     const preselected = roleSelect.querySelector('option[value="{{ Participant.PRESELECTED }}"]');
     if (preselected) {
         preselected.textContent = (mode === '{{ Participant.QTY }}') ?
-            "No Owner (Universal)" : "Preselected";
+            "Universal (No Owner)" : "Preselected";
     }
 
     // Role Restrictions

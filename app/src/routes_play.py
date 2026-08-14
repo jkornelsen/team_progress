@@ -1215,7 +1215,7 @@ def autobattle_step(loc_id):
     # 2. Fetch the latest state
     parties = get_battle_participants(loc_id)
     char_stats = {}
-    active_party_count = 0
+    active_parties = []
     
     for p_name, members in parties.items():
         alive_in_party = 0
@@ -1227,10 +1227,17 @@ def autobattle_step(loc_id):
                 "max_hp": format_num(max_hp),
                 "is_dead": hp <= 0
             }
-            if hp > 0:
+            if hp >= 1:
                 alive_in_party += 1
         if alive_in_party > 0:
-            active_party_count += 1
+            active_parties.append(p_name)
+
+    battle_continues = len(active_parties) > 1
+    if not battle_continues:
+        if len(active_parties) == 1:
+            add_message(f"-- {active_parties[0]} Wins Round --")
+        else:
+            add_message("-- No One Wins The Round! --")
 
     # 3. Fetch recent messages formatted for the log
     messages = [{
@@ -1242,8 +1249,8 @@ def autobattle_step(loc_id):
     return jsonify({
         "success": success,
         "char_stats": char_stats,
-        "log": messages,
-        "battle_continues": active_party_count >= 2
+        "battle_continues": battle_continues,
+        "log": messages
     })
 
 @play_bp.route('/play/autobattle/<int:loc_id>/reset', methods=['POST'])

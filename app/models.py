@@ -437,7 +437,7 @@ class Location(Entity):
     toplevel = db.Column(db.Boolean, default=False)
     masked = db.Column(db.Boolean, default=False)
     dimensions = db.Column(ARRAY(db.Integer), default=None)
-    enable_autobattle = db.Column(db.Boolean, default=False)
+    autobattle = db.Column(db.Boolean, default=False)
 
     def to_dict(self):
         data = super().to_dict()
@@ -445,6 +445,7 @@ class Location(Entity):
             "dimensions": self.dimensions,
             "toplevel": self.toplevel,
             "masked": self.masked,
+            "autobattle": self.autobattle,
             "items": sorted(
                 [p.to_dict() for p in self.piles], 
                 key=lambda x: (x['item_id'], x.get('position') or [])),

@@ -12,13 +12,11 @@ in event configure for randomly placing an item, hide calculation section and lo
 link "working..." text in char inv to the actual production pile
 show spin icon when char inventory is the target owner even if not the host
 
-auto battle
-    hide autobattle fields in event and attrib config if no locations have ab enabled
-    in event config specify priority number
-        default is 1 which means choose randomly if multiple can work
-        otherwise higher priority means always try that one first?
-        determinant comparisons must fail clearly so we can try the next one
-        0 means not automatic
+hide autobattle fields in event and attrib config if no locations have ab enabled
+
+tooltips for all event selectbox options
+    if looping to display the options then use dicts
+    the dicts wouldn't have to be in the model
 
 old_loc_id doesn't always get set when going to loc page
     http://localhost:5000/play/location/14 (navigate and reload both failed)
@@ -56,6 +54,9 @@ CONTEXT:  while updating tuple (0,46) in relation "characters"
 
 ---- scenario ----
 
+dungeon crawl
+    add necromancer to random class list
+
 lumber
     idle a certain number of batches that require fuel
         can either burn wood or purchased gasoline
@@ -75,8 +76,6 @@ tethered one
         still must hear convo (branched) about atlanth's revenge plan
 
 aegis
-    merchant sells mounts
-        "not mounted" item
     tower defense
         two climber siegemen
         two enemy archers
@@ -85,17 +84,10 @@ aegis
             maybe 3 mercenaries available in the tavern
                 or more but exponentially more expensive
     items
-        lance
-            reach
-            multiplies damage by movement speed
-            lancing could require an "open ground" location attribute
-            or riding requires open ground and lancing requires riding
         health potions
             storage limit of maybe 3 in each pack
-        need at least 1 or 2 rare drops or this scenario doesn't really work
-            from bandits
-            jewelled shield -- higher evasion
-            jewelled oil lamp to set the hot oil on fire
+        jewelled oil lamp to set the hot oil on fire
+            but hot oil would be expected to do something like that anyway
 
 moon base
     mine helium-3 with location production
@@ -117,17 +109,11 @@ render.com is an alternative.
 delete data based on user_interactions timestamp
 psql -d app -c "DELETE FROM your_table WHERE created_at < NOW() - INTERVAL '4 days';"
 
-disconnect after 30 minutes without user interaction
-    reloading overview doesn't count
-    disconnect means go to a static page so it doesn't keep requesting updates
-    session['disconnected'] = True
-    button on page to reconnect
-
 consider sharing community scenarios
 perhaps submit to reddit, or github via pull requests
 ask for feedback about:
+    do you appreciate the ability to change everything or would you prefer to avoid configuration pages as much as possible
     which scenarios would you like to see developed further
-    do you like creating and modifying or would you prefer to avoid using configuration pages as much as possible
 
 screenshots
     infestation baby mouse attack

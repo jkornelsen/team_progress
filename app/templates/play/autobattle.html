@@ -33,7 +33,10 @@
                 {{ location.name }}
             {% endcall %}
         </span>
-        <h1>⚔️ Auto Battle: {{ location.name }}</h1>
+        <h1>{{ location.name }}: ⚔️ Auto Battle</h1>
+        {% if location.description %}
+            <div class="description-box">{{ location.description | htmlify }}</div>
+        {% endif %}
     </header>
 
     <div class="column-container">
@@ -69,7 +72,7 @@
                             {% call hk.hotlink(target_url, link_letters) %}
                                 {{ char.name }}
                             {% endcall %}
-                            <span id="hp-wrapper-{{ char.id }}" class="{{ 'text-danger' if char.hp <= 0 else '' }}">
+                            <span id="hp-wrapper-{{ char.id }}" class="{{ 'text-danger' if char.hp < 1 else '' }}">
                                 HP: <span id="hp-val-{{ char.id }}">{{ char.hp | formatNum }}</span> 
                                 / <span id="hp-max-{{ char.id }}">{{ char.max_hp | formatNum }}</span>
                             </span>

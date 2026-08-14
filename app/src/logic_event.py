@@ -1218,7 +1218,8 @@ def roll_for_outcome(
         event_id, role_entities, difficulty=0.0, group_messages=True):
     """
     Performs the random roll based on user-provided difficulty and Event rules.
-    Returns: (numeric_result, string_display, tier)
+    Returns: (numeric_result, string_display, tier),
+        result None if a condition is not met
     """
     game_token = g.game_token
     event = db.session.get(Event, (g.game_token, event_id))

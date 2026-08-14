@@ -377,7 +377,7 @@ def edit_location(id):
         loc.dimensions = parse_coords(req.get_str('dimensions_str'))
         loc.toplevel = 'toplevel' in request.form
         loc.masked = 'masked' in request.form
-        loc.enable_autobattle = 'enable_autobattle' in request.form
+        loc.autobattle = 'autobattle' in request.form
 
         # Destinations (Exits) -- Symmetric Route Saving
         # Fetch existing routes involving this location to determine what to delete/update

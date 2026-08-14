@@ -27,8 +27,11 @@
             },
             {"id": 33, "name": "Evasion"},
             {"id": 6, "name": "HP", "ab_field": "hp"},
+            {"id": 51, "name": "Is Castle", "is_binary": true},
+            {"id": 62, "name": "Is Lance", "is_binary": true},
             {"id": 7, "name": "Max HP", "ab_field": "max_hp"},
-            {"id": 19, "name": "Riding Speed"},
+            {"id": 19, "name": "Movement Speed"},
+            {"id": 55, "name": "Riding Speed Bonus"},
             {"id": 26, "name": "Str"}
         ],
         "items": [
@@ -40,11 +43,20 @@
                 "toplevel": true
             },
             {
-                "id": 11,
+                "id": 49,
                 "name": "🪙Gold",
-                "description": "Earn by killing enemies. Bounty is per pelt so chance of pelt getting destroyed means no bounty for that wolf.",
                 "storage_type": "u",
-                "toplevel": true
+                "toplevel": true,
+                "recipes": [
+                    {
+                        "id": 50,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 11, "q_required": 15.0},
+                            {"item_id": 43, "q_required": 1.0, "preserve": true}
+                        ]
+                    }
+                ]
             },
             {
                 "id": 35,
@@ -59,12 +71,22 @@
             {
                 "id": 18,
                 "name": "🐎Horse",
-                "description": "Required for a knight to mount.",
+                "description": "Noble steed for a knight.",
                 "attribs": [
-                    [19, 2.0]
+                    [55, 2.0]
                 ],
                 "q_limit": 1.0,
-                "slot": "Mount"
+                "slot": "Mount",
+                "recipes": [
+                    {
+                        "id": 63,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 43, "q_required": 1.0, "preserve": true},
+                            {"item_id": 49, "q_required": 30.0}
+                        ]
+                    }
+                ]
             },
             {
                 "id": 32,
@@ -87,6 +109,16 @@
                 ],
                 "q_limit": 1.0,
                 "slot": "Main Hand"
+            },
+            {
+                "id": 59,
+                "name": "🛡️Jewelled Shield",
+                "description": "Rare drop. Chance to be found on the ground in the **Ravine** from bandit loot.",
+                "attribs": [
+                    [33, 3.0]
+                ],
+                "q_limit": 1.0,
+                "slot": "Off Hand"
             },
             {
                 "id": 17,
@@ -118,6 +150,16 @@
             },
             {"id": 43, "name": "Merchant", "storage_type": "l", "q_limit": 1.0},
             {
+                "id": 56,
+                "name": "(Not Mounted)",
+                "attribs": [
+                    [55, 0.0]
+                ],
+                "q_limit": 1.0,
+                "slot": "Mount"
+            },
+            {"id": 11, "name": "🔵Silver", "storage_type": "u", "toplevel": true},
+            {
                 "id": 45,
                 "name": "👕Splint Mail",
                 "attribs": [
@@ -130,8 +172,8 @@
                         "id": 46,
                         "instant": true,
                         "sources": [
-                            {"item_id": 11, "q_required": 50.0},
-                            {"item_id": 43, "q_required": 1.0, "preserve": true}
+                            {"item_id": 43, "q_required": 1.0, "preserve": true},
+                            {"item_id": 49, "q_required": 10.0}
                         ]
                     }
                 ]
@@ -151,8 +193,8 @@
                         "id": 44,
                         "instant": true,
                         "sources": [
-                            {"item_id": 11, "q_required": 100.0},
-                            {"item_id": 43, "q_required": 1.0, "preserve": true}
+                            {"item_id": 43, "q_required": 1.0, "preserve": true},
+                            {"item_id": 49, "q_required": 100.0}
                         ]
                     }
                 ]
@@ -172,8 +214,8 @@
                         "id": 42,
                         "instant": true,
                         "sources": [
-                            {"item_id": 11, "q_required": 20.0},
-                            {"item_id": 43, "q_required": 1.0, "preserve": true}
+                            {"item_id": 43, "q_required": 1.0, "preserve": true},
+                            {"item_id": 49, "q_required": 3.0}
                         ]
                     }
                 ]
@@ -203,6 +245,10 @@
                 "id": 16,
                 "name": "🏰Castle",
                 "description": "Tower defense:\r\n\r\n- start distance at 30\r\n- allow arrows to hit far away\r\n- hot oil to require being closer",
+                "attribs": [
+                    [51, true]
+                ],
+                "autobattle": true,
                 "destinations": [
                     {"loc2_id": 21},
                     {"loc2_id": 22}
@@ -219,7 +265,11 @@
             {
                 "id": 15,
                 "name": "Ravine",
-                "description": "A mounted knights patrol chases bandits who have been using this area to rob villagers and then get away. Small chance of catching a bandit without being mounted.",
+                "description": "A mounted knights patrol chases bandits who have been using this area to rob villagers and then get away. Small chance of catching a bandit without being mounted.\r\n\r\nIf they get away by increasing the distance enough, then **Aegis** loses the battle, by showing their **HP** as 0. This does not mean their actual health has been lost.",
+                "attribs": [
+                    [51, false]
+                ],
+                "autobattle": true,
                 "destinations": [
                     {"loc2_id": 23}
                 ]
@@ -245,12 +295,58 @@
                 "id": 3,
                 "name": "🌳Woods",
                 "description": "After reports of wolves frightening young girls, a bounty has been offered for each pelt.",
+                "attribs": [
+                    [51, false]
+                ],
+                "autobattle": true,
                 "destinations": [
                     {"loc2_id": 23}
                 ]
             }
         ],
         "characters": [
+            {
+                "id": 53,
+                "name": "Bandit 1",
+                "attribs": [
+                    [6, 25.0],
+                    [7, 25.0],
+                    [12, false],
+                    [13, 1.0],
+                    [26, 9.0],
+                    [27, 8.0]
+                ],
+                "abilities": [8, 14, 52, 57, 58],
+                "location_id": 15,
+                "party": "Enemies",
+                "items": [
+                    {"item_id": 32, "quantity": 1.0, "slot": "Off Hand"},
+                    {"item_id": 36, "quantity": 1.0, "slot": "Body"},
+                    {"item_id": 39, "quantity": 1.0, "slot": "Main Hand"},
+                    {"item_id": 56, "quantity": 1.0, "slot": "Mount"}
+                ]
+            },
+            {
+                "id": 64,
+                "name": "Bandit 2",
+                "attribs": [
+                    [6, 25.0],
+                    [7, 25.0],
+                    [12, false],
+                    [13, 1.0],
+                    [26, 9.0],
+                    [27, 8.0]
+                ],
+                "abilities": [8, 14, 52, 57, 58],
+                "location_id": 15,
+                "party": "Enemies",
+                "items": [
+                    {"item_id": 32, "quantity": 1.0, "slot": "Off Hand"},
+                    {"item_id": 36, "quantity": 1.0, "slot": "Body"},
+                    {"item_id": 39, "quantity": 1.0, "slot": "Main Hand"},
+                    {"item_id": 56, "quantity": 1.0, "slot": "Mount"}
+                ]
+            },
             {
                 "id": 4,
                 "name": "Ivanhoe",
@@ -262,14 +358,15 @@
                     [26, 9.0],
                     [27, 8.0]
                 ],
-                "abilities": [8, 14],
+                "abilities": [8, 14, 54, 61],
                 "toplevel": true,
                 "location_id": 3,
                 "party": "Aegis",
                 "items": [
                     {"item_id": 28, "quantity": 1.0, "slot": "Main Hand"},
                     {"item_id": 32, "quantity": 1.0, "slot": "Off Hand"},
-                    {"item_id": 36, "quantity": 1.0, "slot": "Body"}
+                    {"item_id": 36, "quantity": 1.0, "slot": "Body"},
+                    {"item_id": 56, "quantity": 1.0, "slot": "Mount"}
                 ]
             },
             {
@@ -283,14 +380,15 @@
                     [26, 10.0],
                     [27, 7.0]
                 ],
-                "abilities": [8, 14],
+                "abilities": [8, 14, 54, 61],
                 "toplevel": true,
                 "location_id": 3,
                 "party": "Aegis",
                 "items": [
                     {"item_id": 28, "quantity": 1.0, "slot": "Main Hand"},
                     {"item_id": 32, "quantity": 1.0, "slot": "Off Hand"},
-                    {"item_id": 36, "quantity": 1.0, "slot": "Body"}
+                    {"item_id": 36, "quantity": 1.0, "slot": "Body"},
+                    {"item_id": 56, "quantity": 1.0, "slot": "Mount"}
                 ]
             },
             {
@@ -300,7 +398,7 @@
                     [6, 40.0],
                     [7, 40.0],
                     [12, false],
-                    [13, 2.0],
+                    [13, 3.0],
                     [26, 6.0],
                     [27, 10.0]
                 ],
@@ -315,8 +413,59 @@
         ],
         "events": [
             {
+                "id": 57,
+                "name": "Drop — Bandit",
+                "auto_apply": true,
+                "numeric_range": [1, 100],
+                "ab_stage": "after",
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 6},
+                        "op_application": "<"
+                    },
+                    {
+                        "infield": {"attrib_id": 12},
+                        "op_application": "==",
+                        "val_required": false
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"attrib_id": 12},
+                        "op_application": ":=",
+                        "op_transform": "c"
+                    },
+                    {
+                        "infield": {"attrib_id": 13},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 49},
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 17},
+                        "op_transform": "c",
+                        "outcome_success": "success_major"
+                    },
+                    {
+                        "label": "Rare Drop Chance",
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 47},
+                        "op_transform": "-",
+                        "val_transform": 99.0,
+                        "outcome_success": "success_major"
+                    },
+                    {
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 47},
+                        "outfield": {"role": "at", "field_mode": "qty", "item_id": 59},
+                        "op_transform": "mask",
+                        "outcome_success": "success_major"
+                    }
+                ]
+            },
+            {
                 "id": 10,
-                "name": "Drop",
+                "name": "Drop — Wolf",
                 "auto_apply": true,
                 "outcome_type": "determined",
                 "ab_stage": "after",
@@ -348,6 +497,272 @@
                 ]
             },
             {
+                "id": 52,
+                "name": "Flee",
+                "auto_apply": true,
+                "outcome_type": "numeric",
+                "numeric_range": [1, 5],
+                "ab_stage": "turn",
+                "determinants": [
+                    {
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 38},
+                        "op_application": ">=",
+                        "val_required": 2.0
+                    },
+                    {
+                        "infield": {"role": "target char", "attrib_id": 6},
+                        "op_application": ">="
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 38}
+                    },
+                    {
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 38},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 47},
+                        "op_application": ":=",
+                        "op_transform": "-",
+                        "val_transform": 29.0
+                    },
+                    {
+                        "label": "1 if escaped (else 0)",
+                        "get_val_from": "outfield",
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 47},
+                        "op_application": ":=",
+                        "op_transform": "mask"
+                    },
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 47},
+                        "op_transform": "c"
+                    },
+                    {
+                        "label": "0 if escaped (else 1)",
+                        "get_val_from": "outfield",
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 47},
+                        "op_application": ":=",
+                        "op_transform": "%",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "label": "End the fight by wiping HP",
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 47},
+                        "outfield": {"role": "target char", "attrib_id": 6},
+                        "op_application": "*",
+                        "val_transform": 0.0
+                    }
+                ]
+            },
+            {
+                "id": 61,
+                "name": "Lance",
+                "description": "Run down enemies on a horse with a lance, using movement speed to increase damage.",
+                "auto_apply": true,
+                "numeric_range": [1, 20],
+                "party_targeting": "not_same",
+                "ab_stage": "turn",
+                "ab_priority": 3,
+                "determinants": [
+                    {
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 38},
+                        "op_application": "<",
+                        "val_required": 3.0
+                    },
+                    {
+                        "infield": {"child_of_anchor": true, "attrib_id": 62},
+                        "op_application": "=="
+                    },
+                    {
+                        "infield": {"child_of_anchor": true, "attrib_id": 55},
+                        "op_application": ">="
+                    },
+                    {
+                        "infield": {"attrib_id": 27},
+                        "op_transform": "*",
+                        "val_transform": 0.8
+                    },
+                    {
+                        "infield": {"child_of_anchor": true, "attrib_id": 30}
+                    },
+                    {
+                        "infield": {"role": "target char", "attrib_id": 27},
+                        "op_application": "-",
+                        "op_transform": "*",
+                        "val_transform": 0.8
+                    },
+                    {
+                        "infield": {"role": "target char", "child_of_anchor": true, "attrib_id": 33},
+                        "op_application": "-"
+                    },
+                    {
+                        "label": "Harder to land accurately at speed",
+                        "op_application": "-",
+                        "op_transform": "c"
+                    },
+                    {"op_application": ":=", "op_transform": "floor"}
+                ],
+                "effects": [
+                    {
+                        "label": "Tally Damage in Mem1",
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 47},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 0.0
+                    },
+                    {
+                        "label": "Armour Pen in Mem2 (Full)",
+                        "infield": {"role": "target char", "child_of_anchor": true, "attrib_id": 34},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 48},
+                        "op_application": ":=",
+                        "op_transform": "+",
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "infield": {"child_of_anchor": true, "attrib_id": 40},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 48},
+                        "op_application": "-",
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "label": "Is Pen Full Benefit?",
+                        "get_val_from": "outfield",
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 48},
+                        "op_application": ":=",
+                        "op_transform": "mask",
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "label": "Pen Impact",
+                        "infield": {"child_of_anchor": true, "attrib_id": 40},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 48},
+                        "op_application": "*",
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "label": "Apply Pen Impact (Full)",
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 48},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 47},
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "label": "Armour Pen in Mem2 (Partial)",
+                        "infield": {"child_of_anchor": true, "attrib_id": 40},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 48},
+                        "op_application": ":=",
+                        "op_transform": "+",
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "infield": {"role": "target char", "child_of_anchor": true, "attrib_id": 34},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 48},
+                        "op_application": "-",
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "label": "Is Partial Pen",
+                        "get_val_from": "outfield",
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 48},
+                        "op_application": ":=",
+                        "op_transform": "mask",
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "label": "Pen Impact",
+                        "infield": {"role": "target char", "child_of_anchor": true, "attrib_id": 34},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 48},
+                        "op_application": "*",
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "label": "Apply Pen Impact (Partial)",
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 48},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 47},
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "infield": {"attrib_id": 26},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 47},
+                        "op_transform": "/",
+                        "val_transform": 3.0,
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "infield": {"child_of_anchor": true, "attrib_id": 29},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 47},
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "label": "Speed Multiplier",
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 47},
+                        "op_application": "*",
+                        "op_transform": "c",
+                        "val_transform": 2.0
+                    },
+                    {
+                        "infield": {"role": "target char", "child_of_anchor": true, "attrib_id": 34},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 47},
+                        "op_application": "-",
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "label": "Can't Heal From Getting Hit",
+                        "get_val_from": "outfield",
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 47},
+                        "op_application": ":=",
+                        "op_transform": "max",
+                        "val_transform": 0.0,
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "label": "Damage Total",
+                        "get_val_from": "outfield",
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 47},
+                        "op_application": ":=",
+                        "op_transform": "floor",
+                        "outcome_success": "success_any"
+                    },
+                    {
+                        "label": "Apply Damage",
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 47},
+                        "outfield": {"role": "target char", "attrib_id": 6},
+                        "op_application": "-",
+                        "outcome_success": "success_any"
+                    }
+                ]
+            },
+            {
+                "id": 54,
+                "name": "Pursue",
+                "auto_apply": true,
+                "outcome_type": "numeric",
+                "numeric_range": [1, 5],
+                "ab_stage": "turn",
+                "determinants": [
+                    {
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 38},
+                        "op_application": "<",
+                        "val_required": 30.0
+                    },
+                    {
+                        "infield": {"attrib_id": 19}
+                    },
+                    {
+                        "infield": {"child_of_anchor": true, "attrib_id": 55}
+                    }
+                ],
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 38},
+                        "op_application": "-"
+                    }
+                ]
+            },
+            {
                 "id": 14,
                 "name": "Reset Char",
                 "auto_apply": true,
@@ -374,13 +789,40 @@
                 ]
             },
             {
+                "id": 58,
+                "name": "Reset Distance — Ravine",
+                "auto_apply": true,
+                "outcome_type": "determined",
+                "ab_stage": "reset",
+                "effects": [
+                    {
+                        "get_val_from": "outcome",
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 38},
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "val_transform": 15.0
+                    }
+                ]
+            },
+            {
                 "id": 8,
                 "name": "Strike",
                 "auto_apply": true,
                 "numeric_range": [1, 20],
                 "party_targeting": "not_same",
                 "ab_stage": "turn",
+                "ab_priority": 2,
                 "determinants": [
+                    {
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 38},
+                        "op_application": "<",
+                        "val_required": 2.0
+                    },
+                    {
+                        "infield": {"child_of_anchor": true, "attrib_id": 62},
+                        "op_application": "==",
+                        "negate": true
+                    },
                     {
                         "infield": {"attrib_id": 27},
                         "op_transform": "*",
@@ -533,7 +975,9 @@
     },
     "general data": {
         "piles": [
-            {"item_id": 11, "quantity": 0.0}
+            {"item_id": 11, "quantity": 0.0},
+            {"item_id": 38, "quantity": 1.0},
+            {"item_id": 49, "quantity": 0.0}
         ]
     },
     "progress": []

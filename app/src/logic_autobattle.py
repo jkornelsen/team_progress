@@ -46,15 +46,16 @@ def execute_event_chain(event_id, role_entities, depth=0):
     """
     Executes an event and recursively follows any eligible chains.
     'depth' prevents accidental infinite loops in configuration.
+    Returns False if no event could be executed.
     """
     if depth > 5:
         logger.warning(f"Event chain reached max depth at event {event_id}")
-        return
+        return True
 
     game_token = g.game_token
     event = db.session.get(Event, (game_token, event_id))
     if not event:
-        return
+        return False
 
     # 1. Roll the outcome
     # For now, autobattle uses 'Normal' difficulty (0.5) for Four-Way rolls
@@ -66,7 +67,7 @@ def execute_event_chain(event_id, role_entities, depth=0):
             event_id, role_entities, difficulty=0.5, group_messages=False)
     if result_val is None:
         #add_message(result_str)
-        return
+        return False
 
     # 2. Apply the effects (HP changes, status updates, etc.)
     # resolve_effects gives us the ledger (virtual state change)
@@ -84,6 +85,7 @@ def execute_event_chain(event_id, role_entities, depth=0):
         # If multiple branches are eligible, pick one randomly
         next_event = random.choice(chains)
         execute_event_chain(next_event['child_id'], role_entities, depth + 1)
+    return True
 
 def run_battle_round(loc_id):
     """
@@ -101,43 +103,56 @@ def run_battle_round(loc_id):
     all_chars.sort(key=lambda x: x.id)
 
     for actor in all_chars:
+        if get_char_stat(actor, AutobattleField.HP) < 1:
+            continue
+
         # Action Selection
-        # Find abilities marked for 'turn' stage with priority > 0
-        if get_char_stat(actor, AutobattleField.HP) > 0:
-            available_actions = [
-                e for e in actor.abilities 
-                if e.ab_stage == AutobattleStage.TURN and e.ab_priority > 0
-            ]
-            if available_actions:
-                # Weigh by priority
-                action = random.choices(
-                    available_actions, 
-                    weights=[e.ab_priority for e in available_actions], 
-                    k=1
-                )[0]
+        # Find abilities marked for 'turn' stage
+        available_actions = [
+            e for e in actor.abilities 
+            if e.ab_stage == AutobattleStage.TURN and e.ab_priority > 0
+        ]
+        if not available_actions:
+            continue
 
-                # Target Selection
-                # Find someone NOT in the actor's party with HP > 0
-                enemies = []
-                for p_name, members in parties.items():
-                    if p_name != actor.party:
-                        enemies.extend([
-                            m for m in members
-                            if get_char_stat(m, AutobattleField.HP) > 0])
-                
-                if enemies:
-                    # Sort enemies by missing HP descending (most damaged first)
-                    enemies.sort(key=get_missing_hp, reverse=True)
-                    target = enemies[0]
+        # Target Selection
+        # Find someone NOT in the actor's party with HP
+        enemies = []
+        for p_name, members in parties.items():
+            if p_name != actor.party:
+                enemies.extend([
+                    m for m in members
+                    if get_char_stat(m, AutobattleField.HP) >= 1])
+        
+        if enemies:
+            # Sort enemies by missing HP descending
+            # (most damaged first)
+            enemies.sort(key=get_missing_hp, reverse=True)
+            target = enemies[0]
 
-                    # Execution
-                    role_entities = {
-                        Participant.SUBJECT: actor.id,
-                        Participant.TARGET: target.id,
-                        Participant.AT: loc_id
-                    }
-                    execute_event_chain(action.id, role_entities)
+            # Priority Sorting & Tie-Breaking
+            # Shuffle first to randomize tie-breakers, then stable sort
+            # by priority descending
+            ordered_actions = list(available_actions)
+            random.shuffle(ordered_actions)
+            ordered_actions.sort(key=lambda e: e.ab_priority, reverse=True)
 
+            # Execution Loop
+            # Try higher priority values first;
+            # move to the next if execution fails
+            for action in ordered_actions:
+                role_entities = {
+                    Participant.SUBJECT: actor.id,
+                    Participant.TARGET: target.id,
+                    Participant.AT: loc_id
+                }
+                executed = execute_event_chain(action.id, role_entities)
+                if executed:
+                    # Successfully executed an action,
+                    # end the turn attempts
+                    break
+
+    for actor in all_chars:
         # After Turn (Death Checks/Cleanup)
         after_actions = [
             e for e in actor.abilities

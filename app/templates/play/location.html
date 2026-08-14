@@ -210,7 +210,7 @@
 
         <!-- RIGHT COLUMN: Tactical Grid & Navigation Controls -->
         <div class="tactgrid-column">
-            {% if location.enable_autobattle %}
+            {% if location.autobattle %}
                 {% set target_url = url_for('play.play_autobattle', loc_id=location.id) %}
                 <a href="{{ target_url|safe }}" 
                    class="btn-sm go-button" style="display: inline-block; font-size: 1em; vertical-align: middle; margin-left: 10px; margin-bottom: 20px;">
