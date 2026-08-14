@@ -14,7 +14,11 @@
         "attribs": [
             {"id": 30, "name": "Accuracy"},
             {"id": 40, "name": "Armour Pen"},
-            {"id": 13, "name": "Bounty"},
+            {
+                "id": 13,
+                "name": "Bounty",
+                "description": "How much you can earn by defeating this menace."
+            },
             {"id": 29, "name": "Damage"},
             {"id": 34, "name": "Damage Reduction"},
             {"id": 12, "name": "Death Counted", "is_binary": true},
@@ -26,7 +30,12 @@
                 "enum_list": ["Main Hand", "Off Hand", "Body", "Mount"]
             },
             {"id": 33, "name": "Evasion"},
-            {"id": 6, "name": "HP", "ab_field": "hp"},
+            {
+                "id": 6,
+                "name": "HP",
+                "description": "How many hits the character can take and still keep going. Those without HP could be dead, lying gravely wounded, captured, or simply out of the fight.",
+                "ab_field": "hp"
+            },
             {"id": 51, "name": "Is Castle", "is_binary": true},
             {"id": 62, "name": "Is Lance", "is_binary": true},
             {"id": 7, "name": "Max HP", "ab_field": "max_hp"},
@@ -73,7 +82,7 @@
                 "name": "🐎Horse",
                 "description": "Noble steed for a knight.",
                 "attribs": [
-                    [55, 2.0]
+                    [55, 1.0]
                 ],
                 "q_limit": 1.0,
                 "slot": "Mount",
@@ -83,7 +92,7 @@
                         "instant": true,
                         "sources": [
                             {"item_id": 43, "q_required": 1.0, "preserve": true},
-                            {"item_id": 49, "q_required": 30.0}
+                            {"item_id": 49, "q_required": 25.0}
                         ]
                     }
                 ]
@@ -126,6 +135,29 @@
                 "description": "Bandits hoard these (random drop qty chance). Used to hire mercenaries.",
                 "storage_type": "u",
                 "toplevel": true
+            },
+            {
+                "id": 66,
+                "name": "🗡️Lance",
+                "description": "Excellent for charging on horseback, terrible when wielded on foot.",
+                "attribs": [
+                    [29, 2.0],
+                    [30, 1.0],
+                    [40, 1.0],
+                    [62, true]
+                ],
+                "q_limit": 1.0,
+                "slot": "Main Hand",
+                "recipes": [
+                    {
+                        "id": 65,
+                        "instant": true,
+                        "sources": [
+                            {"item_id": 43, "q_required": 1.0, "preserve": true},
+                            {"item_id": 49, "q_required": 15.0}
+                        ]
+                    }
+                ]
             },
             {
                 "id": 36,
@@ -194,7 +226,7 @@
                         "instant": true,
                         "sources": [
                             {"item_id": 43, "q_required": 1.0, "preserve": true},
-                            {"item_id": 49, "q_required": 100.0}
+                            {"item_id": 49, "q_required": 20.0}
                         ]
                     }
                 ]
@@ -265,7 +297,7 @@
             {
                 "id": 15,
                 "name": "Ravine",
-                "description": "A mounted knights patrol chases bandits who have been using this area to rob villagers and then get away. Small chance of catching a bandit without being mounted.\r\n\r\nIf they get away by increasing the distance enough, then **Aegis** loses the battle, by showing their **HP** as 0. This does not mean their actual health has been lost.",
+                "description": "The knights patrol chases bandits who have been using this area to rob the town.\r\nIf the bandits get away by increasing **Distance** enough, then **Aegis** cannot continue the fight, showing their hit points as 0 even though no health is lost.",
                 "attribs": [
                     [51, false]
                 ],
@@ -312,7 +344,7 @@
                     [6, 25.0],
                     [7, 25.0],
                     [12, false],
-                    [13, 1.0],
+                    [13, 2.0],
                     [26, 9.0],
                     [27, 8.0]
                 ],
@@ -333,7 +365,7 @@
                     [6, 25.0],
                     [7, 25.0],
                     [12, false],
-                    [13, 1.0],
+                    [13, 2.0],
                     [26, 9.0],
                     [27, 8.0]
                 ],
@@ -350,6 +382,7 @@
             {
                 "id": 4,
                 "name": "Ivanhoe",
+                "description": "King Richard's best knight who returned with him from the crusades.",
                 "attribs": [
                     [6, 15.0],
                     [7, 15.0],
@@ -372,6 +405,7 @@
             {
                 "id": 25,
                 "name": "Tristan",
+                "description": "Famously dueled with Lancelot and neither could prevail, so the contest ended in a draw.",
                 "attribs": [
                     [6, 17.0],
                     [7, 17.0],
@@ -415,6 +449,7 @@
             {
                 "id": 57,
                 "name": "Drop — Bandit",
+                "description": "The threshold adjustment makes it so there is a 15% chance of major success (105 or higher).",
                 "auto_apply": true,
                 "numeric_range": [1, 100],
                 "ab_stage": "after",
@@ -427,6 +462,11 @@
                         "infield": {"attrib_id": 12},
                         "op_application": "==",
                         "val_required": false
+                    },
+                    {
+                        "label": "Base Threshold Adjustment",
+                        "op_transform": "c",
+                        "val_transform": 20.0
                     }
                 ],
                 "effects": [
@@ -438,7 +478,7 @@
                     },
                     {
                         "infield": {"attrib_id": 13},
-                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 49},
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 11},
                         "outcome_success": "success_any"
                     },
                     {
@@ -448,18 +488,12 @@
                         "outcome_success": "success_major"
                     },
                     {
-                        "label": "Rare Drop Chance",
+                        "label": "Rare Drop",
                         "get_val_from": "outcome",
-                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 47},
-                        "op_transform": "-",
-                        "val_transform": 99.0,
-                        "outcome_success": "success_major"
-                    },
-                    {
-                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 47},
                         "outfield": {"role": "at", "field_mode": "qty", "item_id": 59},
-                        "op_transform": "mask",
-                        "outcome_success": "success_major"
+                        "op_application": ":=",
+                        "op_transform": "c",
+                        "outcome_success": "natural_max"
                     }
                 ]
             },
@@ -501,7 +535,7 @@
                 "name": "Flee",
                 "auto_apply": true,
                 "outcome_type": "numeric",
-                "numeric_range": [1, 5],
+                "numeric_range": [1, 6],
                 "ab_stage": "turn",
                 "determinants": [
                     {
@@ -695,12 +729,12 @@
                         "outcome_success": "success_any"
                     },
                     {
-                        "label": "Speed Multiplier",
+                        "label": "Multiplier from Charging",
                         "get_val_from": "outcome",
                         "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 47},
                         "op_application": "*",
                         "op_transform": "c",
-                        "val_transform": 2.0
+                        "val_transform": 2.5
                     },
                     {
                         "infield": {"role": "target char", "child_of_anchor": true, "attrib_id": 34},
@@ -793,13 +827,13 @@
                 "name": "Reset Distance — Ravine",
                 "auto_apply": true,
                 "outcome_type": "determined",
+                "fixed_base": 20.0,
                 "ab_stage": "reset",
                 "effects": [
                     {
                         "get_val_from": "outcome",
                         "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 38},
                         "op_application": ":=",
-                        "op_transform": "c",
                         "val_transform": 15.0
                     }
                 ]

@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 # 1. Chronicle (Game Message Log)
 # ------------------------------------------------------------------------
 
-def add_message(text, group_duplicates=True):
+def add_message(text, group_duplicates=True, commit=False):
     """
     Adds a message to the game log. 
     If the exact same message was sent recently, increments the count 
@@ -45,6 +45,8 @@ def add_message(text, group_duplicates=True):
         db.session.add(msg)
     
     db.session.flush()
+    if commit:
+        db.session.commit()
 
 def get_chronicle(limit=50):
     """Fetches the most recent messages."""

@@ -7,13 +7,6 @@
 recipe_id is still often showing up in events when not wanted
     for example shoot: has ammo
 
-in event configure for randomly placing an item, hide calculation section and lock (require) roll result
-
-link "working..." text in char inv to the actual production pile
-show spin icon when char inventory is the target owner even if not the host
-
-hide autobattle fields in event and attrib config if no locations have ab enabled
-
 tooltips for all event selectbox options
     if looping to display the options then use dicts
     the dicts wouldn't have to be in the model
@@ -54,9 +47,6 @@ CONTEXT:  while updating tuple (0,46) in relation "characters"
 
 ---- scenario ----
 
-dungeon crawl
-    add necromancer to random class list
-
 lumber
     idle a certain number of batches that require fuel
         can either burn wood or purchased gasoline
@@ -86,12 +76,14 @@ aegis
     items
         health potions
             storage limit of maybe 3 in each pack
-        jewelled oil lamp to set the hot oil on fire
-            but hot oil would be expected to do something like that anyway
+        flaming arrows to set oil on fire
 
 moon base
     mine helium-3 with location production
-    then char converts to cannisters
+        then char converts to cannisters
+    item found in robot home that reveals the robots were originally from earth
+        plaque?
+        robots were brought to help mine
 
 ---- code quality ----
 

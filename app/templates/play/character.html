@@ -112,7 +112,13 @@
             <div>
                 {% set active_job = character.progress_records | first | default(none) %}
                 {% if active_job %}
-                    <span class="text-accent">Working: {{ active_job.product.name }}</span>
+                    <span class="text-accent">Working:</span>
+                    <a href="{{ url_for('play.play_item',
+                            id=active_job.product_id,
+                            owner_id=active_job.owner_id) }}"
+                        class="text-accent">
+                        {{ active_job.product.name }}
+                    </a>
                 {% endif %}
             </div>
         </section>
@@ -128,7 +134,6 @@
                 </style>
                 {% set equipped = inventory | selectattr("slot_id") | list %}
                 {% set backpack = inventory | rejectattr("slot_id") | list %}
-                {% set producing_ids = character.progress_records | map(attribute='product_id') | list %}
                 {% if equipped or backpack %}
                 <section class="outer-border">
                     <div class="inventory-section">
@@ -143,7 +148,12 @@
                                             {{ pile.item.name }}
                                         {% endcall %}
                                         
-                                        <span>{{ pile.quantity | formatNum if pile.quantity >= 2 else '' }}</span>
+                                        <div>
+                                            {% if pile.item_id in producing_ids %}
+                                            <span title="Production In Progress" class="spin">🔄</span>
+                                            {% endif %}
+                                            <span>{{ pile.quantity | formatNum if pile.quantity >= 2 else '' }}</span>
+                                        </div>
                                         <span class="label-like">{{ pile.slot_label }}</span>
                                     </div>
                                 {% endfor %}
@@ -164,7 +174,7 @@
 
                                         <div>
                                             {% if pile.item_id in producing_ids %}
-                                            <span title="Character Production In Progress" class="spin">🔄</span>
+                                            <span title="Production In Progress" class="spin">🔄</span>
                                             {% endif %}
                                             
                                             <span>{{ pile.quantity | formatNum }}</span>

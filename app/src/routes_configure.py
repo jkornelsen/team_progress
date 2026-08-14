@@ -22,6 +22,7 @@ from app.utils import (
     capture_origin, redirect_back, name_stripped, sort_by_name_stripped)
 from .logic_discovery import run_discovery_scan
 from .logic_navigation import all_parties
+from .logic_autobattle import is_autobattle_enabled
 
 logger = logging.getLogger(__name__)
 configure_bp = Blueprint('configure', __name__, url_prefix='/configure')
@@ -738,6 +739,7 @@ def edit_attrib(id):
     return render_template(
         'configure/attrib.html',
         attrib=attrib,
+        autobattle_enabled=is_autobattle_enabled(),
         AutobattleField=AutobattleField)
 
 @configure_bp.route('/event/<int:id>', methods=['GET', 'POST'])
@@ -953,6 +955,7 @@ def edit_event(id):
             game_token=game_token).order_by(name_stripped()).all(),
         recipe_map=recipe_map,
         parties=all_parties(),
+        autobattle_enabled=is_autobattle_enabled(),
         OutcomeType=OutcomeType,
         SuccessTier=SuccessTier,
         Operation=Operation,

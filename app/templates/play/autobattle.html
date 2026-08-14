@@ -162,9 +162,11 @@
                     if (resetData) {
                         updateBattleUI(resetData); // Refresh bars and log
                     }
-                    if (isRunning()) {
-                        runNextStep();
-                    }
+                    setTimeout(() => {
+                        if (isRunning()) {
+                            runNextStep();
+                        }
+                    }, STEP_DELAY);
                 }, RESET_DELAY); 
             }
         } else {

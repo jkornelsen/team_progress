@@ -87,6 +87,7 @@
                 </div>
             </div>
 
+            {% if autobattle_enabled or attrib.ab_field != AutobattleField.NONE %}
             <div class="spacious-top">
                 <label for="ab_field">Autobattle Field:</label>
                 <select id="ab_field" name="ab_field" class="themed-input">
@@ -104,6 +105,7 @@
                         }}>Status Effect</option>
                 </select>
             </div>
+            {% endif %}
 
         </section>
 

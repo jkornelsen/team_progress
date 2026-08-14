@@ -2,7 +2,7 @@ import random
 import logging
 from flask import g
 from app.models import (
-    db, Character, Attrib, AttribVal, Event, 
+    db, Character, Location, Attrib, AttribVal, Event, 
     AutobattleField, AutobattleStage, Participant,
     OutcomeType)
 from .logic_event import (
@@ -11,6 +11,13 @@ from .logic_event import (
 from .logic_user_interaction import add_message
 
 logger = logging.getLogger(__name__)
+
+def is_autobattle_enabled():
+    """Returns True if any location has autobattle enabled."""
+    return Location.query.filter_by(
+        game_token=g.game_token, 
+        autobattle=True
+    ).first() is not None
 
 def get_battle_participants(loc_id):
     """Groups characters at a location by party."""

@@ -297,6 +297,13 @@ def play_character(id):
 
     # Fetch Navigation (Nearby Destinations)
     destinations, has_nonadjacent = get_available_destinations(character)
+
+    # Find all items being produced where this character is the owner
+    items_owned_in_production = {
+        p.product_id for p in Progress.query.filter_by(
+            game_token=game_token, owner_id=id
+        ).all()
+    }
     
     return render_template(
         'play/character.html',
@@ -313,6 +320,7 @@ def play_character(id):
         has_nonadjacent=has_nonadjacent,
         party_members=party_members,
         travel_with_party=move_party,
+        producing_ids=items_owned_in_production,
         link_letters=LinkLetters(excluded='gltmoew')
     )
 
@@ -367,6 +375,16 @@ def pickup_item(id):
     item = db.session.get(Item, (g.game_token, item_id))
     if success:
         if slot_id:
+            # Kick out any item currently in the target slot
+            existing_occupant = Pile.query.filter_by(
+                game_token=game_token,
+                owner_id=id,
+                slot_id=slot_id
+            ).first()
+            if existing_occupant and existing_occupant.id != item.id:
+                existing_occupant.slot_id = None
+
+            # Assign the new item to the slot
             pile = Pile.query.filter_by(
                 game_token=game_token, 
                 owner_id=id, 
@@ -380,7 +398,7 @@ def pickup_item(id):
         return jsonify({"message": msg}), HTTPStatus.OK
 
     return jsonify(
-        {"message": "{char.name} could not pick up {item.name}."}
+        {"message": f"{char.name} could not pick up {item.name}."}
     ), HTTPStatus.BAD_REQUEST
 
 @play_bp.route('/char/<int:id>/give', methods=['POST'])
@@ -1235,9 +1253,11 @@ def autobattle_step(loc_id):
     battle_continues = len(active_parties) > 1
     if not battle_continues:
         if len(active_parties) == 1:
-            add_message(f"-- {active_parties[0]} Wins Round --")
-        else:
-            add_message("-- No One Wins The Round! --")
+            pname = active_parties[0]
+            s = '' if pname[-1:] == 's' else 's'
+            add_message(
+                f"-- {pname} Win{s} Round --",
+                group_duplicates=False, commit=True)
 
     # 3. Fetch recent messages formatted for the log
     messages = [{

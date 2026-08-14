@@ -165,6 +165,7 @@
                 </div>
             </div>
 
+            {% if autobattle_enabled or event.ab_stage != AutobattleStage.NONE %}
             <div>
                 <div>
                     <label>Autobattle Stage:</label>
@@ -192,6 +193,7 @@
                     </label>
                 </div>
             </div>
+            {% endif %}
         </section>
 
         <!-- 3. Determinants -->
@@ -453,6 +455,8 @@ function syncUnifiedIdsState(select) {
 
 function syncEventFieldState(element) {
     const card = element.closest('.factor-card');
+    const sourceSelect = card.querySelector('.eff-source-type-select');
+    const calcSection = card.querySelector('.calculation-section');
     const fieldGroup = element.closest('.field-input-group');
 
     const modeSelect = fieldGroup.querySelector('.field-mode-select');
@@ -503,6 +507,24 @@ function syncEventFieldState(element) {
         }
     }
 
+    if (mode === '{{ Participant.PLACE }}') {
+        // Lock Source to Roll Result and hide Calculation section
+        if (sourceSelect) {
+            sourceSelect.value = '{{ Participant.OUTCOME }}';
+            sourceSelect.disabled = true;
+        }
+        if (calcSection) calcSection.classList.add('hidden');
+    } else {
+        if (sourceSelect) {
+            sourceSelect.disabled = false;
+            const opInner = card.querySelector('.op-inner-selector')?.value;
+            if (opInner === '{{ Operation.CONST }}') {
+                sourceSelect.value = '{{ Participant.OUTCOME }}';
+                sourceSelect.disabled = true;
+            }
+        }
+        if (calcSection) calcSection.classList.remove('hidden');
+    }
     if (REQUIRES_PRESELECTED.includes(mode)) {
         roleRow.classList.add('hidden');
         childContainer.classList.add('hidden');
@@ -1244,72 +1266,74 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
 
         <!-- 3. MATH (Calculations) -->
-        <h5>🧮 Calculation</h5>
-        <div class="sub-section">
-            <div class="flex-row align-center gap-10">
+        <div class="calculation-section">
+            <h5>🧮 Calculation</h5>
+            <div class="sub-section">
+                <div class="flex-row align-center gap-10">
 
-                <div class="inner-expr-group flex-row align-center gap-5" data-inner-group>
-                    <span style="font-size: 2em; order: 0;">(</span>
-                    
-                    <span data-slot-lhs style="font-style: italic">Fetched Value</span>
+                    <div class="inner-expr-group flex-row align-center gap-5" data-inner-group>
+                        <span style="font-size: 2em; order: 0;">(</span>
+                        
+                        <span data-slot-lhs style="font-style: italic">Fetched Value</span>
 
-                    {% set op_transform = factor.op_transform if factor else '' %}
-                    <select name="dets[{{ card_index }}][op_transform]" 
-                            class="op-inner-selector"
-                            style="max-width: 15ch;"
-                            onchange="syncInnerExprState(this.closest('.factor-card'))">
-                        <option value="{{ Operation.CONST }}" {{ 'selected'
-                            if op_transform == Operation.CONST }}>Constant</option>
-                        <option value="" {{ 'selected'
-                            if not op_transform }}>Use Value</option>
-                        <option value="{{ Operation.MEM_RECALL }}" {{ 'selected'
-                            if op_transform == Operation.MEM_RECALL }}>Recall</option>
-                        {% for op_key in Operation.TRANSFORM %}
+                        {% set op_transform = factor.op_transform if factor else '' %}
+                        <select name="dets[{{ card_index }}][op_transform]" 
+                                class="op-inner-selector"
+                                style="max-width: 15ch;"
+                                onchange="syncInnerExprState(this.closest('.factor-card'))">
+                            <option value="{{ Operation.CONST }}" {{ 'selected'
+                                if op_transform == Operation.CONST }}>Constant</option>
+                            <option value="" {{ 'selected'
+                                if not op_transform }}>Use Value</option>
+                            <option value="{{ Operation.MEM_RECALL }}" {{ 'selected'
+                                if op_transform == Operation.MEM_RECALL }}>Recall</option>
+                            {% for op_key in Operation.TRANSFORM %}
+                                <option value="{{ op_key }}" {{ 'selected'
+                                if op_transform == op_key }}>
+                                    {{ Operation.Repr[op_key] }}
+                                </option>
+                            {% endfor %}
+                        </select>
+
+                        <div data-slot-rhs class="flex-row align-center gap-5">
+                            <input type="number" 
+                                   name="dets[{{ card_index }}][val_transform]" 
+                                   data-input-constant
+                                   value="{{ factor.val_transform if factor else 1.0 }}" 
+                                   step="any" 
+                                   style="max-width: 12ch;">
+                        </div>
+
+                        <span style="font-size: 2em; order: 4;">)</span>
+                    </div>
+
+                    {% set op_application = factor.op_application if factor else '' %}
+                    <select name="dets[{{ card_index }}][op_application]" 
+                            class="op-application-selector" 
+                            style="max-width: 8ch;"
+                            onchange="syncOuterExprState(this.closest('.factor-card'))">
+                        {% for op_key in Operation.DET_APPLICATION %}
                             <option value="{{ op_key }}" {{ 'selected'
-                            if op_transform == op_key }}>
+                                if op_application == op_key }}>
                                 {{ Operation.Repr[op_key] }}
                             </option>
                         {% endfor %}
                     </select>
 
-                    <div data-slot-rhs class="flex-row align-center gap-5">
-                        <input type="number" 
-                               name="dets[{{ card_index }}][val_transform]" 
-                               data-input-constant
-                               value="{{ factor.val_transform if factor else 1.0 }}" 
-                               step="any" 
-                               style="max-width: 12ch;">
+                    <div data-slot-valreq
+                        class="attribval-container flex-row align-center gap-5 hidden"
+                        data-field-name="dets[{{ card_index }}][val_required]">
+                        <!-- Filled by ConfigEditor.syncAttribVal -->
                     </div>
-
-                    <span style="font-size: 2em; order: 4;">)</span>
-                </div>
-
-                {% set op_application = factor.op_application if factor else '' %}
-                <select name="dets[{{ card_index }}][op_application]" 
-                        class="op-application-selector" 
-                        style="max-width: 8ch;"
-                        onchange="syncOuterExprState(this.closest('.factor-card'))">
-                    {% for op_key in Operation.DET_APPLICATION %}
-                        <option value="{{ op_key }}" {{ 'selected'
-                            if op_application == op_key }}>
-                            {{ Operation.Repr[op_key] }}
-                        </option>
-                    {% endfor %}
-                </select>
-
-                <div data-slot-valreq
-                    class="attribval-container flex-row align-center gap-5 hidden"
-                    data-field-name="dets[{{ card_index }}][val_required]">
-                    <!-- Filled by ConfigEditor.syncAttribVal -->
-                </div>
-                <div class="negate-toggle-container" style="order: 4">
-                    <label class="checkbox-label"
-                            title="True when value isn't found or doesn't match expression">
-                        <input type="checkbox" name="dets[{{ card_index }}][negate]"
-                            class="negate-checkbox"
-                            {{ 'checked' if factor and factor.negate }}>
-                        NOT
-                    </label>
+                    <div class="negate-toggle-container" style="order: 4">
+                        <label class="checkbox-label"
+                                title="True when value isn't found or doesn't match expression">
+                            <input type="checkbox" name="dets[{{ card_index }}][negate]"
+                                class="negate-checkbox"
+                                {{ 'checked' if factor and factor.negate }}>
+                            NOT
+                        </label>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1427,69 +1451,71 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
 
         <!-- 4. THE MATH (The "Calculated Result") -->
-        <h5>🧮 Calculation</h5>
-        <div class="sub-section">
-            <div class="flex-row align-center gap-10">
-                
-                <!-- Assignment Operator -->
-                <div class="flex-column" style="gap: 2px;">
-                    <select name="effs[{{ card_index }}][op_application]" class="op-application-selector" style="max-width: 15ch;">
-                        <option value="{{ Operation.ASSIGN }}" {{ 'selected'
-                            if (not factor) or (factor.op_application == Operation.ASSIGN) }}>
-                            Set To
-                        </option>
-                        <option value="{{ Operation.ADD }}" {{ 'selected'
-                            if factor and factor.op_application == Operation.ADD }}>
-                            Increase By ({{ Operation.Repr[Operation.ADD] }})
-                        </option>
-                        <option value="{{ Operation.SUB }}" {{ 'selected'
-                            if factor and factor.op_application == Operation.SUB }}>
-                            Decrease By ({{ Operation.Repr[Operation.SUB] }})
-                        </option>
-                        <option value="{{ Operation.MULT }}" {{ 'selected'
-                            if factor and factor.op_application == Operation.MULT }}>
-                            Multiply By ({{ Operation.Repr[Operation.MULT] }})
-                        </option>
-                        <option value="{{ Operation.DIV }}" {{ 'selected'
-                            if factor and factor.op_application == Operation.DIV }}>
-                            Divide By ({{ Operation.Repr[Operation.DIV] }})
-                        </option>
-                    </select>
-                </div>
-
-                <!-- The Inner Transformation -->
-                <div class="inner-expr-group flex-row align-center gap-5" data-inner-group>
-                    <span style="font-size: 2em; order: 0;">(</span>
+        <div class="calculation-section">
+            <h5>🧮 Calculation</h5>
+            <div class="sub-section">
+                <div class="flex-row align-center gap-10">
                     
-                    <span data-slot-lhs style="font-style: italic; order: 1;" class="source-placeholder-text">
-                        Source
-                    </span>
-
-                    {% set op_transform = factor.op_transform if factor else '' %}
-                    <select name="effs[{{ card_index }}][op_transform]" 
-                            class="op-inner-selector"
-                            style="max-width: 15ch; order: 2;"
-                            onchange="syncInnerExprState(this.closest('.factor-card'))">
-                        <option value="{{ Operation.CONST }}" {{ 'selected'
-                            if op_transform == Operation.CONST }}>Constant</option>
-                        <option value="" {{ 'selected'
-                            if not op_transform }}>Use Value</option>
-                        {% for op_key in Operation.TRANSFORM %}
-                            <option value="{{ op_key }}" {{ 'selected'
-                                if op_transform == op_key }}>
-                                {{ Operation.Repr[op_key] }}
+                    <!-- Assignment Operator -->
+                    <div class="flex-column" style="gap: 2px;">
+                        <select name="effs[{{ card_index }}][op_application]" class="op-application-selector" style="max-width: 15ch;">
+                            <option value="{{ Operation.ASSIGN }}" {{ 'selected'
+                                if (not factor) or (factor.op_application == Operation.ASSIGN) }}>
+                                Set To
                             </option>
-                        {% endfor %}
-                    </select>
-
-                    <div data-slot-rhs
-                        class="attribval-container flex-row align-center gap-5"
-                        data-field-name="effs[{{ card_index }}][val_transform]"
-                        style="order: 3;">
-                        <!-- Filled by ConfigEditor.syncAttribVal -->
+                            <option value="{{ Operation.ADD }}" {{ 'selected'
+                                if factor and factor.op_application == Operation.ADD }}>
+                                Increase By ({{ Operation.Repr[Operation.ADD] }})
+                            </option>
+                            <option value="{{ Operation.SUB }}" {{ 'selected'
+                                if factor and factor.op_application == Operation.SUB }}>
+                                Decrease By ({{ Operation.Repr[Operation.SUB] }})
+                            </option>
+                            <option value="{{ Operation.MULT }}" {{ 'selected'
+                                if factor and factor.op_application == Operation.MULT }}>
+                                Multiply By ({{ Operation.Repr[Operation.MULT] }})
+                            </option>
+                            <option value="{{ Operation.DIV }}" {{ 'selected'
+                                if factor and factor.op_application == Operation.DIV }}>
+                                Divide By ({{ Operation.Repr[Operation.DIV] }})
+                            </option>
+                        </select>
                     </div>
 
-                    <span style="font-size: 2em; order: 4;">)</span>
+                    <!-- The Inner Transformation -->
+                    <div class="inner-expr-group flex-row align-center gap-5" data-inner-group>
+                        <span style="font-size: 2em; order: 0;">(</span>
+                        
+                        <span data-slot-lhs style="font-style: italic; order: 1;" class="source-placeholder-text">
+                            Source
+                        </span>
+
+                        {% set op_transform = factor.op_transform if factor else '' %}
+                        <select name="effs[{{ card_index }}][op_transform]" 
+                                class="op-inner-selector"
+                                style="max-width: 15ch; order: 2;"
+                                onchange="syncInnerExprState(this.closest('.factor-card'))">
+                            <option value="{{ Operation.CONST }}" {{ 'selected'
+                                if op_transform == Operation.CONST }}>Constant</option>
+                            <option value="" {{ 'selected'
+                                if not op_transform }}>Use Value</option>
+                            {% for op_key in Operation.TRANSFORM %}
+                                <option value="{{ op_key }}" {{ 'selected'
+                                    if op_transform == op_key }}>
+                                    {{ Operation.Repr[op_key] }}
+                                </option>
+                            {% endfor %}
+                        </select>
+
+                        <div data-slot-rhs
+                            class="attribval-container flex-row align-center gap-5"
+                            data-field-name="effs[{{ card_index }}][val_transform]"
+                            style="order: 3;">
+                            <!-- Filled by ConfigEditor.syncAttribVal -->
+                        </div>
+
+                        <span style="font-size: 2em; order: 4;">)</span>
+                    </div>
                 </div>
             </div>
         </div>
