@@ -13,7 +13,7 @@
             {"item_id": 18, "quantity": 1.0}
         ],
         "tag_introduce_order": 70,
-        "tag_best_order": 45,
+        "tag_best_order": 42,
         "tag_progress_type": "RPG",
         "tag_complete": "09 Complete"
     },
@@ -413,7 +413,7 @@
             {
                 "id": 203,
                 "name": "Convo Danglars 2a",
-                "description": "Danglars is waiting for Lyria. *\"Hurry, come aside to this **Snow Cave** where we can talk.\"*",
+                "description": "Danglars is waiting for Lyria. *\"Hurry, come aside to this **Snow Cave** where we can talk.\"*\r\n\r\n (Move them to the location before continuing.)",
                 "storage_type": "u",
                 "q_limit": 2.0,
                 "recipes": [
@@ -774,7 +774,7 @@
             {
                 "id": 295,
                 "name": "Convo Sunderforge 1b",
-                "description": "Lyria can no longer contain the words burning within her. *\"Stormcaller, the gods lie dormant or in hiding, and there is sickness in the earthly plane. The Drowned Court King is long gone, and the rest of my people had only sought shelter from you, not dominion over the earth.\"*\r\n\r\nSunderforge looks closely at her. *\"I have followed your travels. You deal in matters that perhaps you do not understand. Yet your words belie a certain wisdom. What guarantee would you offer that your people will not seek to rise up and flood the world?\"*\r\n\r\nThe Tethered One answers. *\"I propose an offer. Make me mortal, and I will live as an {darkgray|Ithilborn}.\"*",
+                "description": "Lyria can no longer contain the words burning within her. *\"Stormcaller, the gods lie dormant or in hiding, and there is sickness in the earthly plane. The Drowned Court King is long gone, and the rest of my people had only sought shelter from you, not dominion over the earth.\"*\r\n\r\nSunderforge looks closely at her. *\"I have followed your travels. Your words belie a certain wisdom. What guarantee would you offer that your people will not seek to rise up and flood the world?\"*\r\n\r\nThe Tethered One answers. *\"I propose an offer. Make me mortal, and I will live as an {darkgray|Ithilborn}.\"*",
                 "storage_type": "u",
                 "q_limit": 1.0,
                 "recipes": [
@@ -846,7 +846,7 @@
             {
                 "id": 101,
                 "name": "Convo Tethered 1c",
-                "description": "The Tethered One responds, *\"There's a book that reveals my history. However, the gods have hidden it, I believe somewhere under water. Perhaps you could find it?\"*\r\n\r\nLyria huffs. *\"Well, there is a lot of water in the world. But I do know of someone who has spent years mapping oceans and lakes, a {CornflowerBlue|Frostblended} by the name of **Danglars**, from **Pike Village.**. Perhaps he can help.\"*",
+                "description": "The Tethered One responds, *\"There's a book that reveals my history. However, the gods have hidden it, I believe somewhere under water. Perhaps you could find it?\"*\r\n\r\nLyria huffs. *\"Well, there is a lot of water in the world. But I do know of someone who has spent years mapping oceans and lakes, a {CornflowerBlue|Frostblended} by the name of **Danglars**, from **Pike Village.** Perhaps he can help.\"*",
                 "storage_type": "u",
                 "q_limit": 1.0,
                 "recipes": [
@@ -907,7 +907,7 @@
                     {
                         "id": 226,
                         "sources": [
-                            {"item_id": 146, "q_required": 1.0, "preserve": true}
+                            {"item_id": 227, "q_required": 1.0, "preserve": true}
                         ],
                         "attrib_reqs": [
                             {"attrib_id": 95}
@@ -1106,7 +1106,7 @@
             {
                 "id": 77,
                 "name": "Needle",
-                "description": "Hypodermically sharp thin blade that phases in and out of this plane. Stitch an earthly soul to the steel.",
+                "description": "Thin, hypodermically sharp blade that phases in and out of this plane. Stitch an earthly soul to the steel.",
                 "attribs": [
                     [28, 8.0],
                     [29, 5.0]
@@ -2025,6 +2025,7 @@
                 "name": "Crush",
                 "description": "- **Ancestry:** {peru|Stonereach}, taciturn, can shape rocks, from Dustridge\r\n- **Specialties:** lumberjack, axe proficency, boxing skill\r\n- **Appearance:** thick and sturdy, dark gray skin",
                 "attribs": [
+                    [7, false],
                     [22, 20.0],
                     [30, 9.0],
                     [31, 3.0],
@@ -2085,6 +2086,7 @@
                 "name": "Dulcie",
                 "description": "- **Ancestry:** {pink|Jovial}, charismatic\r\n- **Specialties:** brings drinks and entertains tavern goers, usually men, not paid to be a prostitute although her job has at times led to sleeping with patrons\r\n- **Appearance:** age 30, soft and curvy build, light chocolate skin, low-cut bodice, messy layered colorful skirts",
                 "attribs": [
+                    [7, false],
                     [22, 20.0],
                     [88, true],
                     [89, true],
@@ -2117,7 +2119,10 @@
                     [88, true],
                     [89, true]
                 ],
-                "location_id": 75
+                "location_id": 56,
+                "items": [
+                    {"item_id": 242, "quantity": 1.0}
+                ]
             },
             {
                 "id": 4,
@@ -2140,14 +2145,14 @@
             {
                 "id": 285,
                 "name": "Leather Harness",
-                "description": "After finishing the harness (**Leather Straps** quantity **2**), tie it around the pole, with leather straps to bind the party members.\r\n\r\nTo do this, set the harness to travel with \"main party\" and toggle the **Bound** status of the 4 members to *On.* Then, move all onto the pole and push off.",
+                "description": "After finishing the harness (**Leather Straps** quantity **2**), tie it around the pole, with leather straps to bind the party members.\r\n\r\nTo do this, set the harness to travel with \"Main Party\" and toggle the **Bound** status of the 4 members to *On.* Then, move all onto the pole and push off.",
                 "attribs": [
                     [7, true]
                 ],
-                "location_id": 86,
-                "party": "main party",
+                "location_id": 283,
+                "party": "Main Party",
                 "items": [
-                    {"item_id": 287, "quantity": 2.0}
+                    {"item_id": 287, "quantity": 1.0}
                 ]
             },
             {
@@ -2258,7 +2263,7 @@
             {
                 "id": 57,
                 "name": "Suhkh",
-                "description": "- **Ancestry:** {purple|Demon} (minor), succubus\r\n- **Specialties:** derives power from enticing and tormenting\r\n- **Appearance:** not visible in earthly plane, when seen in hell: orange pupils, blackened rotting bare flesh, whip-like tail, bodily fluids dripping, sulfur smell",
+                "description": "- **Ancestry:** {purple|Demon} (minor), succubus\r\n- **Specialties:** derives power from enticing and tormenting\r\n- **Appearance:** not visible in earthly plane; when seen in hell: orange pupils, blackened rotting bare flesh, whip-like tail, bodily fluids dripping, sulfur smell",
                 "attribs": [
                     [88, true],
                     [89, true]
@@ -2286,6 +2291,7 @@
                 "name": "Tethered One",
                 "description": "- **Ancestry:** {rebeccapurple|half fallen celestial} (unique category)\r\n- **Specialties:** partial existence in both spiritual and physical plane, dagger/knives proficiency, rogue, can slip through cracks, reportedly can stitch souls onto physical surfaces\r\n- **Appearance:** extroardinarily thin, from within eye sockets comes a {rebeccapurple|purple glow} rather than irises, long smooth dark pants and shirt, pale face, slick hair",
                 "attribs": [
+                    [7, false],
                     [22, 25.0],
                     [30, 5.0],
                     [31, 9.0],
@@ -2383,7 +2389,7 @@
             {
                 "id": 233,
                 "name": "Detonated",
-                "description": "{OrangeRed|Instead of blasting through the steel doors, the dynamite breaks open a huge fissure in the earth, and unleashed currents sweep them down into unknown depths.}\r\n\r\n- {lemonchiffon|Edit **Tethered One** and mark *Show in Overview.*}\r\n- The party is now complete. Set all four to be in \"main party\" for travel convenience.\r\n- Move from the D block cells to the **Vuldelf** location: Galebane with his party (Evelyn and Suhkh), then the main party. Not Lorcan — he was cowering in a corner of cell D1 that still held.\r\n- Continue with **Convo Dulcie 3a.**",
+                "description": "{OrangeRed|Instead of blasting through the steel doors, the dynamite breaks open a huge fissure in the earth, and unleashed currents sweep them down into unknown depths.}\r\n\r\n- {lemonchiffon|Edit **Tethered One** and mark *Show in Overview.*}\r\n- The party is now complete. Set all four to be in \"Main Party\" for travel convenience.\r\n- Move from the D block cells to the **Vuldelf** location: Galebane with his party (Evelyn and Suhkh), then the main party. Not Lorcan — he was cowering in a corner of cell D1 that still held.\r\n- Continue with [Convo Dulcie 3a.](/play/item/235)",
                 "auto_apply": true,
                 "outcome_type": "determined",
                 "determinants": [
@@ -3094,42 +3100,7 @@
     },
     "general data": {
         "piles": [
-            {"item_id": 16, "quantity": 2.0},
-            {"item_id": 19, "quantity": 1.0},
-            {"item_id": 97, "quantity": 2.0},
-            {"item_id": 99, "quantity": 1.0},
-            {"item_id": 101, "quantity": 1.0},
-            {"item_id": 110, "quantity": 2.0},
-            {"item_id": 112, "quantity": 1.0},
-            {"item_id": 114, "quantity": 1.0},
-            {"item_id": 117, "quantity": 2.0},
-            {"item_id": 120, "quantity": 1.0},
-            {"item_id": 122, "quantity": 1.0},
-            {"item_id": 124, "quantity": 1.0},
-            {"item_id": 126, "quantity": 2.0},
-            {"item_id": 129, "quantity": 1.0},
-            {"item_id": 131, "quantity": 1.0},
-            {"item_id": 133, "quantity": 1.0},
-            {"item_id": 135, "quantity": 1.0},
-            {"item_id": 137, "quantity": 1.0},
-            {"item_id": 141, "quantity": 2.0},
-            {"item_id": 143, "quantity": 1.0},
-            {"item_id": 146, "quantity": 2.0},
-            {"item_id": 148, "quantity": 1.0},
-            {"item_id": 151, "quantity": 1.0},
-            {"item_id": 156, "quantity": 2.0},
-            {"item_id": 159, "quantity": 2.0},
-            {"item_id": 162, "quantity": 1.0},
-            {"item_id": 164, "quantity": 1.0},
-            {"item_id": 203, "quantity": 2.0},
-            {"item_id": 206, "quantity": 1.0},
-            {"item_id": 210, "quantity": 1.0},
-            {"item_id": 212, "quantity": 1.0},
-            {"item_id": 216, "quantity": 1.0},
-            {"item_id": 218, "quantity": 2.0},
-            {"item_id": 227, "quantity": 2.0},
-            {"item_id": 232, "quantity": 1.0},
-            {"item_id": 235, "quantity": 1.0}
+            {"item_id": 232, "quantity": 0.0}
         ]
     },
     "progress": []

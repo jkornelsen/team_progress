@@ -339,6 +339,10 @@ def session_users():
         interactions=recent_interactions
     )
 
+@session_bp.route('/about')
+def about():
+    return render_template('session/about.html')
+
 # ------------------------------------------------------------------------
 # Global App Integration Helper
 # ------------------------------------------------------------------------

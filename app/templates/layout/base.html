@@ -88,19 +88,17 @@
         function flashMessage(message, type = "") {
             if (!message) return;
 
-            // 1. Save to session storage for the NEXT page load
-            let pending = JSON.parse(sessionStorage.getItem('pending_logs') || "[]");
-            pending.push({ message, type });
-            sessionStorage.setItem('pending_logs', JSON.stringify(pending));
+            if (window.isUnloading) {
+                // The page is currently navigating away.
+                // We must save this for the next page load.
+                let pending = JSON.parse(sessionStorage.getItem('pending_logs') || "[]");
+                pending.push({ message, type });
+                sessionStorage.setItem('pending_logs', JSON.stringify(pending));
 
-            // 2. Try to show it on the CURRENT page.
-            setTimeout(() => {
-                // If we are currently unloading or the page has already started 
-                // navigating, don't draw the UI on this "dead" page.
-                if (isUnloading) return;
-
+            } else {
+                // Show it on the current page.
                 showFlashUI(message, type);
-            }, 100);
+            }
         }
 
         window.addEventListener('DOMContentLoaded', () => {

@@ -87,14 +87,15 @@
                            class="full-width themed-input"
                            list="party-suggestions">
                     <datalist id="party-suggestions">
-                        {% for party in party_names
-                                if party.lower() != "main party"
-                                and party.lower() != "enemies" %}
+                        {% for party in party_names %}
                             <option value="{{ party }}"></option>
                         {% endfor %}
                         {% if party_names|length < 3 %}
-                            <option value="Main Party"></option>
-                            <option value="Enemies"></option>
+                            {% for default_party in ["Main Party", "Enemies"] %}
+                                {% if default_party.lower() not in party_names|map('lower') %}
+                                    <option value="{{ default_party }}"></option>
+                                {% endif %}
+                            {% endfor %}
                         {% endif %}
                     </datalist>
                     <small class="label-like">Characters in the same party can move and fight together.</small>

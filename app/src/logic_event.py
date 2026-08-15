@@ -1108,7 +1108,8 @@ def do_effect_change(eff, roll_val, role_entities):
                     Participant.SUBJECT, role_entities)
                 subject = db.session.get(Entity, (game_token, subject_id)) \
                     if subject_id else None
-                if subject and subject.position:
+                if subject and subject.entity_type == Character.TYPENAME \
+                        and subject.position:
                     position = subject.position
 
         adjust_accessible_quantity(

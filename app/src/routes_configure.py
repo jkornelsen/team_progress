@@ -838,7 +838,8 @@ def edit_event(id):
                     if role and mode:
                         fld_attrib_id = fld.get_int('attrib_id', None)
                         fld_item_id = fld.get_int('item_id', None)
-                        fld_recipe_id = fld.get_int('recipe_id', None)
+                        fld_recipe_id = fld.get_int('recipe_id', None) \
+                            if mode in Participant.USES_RECIPE else None
                         fld_char_id = fld.get_int('char_id', None)
                         fld_loc_id = fld.get_int('loc_id', None)
                         fld_source_item_id = fld.get_int('source_item_id', None)

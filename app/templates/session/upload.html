@@ -28,18 +28,18 @@
             <span>Overwrite</span>
         </label>
         <label class="tab-button">
-            <input type="radio" name="import_mode" value="patch" onchange="syncFormState(this.value)"> 
-            <span>Patch</span>
-        </label>
-        <label class="tab-button">
             <input type="radio" name="import_mode" value="clear" onchange="syncFormState(this.value)"> 
             <span>New Blank</span>
+        </label>
+        <label class="tab-button">
+            <input type="radio" name="import_mode" value="patch" onchange="syncFormState(this.value)"> 
+            <span>Patch</span>
         </label>
     </div>
 
     <div id="status-box" class="warning-box warning">
         <strong id="status-title">Overwrite Mode</strong>
-        <p id="status-text">This will erase all current data and replace it with the contents of the JSON file.</p>
+        <p id="status-text">Erases current data and replaces it with the JSON file.</p>
     </div>
 
     <div class="upload-zone spacious-top" id="drop-zone">
@@ -176,7 +176,7 @@ function syncFormState(mode) {
 
     if (mode === 'overwrite') {
         statusTitle.innerText = "Overwrite Mode";
-        statusText.innerHTML = "Erases current data and replaces it with JSON content.";
+        statusText.innerHTML = "Erases current data and replaces it with the JSON file.";
         statusBox.classList.add('warning');
         modeIcon.innerText = "📄";
     } else if (mode === 'patch') {
@@ -186,7 +186,7 @@ function syncFormState(mode) {
         modeIcon.innerText = "🩹";
     } else if (mode === 'clear') {
         statusTitle.innerText = "Blank Mode";
-        statusText.innerText = "Permanently deletes everything. Use for starting a fresh project.";
+        statusText.innerText = "Clears the current slot. Useful for starting a fresh project.";
         statusBox.classList.add('danger');
         document.getElementById('drop-zone').style.display = 'none';
         document.getElementById('clear-zone').style.display = 'block';

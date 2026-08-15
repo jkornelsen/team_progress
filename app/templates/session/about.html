@@ -1,0 +1,56 @@
+{% extends 'layout/base.html' %}
+{% import 'macros/hotkeys.html' as hk %}
+
+{% block upper_left %}
+    <nav class="nav-container">
+        {{ hk.page_overview() }}
+        <span class="separator">|</span>
+        {{ hk.page_main_setup() }}
+    </nav>
+{% endblock %}
+
+{% block content %}
+<div class="session-card outer-border" style="max-width: 700px; margin: 40px auto;">
+    <header class="entity-header">
+        <h1>About Team Progress Kit</h1>
+        <p>A flexible text-based system for tracking progress and handling storytelling interactions.</p>
+    </header>
+
+    <div class="column-container spacious-top">
+        <section style="flex: 2;">
+            <ul class="clean-list">
+                <li class="spacious-bottom">
+                    <strong>Source Code:</strong><br>
+                    <a href="https://github.com/jkornelsen/team_progress" target="_blank">github.com/jkornelsen/team_progress</a>
+                </li>
+                <li class="spacious-bottom">
+                    <strong>Deployment:</strong><br>
+                    <a href="https://your-deployment-url.com" target="_blank">your-deployment-url.com</a>
+                </li>
+            </ul>
+        </section>
+
+        <section style="flex: 1; border-left: 1px solid var(--border); padding-left: 20px;">
+            <h3>Project Info</h3>
+            <div class="label-like spacious-bottom">
+                <strong>Version:</strong> 2026.08<br>
+                <strong>Development:</strong> 2023-2026<br>
+                <strong>Author:</strong> @jkornelsen<br>
+                <strong>License:</strong> <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank">GPLv3</a>
+            </div>
+        </section>
+    </div>
+
+    <hr class="dim-hr" style="margin-top: 30px;">
+
+    <div class="label-like" style="line-height: 1.6;">
+        <p>The original idea behind this game was to be an <i>incremental-plus,</i> with tabletop mechanics to provide the flexibility other idlers lack. Like, employees from a rival factory might suddenly attack with staplers.</p>
+        <p>Built with Python, Flask, and PostgreSQL.</p>
+    </div>
+</div>
+
+<style>
+    .clean-list { list-style: none; padding: 0; }
+    .dim-hr { border: 0; border-top: 1px solid #333; }
+</style>
+{% endblock %}
