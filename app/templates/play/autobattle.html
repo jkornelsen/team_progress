@@ -44,7 +44,7 @@
             <div class="flex-row align-center">
                 <!-- Toggle Button -->
                 <button id="battle-toggle-btn" class="go-button" onclick="toggleAutoBattle()">
-                    {{ hk.bracket('s') }}tart auto-battle
+                    {{ hk.bracket('s') }}tart battle
                 </button>
                 <script>linkForKey["s"] = "#battle-toggle-btn";</script>
 
@@ -54,14 +54,14 @@
                 </span>
             </div>
             <div style="margin-top: 10px; margin-bottom: 10px">
-                <!-- Manual Step (only visible when stopped) -->
-                {% set target_url = url_for('play.play_autobattle', loc_id=location.id, step=1) %}
+                <!-- Manual Reset (only visible when stopped) -->
+                {% set target_url = url_for('play.autobattle_reset', loc_id=location.id) %}
                 <a href="{{ target_url }}"
-                   id="manual-step-link"
+                   id="manual-reset-link"
                    class="btn-sm" style="text-decoration: none; border: 1px solid #444; padding: 7px 12px; border-radius: 4px;">
-                    {{ hk.bracket('n') }}ext round (step)
+                    {{ hk.bracket('r') }}eset battle
                 </a>
-                <script>linkForKey["n"] = "#manual-step-link";</script>
+                <script>linkForKey["r"] = "#manual-reset-link";</script>
             </div>
             {% for p_name, members in parties.items() %}
                 <section class="outer-border">
@@ -109,7 +109,7 @@
     const AUTO_BATTLE_KEY = "auto_battle_active_{{ location.id }}";
     const battleBtn = document.getElementById('battle-toggle-btn');
     const status = document.getElementById('auto-status');
-    const manualStep = document.getElementById('manual-step-link');
+    const manualReset = document.getElementById('manual-reset-link');
     const logContainer = document.querySelector('.scrollable-log');
     
     const STEP_DELAY = 1500; 
@@ -132,11 +132,11 @@
 
     function updateUI() {
         const active = isRunning();
-        battleBtn.innerHTML = active ? `{{ hk.bracket('s') }}top auto-battle`
-                                     : `{{ hk.bracket('s') }}tart auto-battle`;
+        battleBtn.innerHTML = active ? `{{ hk.bracket('s') }}top battle`
+                                     : `{{ hk.bracket('s') }}tart battle`;
         battleBtn.className = active ? "dangerous-button" : "go-button";
         status.classList.toggle('hidden', !active);
-        manualStep.classList.toggle('disabled', active);
+        manualReset.classList.toggle('disabled', active);
     }
 
     async function runNextStep() {
@@ -177,18 +177,17 @@
         }
     }
 
-    // Manual step handler
-    manualStep.addEventListener('click', (e) => {
+    // Manual reset handler
+    manualReset.addEventListener('click', async (e) => {
         if (isRunning()) {
             e.preventDefault();
             return;
         }
         e.preventDefault();
-        // Temporarily set running to true to reuse the logic, then flip back
-        localStorage.setItem(AUTO_BATTLE_KEY, 'true');
-        runNextStep();
-        localStorage.setItem(AUTO_BATTLE_KEY, 'false');
-        updateUI();
+        const resetData = await apiPost("{{ url_for('play.autobattle_reset', loc_id=location.id) }}", null, "Reset failed");
+        if (resetData) {
+            updateBattleUI(resetData);
+        }
     });
 
     function updateBattleUI(data) {

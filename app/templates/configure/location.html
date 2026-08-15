@@ -47,6 +47,13 @@
             Area or container where items and characters can be.
             May be subdivided into a grid with position 1,1 as the upper-left corner.
         </p>
+        <p class="info">
+            <b>Auto Battle:</b> does not work offline, unlike item production.
+            There are required auto battle settings for
+            events&mdash;including auto apply&mdash;and HP attribute settings.
+            Then, set up characters at this location with these events and attributes,
+            in different parties.
+        </p>
     
     <form method="POST">
         <!-- Identity (Entity Table) -->
@@ -87,7 +94,7 @@
                             title="Enable the auto-combat interface for this location.">
                         <input type="checkbox" name="autobattle" {{
                             'checked' if location.autobattle }}> 
-                        Enable Autobattle ⚔️
+                        Enable Auto Battle ⚔️
                     </label>
                 </div>
             </div>

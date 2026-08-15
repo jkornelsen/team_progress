@@ -113,6 +113,20 @@ def run_battle_round(loc_id):
         if get_char_stat(actor, AutobattleField.HP) < 1:
             continue
 
+        # Before Turn (DoTs)
+        before_actions = [
+            e for e in actor.abilities 
+            if e.ab_stage == AutobattleStage.BEFORE
+        ]
+        for act in before_actions:
+            execute_event_chain(act.id, {
+                Participant.SUBJECT: actor.id,
+                Participant.AT: loc_id
+            })
+
+        if get_char_stat(actor, AutobattleField.HP) < 1:
+            continue
+
         # Action Selection
         # Find abilities marked for 'turn' stage
         available_actions = [

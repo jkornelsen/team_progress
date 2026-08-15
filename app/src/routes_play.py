@@ -1220,7 +1220,7 @@ def play_autobattle(loc_id):
         location=location,
         parties=parties,
         messages=get_chronicle(12),
-        link_letters=LinkLetters(excluded='snmoe'),
+        link_letters=LinkLetters(excluded='srmoe'),
         AutobattleStage=AutobattleStage
     )
 

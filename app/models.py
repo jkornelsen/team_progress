@@ -599,8 +599,7 @@ class AutobattleField:
     NONE = 'none'
     HP = 'hp'
     MAX_HP = 'max_hp'
-    STATUS = 'status'
-    ALL = [NONE, HP, MAX_HP, STATUS]
+    ALL = [NONE, HP, MAX_HP]
 
 class Attrib(Entity):
     """
