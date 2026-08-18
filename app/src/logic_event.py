@@ -139,7 +139,6 @@ def apply_numeric_op(current_val, mod_val, op, output_range=None):
     if op == Operation.EQ: return current_val == mod_val
     if op == Operation.GE: return current_val >= mod_val
     if op == Operation.LT: return current_val < mod_val
-    if op == Operation.NE: return current_val != mod_val
 
     # Arithmetic
     if op == Operation.ADD:  return current_val + mod_val

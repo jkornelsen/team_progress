@@ -1345,7 +1345,6 @@ class Operation:
     EQ = '=='
     GE = '>=' # often means having enough
     LT = '<' # often means NOT having that amount
-    NE = '!=' # value must exist and be different (unlike EventFactor.negate)
     ASSIGN = ':='
     ADD = '+'
     SUB = '-'
@@ -1371,7 +1370,6 @@ class Operation:
         EQ:         '=',
         GE:         '≥',
         LT:         '<',
-        NE:         '≠',
         ASSIGN:     '→',
         ADD:        '+',
         SUB:        '−',
@@ -1393,11 +1391,37 @@ class Operation:
         MEM_RECALL: 'Recall',
     }
 
+    Descriptions = {
+        CONST:      "Uses this fixed value instead of fetching a value",
+        EQ:         "Equality: Values must be the same",
+        GE:         "Value must meet or exceed, used for 'has enough' checks",
+        LT:         "Value must be below, used for 'lacks' checks",
+        ASSIGN:     "Overwrites the existing total with the new result",
+        ADD:        "Adds to the running total or value",
+        SUB:        "Subtracts from the running total or value",
+        MULT:       "Multiplies by this value",
+        DIV:        "Divides by this value, ignoring division by zero",
+        MOD:        "Returns the remainder after division",
+        VAL_TO_POW: "Raises the value to the power of N",
+        POW_OF_VAL: "Raises N to the power of the value",
+        ABS:        "Absolute: Converts negative numbers to positive",
+        ROUND:      "Rounds to the nearest multiple",
+        FLOOR:      "Rounds down to the nearest multiple",
+        CEIL:       "Rounds up to the nearest multiple",
+        MIN:        "Enforce UPPER limit by returning the smaller of the two values",
+        MAX:        "Enforce LOWER limit by returning the larger of the two values",
+        MASK:       "1 if the value is greater than zero, otherwise 0",
+        EQ_TO_ONE:  "1 if the values match, otherwise 0",
+        SOFTCAP:    "Diminishing returns after values exceed the specified threshold",
+        MEM_STORE:  "Saves the current total into memory and resets the total to 0",
+        MEM_RECALL: "Retrieves the value previously saved by 'Store'",
+    }
+
     # How the result applies to the total
     DET_APPLICATION = [
-        ADD, SUB, MULT, DIV, MOD, ASSIGN, MEM_STORE, EQ, GE, LT, NE,
+        ADD, SUB, MULT, DIV, MOD, ASSIGN, MEM_STORE, EQ, GE, LT,
         EQ_TO_ONE]
-    COMPARISON = [EQ, GE, LT, NE]
+    COMPARISON = [EQ, GE, LT]
 
     # Modify the Field Value before we apply it to the total
     TRANSFORM = [

@@ -11,6 +11,11 @@
         {{ hk.page_overview() }}
         <span class="separator">|</span>
         {{ hk.page_main_setup() }}
+        {% if attrib.id %}
+            <span class="separator">|</span>
+            <a href="{{ url_for('configure.lookup',
+                ent_type='attrib', id=attrib.id) }}">lookup</a>
+        {% endif %}
     </nav>
 {% endblock %}
 

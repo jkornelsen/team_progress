@@ -11,7 +11,12 @@
     <nav class="nav-container">
         {{ hk.page_overview() }}
         <span class="separator">|</span>
-        {{ hk.page_main_setup() }}
+        {% if character.id %}
+            {{ hk.page_main_setup() }}
+            <span class="separator">|</span>
+            <a href="{{ url_for('configure.lookup',
+                ent_type='character', id=character.id) }}">lookup</a>
+        {% endif %}
     </nav>
 {% endblock %}
 

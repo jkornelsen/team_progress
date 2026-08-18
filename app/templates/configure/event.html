@@ -11,6 +11,11 @@
         {{ hk.page_overview() }}
         <span class="separator">|</span>
         {{ hk.page_main_setup() }}
+        {% if event.id %}
+            <span class="separator">|</span>
+            <a href="{{ url_for('configure.lookup',
+                ent_type='event', id=event.id) }}">lookup</a>
+        {% endif %}
     </nav>
 {% endblock %}
 
@@ -67,36 +72,45 @@
         <section class="outer-border">
             <div>
                 <div>
-                    <label for="outcome_type">Outcome Type:</label>
+                    <label for="outcome_type" title="Type of roll">
+                        Outcome Type:
                     <select id="outcome_type"
                             name="outcome_type"
                             class="themed-input"
                             onchange="syncOutcomeTypeState()">
                         <option value="{{ OutcomeType.FOURWAY }}" {{ 'selected'
                             if event.outcome_type == OutcomeType.FOURWAY }}
+                            title="For example, minor success if 12 or higher"
                             >Four-Way Success/Fail</option>
                         <option value="{{ OutcomeType.NUMERIC }}" {{ 'selected'
                             if event.outcome_type == OutcomeType.NUMERIC }}
+                            title="For example, d6+2 for 7 damage"
                             >Numeric Roll</option>
                         <option value="{{ OutcomeType.DETERMINED }}" {{ 'selected'
                             if event.outcome_type == OutcomeType.DETERMINED }}
+                            title="For example, set current hp to max hp"
                             >Logic (Not Chance)</option>
                         <option value="{{ OutcomeType.SELECT }}" {{ 'selected'
                             if event.outcome_type == OutcomeType.SELECT }}
+                            title="Choose from an attribute's enumerated list"
                             >Random Selection</option>
                         <option value="{{ OutcomeType.COORDS }}" {{ 'selected'
                             if event.outcome_type == OutcomeType.COORDS }}
+                            title="Choose a grid position"
                             >Random Coordinates</option>
                         <option value="{{ OutcomeType.ROLLER }}" {{ 'selected'
                             if event.outcome_type == OutcomeType.ROLLER }}
+                            title="Roll dice and assess the outcome using a ruleset"
                             >Dice System (Custom Rolls)</option>
                     </select>
+                    </label>
                 </div>
 
             </div>
 
             <div id="fields-selection" class="spacious-top hidden">
-                <label>Enumerated Attribute:
+                <label title="Go to the attribute to view or edit the list">
+                    Enumerated Attribute:
                     <select name="selection_attrib_id">
                         {% for a in all_attribs if a.enum_entries %}
                             <option value="{{ a.id }}" {{ 'selected' if
@@ -107,34 +121,43 @@
             </div>
             <div id="fields-dice" class="spacious-top hidden">
                 <div>
-                    <label>System:</label>
+                    <label>
+                        System:
                     <select name="roller_type" class="full-width themed-input">
                         <option value="dnd" {{ 'selected' if event.roller_type == 'dnd' }}>D&D: XdY + Z</option>
                         <option value="ironsworn" {{ 'selected' if event.roller_type == 'ironsworn' }}>Ironsworn: d6 + X vs 2d10</option>
                     </select>
+                    </label>
                 </div>
             </div>
 
             <div>
                 <div id="fields-range" class="spacious-top hidden">
                     <div>
-                        <label>Die Min:</label>
-                        <input type="number" name="range_min" value="{{ event.numeric_range[0] if event.numeric_range else 1 }}">
+                        <label title="Adjusts the starting range from 1, for example 3 means +2">
+                            Die Min:
+                            <input type="number" name="range_min" value="{{ event.numeric_range[0] if event.numeric_range else 1 }}">
+                        </label>
                     </div>
                     <div>
-                        <label>Die Max:</label>
-                        <input type="number" name="range_max" value="{{ event.numeric_range[1] if event.numeric_range else 20 }}">
+                        <label>
+                            Die Max:
+                            <input type="number" name="range_max" value="{{ event.numeric_range[1] if event.numeric_range else 20 }}">
+                        </label>
                     </div>
                 </div>
                 <div id="fields-base" class="spacious-top hidden">
-                    <label>Base Value:</label>
-                    <input type="number" name="fixed_base" value="{{ event.fixed_base }}" step="any">
+                    <label title="Start with something else instead of 0">
+                        Base Value:
+                        <input type="number" name="fixed_base" value="{{ event.fixed_base }}" step="any">
+                    </label>
                 </div>
             </div>
 
             <div class="spacious-top">
                 <div>
-                    <label>Restrict <i>Target Char</i> By Party:</label>
+                    <label title="For example, 'Do Not Target Same' to attack only characters who have the 'Enemies' party.">
+                        Restrict <i>Target Char</i> By Party:
                     <select name="party_targeting" class="themed-input">
                         <option value="{{ PartyTarget.ANY }}" {{
                             'selected' if event.party_targeting == PartyTarget.ANY
@@ -162,31 +185,39 @@
                             </option>
                         {% endfor %}
                     </select>
+                    </label>
                 </div>
             </div>
 
             {% if autobattle_enabled or event.ab_stage != AutobattleStage.NONE %}
             <div>
                 <div>
-                    <label>Autobattle Stage:</label>
+                    <label>
+                        Autobattle Stage:
                     <select name="ab_stage" class="themed-input">
                         <option value="{{ AutobattleStage.NONE }}" {{
-                            'selected' if event.ab_stage == AutobattleStage.NONE
-                            }}>(Manual Only)</option>
+                            'selected' if event.ab_stage == AutobattleStage.NONE }}
+                            title="Won't be used by auto battle"
+                            >(Manual Only)</option>
                         <option value="{{ AutobattleStage.BEFORE }}" {{
-                            'selected' if event.ab_stage == AutobattleStage.BEFORE
-                            }}>Before Turn (DoT)</option>
+                            'selected' if event.ab_stage == AutobattleStage.BEFORE }}
+                            title="Run at the start of the character's turn"
+                            >Before Turn (DoT)</option>
                         <option value="{{ AutobattleStage.TURN }}" {{
-                            'selected' if event.ab_stage == AutobattleStage.TURN
-                            }}>Turn Action (Attack/Heal)</option>
+                            'selected' if event.ab_stage == AutobattleStage.TURN }}
+                            title="The main action taken by the character on this turn"
+                            >Turn Action (Attack/Heal)</option>
                         <option value="{{ AutobattleStage.AFTER }}" {{
-                            'selected' if event.ab_stage == AutobattleStage.AFTER
-                            }}>After Turn (Death Checks)</option>
+                            'selected' if event.ab_stage == AutobattleStage.AFTER }}
+                            title="Clean up after the characters have taken their turn"
+                            >After Turn (Death Checks)</option>
                         <option value="{{ AutobattleStage.RESET }}" {{
-                            'selected' if event.ab_stage == AutobattleStage.RESET
-                            }}>Post-Battle Reset</option>
+                            'selected' if event.ab_stage == AutobattleStage.RESET }}
+                            title="Reset the field to prepare for a new fight"
+                            >Post-Battle Reset</option>
                     </select>
-                    <label title="Higher numbers = higher weight in random choice.">
+                    </label>
+                    <label title="Attempt higher numbers first (e.g. 5), and if that doesn't work then try lower numbers (1 or 2).">
                         AB Priority:
                         <input type="number" name="ab_priority"
                             value="{{ event.ab_priority }}" class="mini-input"  >
@@ -212,14 +243,16 @@
             </div>
         </section>
 
-        <!-- 4. Effects (Values Changed) -->
+        <!-- 4. Effects -->
         <section id="effects" class="outer-border" style="background: #004422">
             <div class="flex-between sticky-header">
                 <h3>Apply Changes After Roll</h3>
                 <label class="checkbox-label"
-                        style="margin-top: 25px;">
+                        style="margin-top: 25px;"
+                        title="Leave unchecked if you want to choose whether to accept the effects of the roll">
                     <input type="checkbox" name="auto_apply"
-                        {{ 'checked' if event.auto_apply }}> Auto Apply</label>
+                        {{ 'checked' if event.auto_apply }}> Auto Apply
+                </label>
                 <button type="button" class="btn-sm" onclick="addFactor('eff')">+ Add Effect</button>
             </div>
             <div id="eff-list" class="spacious-top">
@@ -507,7 +540,7 @@ function syncEventFieldState(element) {
         }
     }
 
-    if (mode === '{{ Participant.PLACE }}') {
+    if (mode === '{{ Participant.PLACE }}' || mode === '{{ Participant.TELEPORT }}') {
         // Lock Source to Roll Result and hide Calculation section
         if (sourceSelect) {
             sourceSelect.value = '{{ Participant.OUTCOME }}';
@@ -1013,6 +1046,11 @@ document.addEventListener('DOMContentLoaded', function() {
     adjustDet('renumberRows');
     adjustEff('renumberRows');
     syncOutcomeTypeState();
+    document.querySelectorAll('.field-mode-select').forEach(select => {
+        if (!select.closest('.hidden')) {
+            syncEventFieldState(select);
+        }
+    });
 });
 </script>
 
@@ -1038,29 +1076,51 @@ document.addEventListener('DOMContentLoaded', function() {
                 style="min-width: 20ch; max-width: 30ch;"
                 onchange="syncFieldIdsState(this)">
             <option value="{{ Participant.ATTR }}" {{ 'selected'
-                if field_mode == Participant.ATTR }}>Attribute</option>
+                if field_mode == Participant.ATTR }}
+                title="An attribute of a character, item or location"
+                >Attribute</option>
             <option value="{{ Participant.QTY }}" {{ 'selected'
-                if field_mode == Participant.QTY }}>Item Quantity</option>
+                if field_mode == Participant.QTY }}
+                title="Quantity of a universal item, or how many a character or location has"
+                >Item Quantity</option>
             <option value="{{ Participant.LIMIT }}" {{ 'selected'
-                if field_mode == Participant.LIMIT }}>Item Limit</option>
+                if field_mode == Participant.LIMIT }}
+                title="Adjust the max possible quantity for an item"
+                >Item Limit</option>
             <option value="{{ Participant.RATE_AMT }}" {{ 'selected'
-                if field_mode == Participant.RATE_AMT }}>Recipe Yield</option>
+                if field_mode == Participant.RATE_AMT }}
+                title="Adjust how much a recipe produces"
+                >Recipe Yield</option>
             <option value="{{ Participant.RATE_DUR }}" {{ 'selected'
-                if field_mode == Participant.RATE_DUR }}>Recipe Duration</option>
+                if field_mode == Participant.RATE_DUR }}
+                title="Adjust how long the recipe takes"
+                >Recipe Duration</option>
             <option value="{{ Participant.SOURCE_QTY }}" {{ 'selected'
-                if field_mode == Participant.SOURCE_QTY }}>Recipe Source Quantity</option>
+                if field_mode == Participant.SOURCE_QTY }}
+                title="Adjust how much source material the recipe consumes"
+                >Recipe Source Quantity</option>
             <option value="{{ Participant.BYP_QTY }}" {{ 'selected'
-                if field_mode == Participant.BYP_QTY }}>Recipe Byproduct Quantity</option>
+                if field_mode == Participant.BYP_QTY }}
+                title="Adjust the byproduct quantity produced by a recipe"
+                >Recipe Byproduct Quantity</option>
             {% if 'outfield' in prefix %}
             <option value="{{ Participant.PLACE }}" {{ 'selected'
-                if field_mode == Participant.PLACE }}>Place Item</option>
+                if field_mode == Participant.PLACE }}
+                title="Position an item randomly in the grid"
+                >Place Item</option>
             <option value="{{ Participant.TELEPORT }}" {{ 'selected'
-                if field_mode == Participant.TELEPORT }}>Teleport Char</option>
+                if field_mode == Participant.TELEPORT }}
+                title="Move the character to the named location"
+                >Teleport Char</option>
             {% elif 'infield' in prefix %}
             <option value="{{ Participant.DIST }}" {{ 'selected'
-                if field_mode == Participant.DIST }}>Distance</option>
+                if field_mode == Participant.DIST }}
+                title="How many tiles away in a grid"
+                >Distance</option>
             <option value="{{ Participant.ENUM }}" {{ 'selected'
-                if field_mode == Participant.ENUM }}>Enum Constant</option>
+                if field_mode == Participant.ENUM }}
+                title="Specify a value from an attribute enum"
+                >Enum Constant</option>
             {% endif %}
         </select>
 
@@ -1202,19 +1262,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 {{ 'selected' if role == Participant.AT }}>At</option>
 
             <option value="{{ Participant.PRESELECTED }}"
-                title="Configure a specific entity"
+                title="Specify a particular entity"
                 {{ 'selected' if role == Participant.PRESELECTED }}>Preselected</option>
         </select>
     </div>
 
     <div class="child-toggle-container flex-row align-center gap-5">
-        <label class="checkbox-label">
+        <label class="checkbox-label"
+            title="Attribute of an item they have (instead of the participant themself)">
             <input type="checkbox" name="{{ prefix }}[child_of_anchor]" 
                    class="child-item-checkbox"
                    {{ 'checked' if field_data and field_data.child_of_anchor }}>
                 Inventory
         </label>
-        <span class="label-like">— Attribute of an item at/equipped by this participant</span>
     </div>
 </div>
 {% endmacro %}
@@ -1282,14 +1342,21 @@ document.addEventListener('DOMContentLoaded', function() {
                                 style="max-width: 15ch;"
                                 onchange="syncInnerExprState(this.closest('.factor-card'))">
                             <option value="{{ Operation.CONST }}" {{ 'selected'
-                                if op_transform == Operation.CONST }}>Constant</option>
+                                if op_transform == Operation.CONST }}
+                                title="{{ Operation.Descriptions.get(Operation.CONST, '') }}">
+                                Constant</option>
                             <option value="" {{ 'selected'
-                                if not op_transform }}>Use Value</option>
+                                if not op_transform }}
+                                title="Fetches the value">
+                                Use Value</option>
                             <option value="{{ Operation.MEM_RECALL }}" {{ 'selected'
-                                if op_transform == Operation.MEM_RECALL }}>Recall</option>
+                                if op_transform == Operation.MEM_RECALL }}
+                                title="{{ Operation.Descriptions.get(Operation.MEM_RECALL, '') }}">
+                                Recall</option>
                             {% for op_key in Operation.TRANSFORM %}
                                 <option value="{{ op_key }}" {{ 'selected'
-                                if op_transform == op_key }}>
+                                if op_transform == op_key }}
+                                title="{{ Operation.Descriptions.get(op_key, '') }}">
                                     {{ Operation.Repr[op_key] }}
                                 </option>
                             {% endfor %}
@@ -1314,7 +1381,8 @@ document.addEventListener('DOMContentLoaded', function() {
                             onchange="syncOuterExprState(this.closest('.factor-card'))">
                         {% for op_key in Operation.DET_APPLICATION %}
                             <option value="{{ op_key }}" {{ 'selected'
-                                if op_application == op_key }}>
+                                if op_application == op_key }}
+                                title="{{ Operation.Descriptions.get(op_key, '') }}">
                                 {{ Operation.Repr[op_key] }}
                             </option>
                         {% endfor %}
@@ -1501,7 +1569,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                 if not op_transform }}>Use Value</option>
                             {% for op_key in Operation.TRANSFORM %}
                                 <option value="{{ op_key }}" {{ 'selected'
-                                    if op_transform == op_key }}>
+                                    if op_transform == op_key }}
+                                    title="{{ Operation.Descriptions.get(op_key, '') }}">
                                     {{ Operation.Repr[op_key] }}
                                 </option>
                             {% endfor %}
@@ -1614,7 +1683,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 {% set op_application = factor.op_application if factor else '' %}
                 {% for op_key in Operation.COMPARISON %}
                     <option value="{{ op_key }}" {{ 'selected'
-                        if op_application == op_key }}>
+                        if op_application == op_key }}
+                        title="{{ Operation.Descriptions.get(op_key, '') }}">
                         {{ Operation.Repr[op_key] }}
                     </option>
                 {% endfor %}
