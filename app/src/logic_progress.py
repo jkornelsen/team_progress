@@ -9,6 +9,7 @@ from app.models import (
     Recipe, RecipeSource, RecipeByproduct, AttribVal,
     GENERAL_ID, StorageType)
 from app.utils import ContextIds
+from app.database import USE_SQLITE
 from .logic_piles import adjust_quantity
 from .logic_production import can_perform_recipe, execute_production, STALLED
 from .logic_user_interaction import add_message
@@ -24,15 +25,20 @@ def tick_all_active(messages_host_id=None):
     """
     game_token = g.game_token
 
-    # DB lock to prevent concurrent access to this game token
-    lock_id = zlib.adler32(game_token.encode())
-    try:
-        db.session.execute(
-            text("SELECT pg_advisory_xact_lock(:id)"), 
-            {"id": lock_id}
-        )
-    except Exception as e:
-        logger.exception(e)
+    if USE_SQLITE:
+        # Force a write lock immediately
+        # This prevents Worker B from even READING the data until Worker A is done.
+        db.session.execute(text("BEGIN IMMEDIATE"))
+    else:
+        # DB lock to prevent concurrent access to this game token
+        lock_id = zlib.adler32(game_token.encode())
+        try:
+            db.session.execute(
+                text("SELECT pg_advisory_xact_lock(:id)"), 
+                {"id": lock_id}
+            )
+        except Exception as e:
+            logger.exception(e)
 
     all_active_records = Progress.query.filter_by(game_token=game_token).all()
     
@@ -242,13 +248,13 @@ def stop_production(host_id, product_id):
     ).first()
 
     if progress:
-        tick_all_active() # Final catch up
-        still_exists = db.session.query(Progress).filter_by(id=progress.id).first()
-        if still_exists:
-            logger.info(
-                f"[PRODUCTION MANUAL STOP] Host:{host_id}"
-                f" | Product:{product_id}")
-            db.session.delete(still_exists)
-        db.session.commit()
+        p_id = progress.id
+        # Final catch up
+        tick_all_active()
+        # Re-fetch using the ID to see if tick_all_active already deleted it
+        record_to_delete = db.session.get(Progress, p_id)
+        if record_to_delete:
+            db.session.delete(record_to_delete)
+            db.session.commit()
         return True
     return False

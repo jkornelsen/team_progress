@@ -9,6 +9,7 @@ from markupsafe import Markup
 import bleach
 from bleach.css_sanitizer import CSSSanitizer
 from .models import GENERAL_ID, StorageType
+from .database import USE_SQLITE
 
 logger = logging.getLogger(__name__)
 
@@ -467,9 +468,12 @@ def name_stripped(col=None):
     """
     if col is None:
         col = text('name')
-    return func.lower(
-        func.regexp_replace(col, r'^\W+', '', 'g')
-    ).op('COLLATE')(literal_column('"C"'))
+
+    expr = func.lower(func.regexp_replace(col, r'^\W+', '', 'g'))
+    if USE_SQLITE:
+        return expr
+
+    return expr.op('COLLATE')(literal_column('"C"'))
 
 def sort_by_name_stripped(items, named=lambda x: x):
     def get_sort_key(item):

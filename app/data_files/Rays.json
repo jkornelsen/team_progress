@@ -804,10 +804,7 @@
                 "id": 44,
                 "name": "Local Solar System",
                 "description": "An area designated to hold a star orbited by celestial bodies.",
-                "item_refs": [35],
-                "destinations": [
-                    {"loc2_id": 43}
-                ]
+                "item_refs": [35]
             },
             {
                 "id": 43,
@@ -821,6 +818,9 @@
                     {"item_id": 14},
                     {"item_id": 29},
                     {"item_id": 48, "quantity": 1.0}
+                ],
+                "destinations": [
+                    {"loc2_id": 44}
                 ]
             },
             {
@@ -1308,6 +1308,13 @@
                         "op_application": ":=",
                         "op_transform": "*",
                         "val_transform": 120.0
+                    },
+                    {
+                        "infield": {"attrib_id": 53},
+                        "outfield": {"field_mode": "rate_dur", "item_id": 35, "recipe_id": 94},
+                        "op_application": ":=",
+                        "op_transform": "*",
+                        "val_transform": 300.0
                     }
                 ]
             },

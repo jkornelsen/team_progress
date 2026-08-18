@@ -2,7 +2,7 @@ import logging
 import os
 import argparse
 from app import create_app
-from app.database import start_postgres
+from app.database import start_db
 
 def main():
     parser = argparse.ArgumentParser(description="Run the Team Progress Kit server.")
@@ -41,7 +41,7 @@ def main():
     app = create_app()
 
     # 3. Start Database and App
-    start_postgres()
+    start_db()
     print(f"Starting app in {'DEBUG' if args.debug else 'PRODUCTION'} mode at level {args.log.upper()}")
     app.run(host='127.0.0.1', port=5000, debug=args.debug, use_reloader=False)
 

@@ -4,7 +4,6 @@ import os
 import re
 from flask import g, current_app, session
 from sqlalchemy import func, delete, inspect as sa_inspect
-from sqlalchemy.dialects.postgresql import Range
 from sqlalchemy.orm import identity
 from .models import (
     GENERAL_ID, HIGHEST_RESERVED_ID, ENTITIES, JsonKeys, db,
@@ -444,14 +443,6 @@ def serialize_smart(obj, indent=4, max_line_length=60, current_indent=0):
 
     # Prefer unicode symbols over escape sequences as they're easier to edit.
     return json.dumps(obj, ensure_ascii=False)
-
-def range_to_list(r):
-    """Converts a Postgres NumericRange to a [min, max] list."""
-    if r is None: return [None, None]
-    # Handle both infinity and specific values
-    lower = r.lower if not r.lower_inf else None
-    upper = r.upper if not r.upper_inf else None
-    return [lower, upper]
 
 # ------------------------------------------------------------------------
 # Model Changes

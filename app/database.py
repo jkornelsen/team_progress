@@ -1,36 +1,71 @@
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import inspect
-from sqlalchemy.orm import make_transient
 import os
+from pathlib import Path
+import re
 import subprocess
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import event, inspect
+from sqlalchemy.engine import Engine
+from sqlalchemy.orm import make_transient
 
 # Define the object once here. 
 # It isn't "attached" to an app yet.
 db = SQLAlchemy()
 
+USE_SQLITE = True
+
 def get_db_uri():
     """Centralized logic for building the connection string."""
+    if USE_SQLITE:
+        app_dir = Path(__file__).resolve().parent
+        project_root = app_dir.parent
+        sqlite_dir = project_root / "sqlite_data"
+        sqlite_path = (sqlite_dir / "app.db").as_posix()
+        os.makedirs(sqlite_dir, exist_ok=True)
+        return f"sqlite:///{sqlite_path}"
+
     # 1. Try to get password from sensitive.py
     try:
         from .sensitive import DB_PASSWORD
     except (ImportError, ValueError):
         # Fallback for local trusted authentication
-        DB_PASSWORD = 'no password needed with trust'
+        DB_PASSWORD = "no password needed with trust"
 
     # 2. Get other connection details from Environment or Defaults
 
-    user = os.environ.get('DB_USER', 'postgres')
+    user = os.environ.get('DB_USER', "postgres")
     pw = os.environ.get('DB_PASSWORD', DB_PASSWORD) 
-    host = os.environ.get('DB_HOST', 'localhost')
-    db_name = os.environ.get('DB_NAME', 'app')
-    db_port = os.environ.get('DB_PORT', '5432')
+    host = os.environ.get('DB_HOST', "localhost")
+    db_name = os.environ.get('DB_NAME', "app")
+    db_port = os.environ.get('DB_PORT', "5432")
     
     # 3. Construct the SQLAlchemy URI
     return f"postgresql://{user}:{pw}@{host}:{db_port}/{db_name}"
 
-def start_postgres():
-    env_pf = os.environ.get('ProgramFiles', r'C:\Program Files')
-    pg_ctl = os.path.join(env_pf, 'PostgreSQL', '16', 'bin', 'pg_ctl.exe')
+@event.listens_for(Engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    """Settings for SQLite every time we open a connection."""
+    if USE_SQLITE:
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.execute("PRAGMA journal_mode=WAL")
+        cursor.close()
+
+        # Register custom regexp_replace function for SQLite
+        def regexp_replace(text, pattern, replacement, flags=""):
+            if text is None:
+                return ""
+            return re.sub(pattern, replacement, text)
+
+        HOW_MANY_ARGS = 4
+        dbapi_connection.create_function(
+            "regexp_replace", HOW_MANY_ARGS, regexp_replace)
+
+def start_db():
+    if USE_SQLITE:
+        return
+
+    env_pf = os.environ.get("ProgramFiles", r"C:\Program Files")
+    pg_ctl = os.path.join(env_pf, "PostgreSQL", "16", "bin", "pg_ctl.exe")
     data_dir = r"postgres_data"
     
     if not os.path.exists(pg_ctl):

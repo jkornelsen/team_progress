@@ -29,6 +29,11 @@ def create_app():
 
     app.config['SQLALCHEMY_DATABASE_URI'] = get_db_uri()
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        'connect_args': {
+            'timeout': 15
+        }
+    }
 
     app.config['UPLOAD_DIR'] = os.path.join(app.config['DATA_DIR'], 'uploads')
     app.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024

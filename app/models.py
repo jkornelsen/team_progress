@@ -1,7 +1,6 @@
 import logging
 from datetime import datetime
 from sqlalchemy import select, event as sa_event, inspect as sa_inspect
-from sqlalchemy.dialects.postgresql import ARRAY, NUMRANGE
 from .database import db
 
 logger = logging.getLogger(__name__)
@@ -134,7 +133,7 @@ class DictHydrator:
     @classmethod
     def from_dict(cls, data, game_token, **overrides):
         # Skip lists and dicts because they may be nested relationships,
-        # except for ARRAY DB column type.
+        # except for db.JSON column type.
         # Subclass from_dict() methods will need to handle skipped data.
         fields = {}
         if not isinstance(data, dict):
@@ -167,7 +166,8 @@ class DictHydrator:
         for k, v in data.items():
             if hasattr(cls, k):
                 column = cls.__table__.columns.get(k)
-                is_array_col = column is not None and isinstance(column.type, ARRAY)
+                is_array_col = column is not None and isinstance(
+                    column.type, db.JSON)
                 if not isinstance(v, (list, dict)) or is_array_col:
                     fields[k] = v
         
@@ -436,7 +436,7 @@ class Location(Entity):
     id = db.Column(db.Integer, primary_key=True)
     toplevel = db.Column(db.Boolean, default=False)
     masked = db.Column(db.Boolean, default=False)
-    dimensions = db.Column(ARRAY(db.Integer), default=None)
+    dimensions = db.Column(db.JSON(db.Integer), default=None)
     autobattle = db.Column(db.Boolean, default=False)
 
     def to_dict(self):
@@ -556,7 +556,7 @@ class Character(Entity):
     id = db.Column(db.Integer, primary_key=True)
     toplevel = db.Column(db.Boolean, default=False)
     party = db.Column(db.String(100))
-    position = db.Column(ARRAY(db.Integer), default=None)
+    position = db.Column(db.JSON(db.Integer), default=None)
     location_id = db.Column(db.Integer)
 
     def to_dict(self):
@@ -770,7 +770,7 @@ class Event(Entity):
     outcome_type = db.Column(
         db.String(20), nullable=False, default=OutcomeType.FOURWAY)
     roller_type = db.Column(db.String(20))
-    numeric_range = db.Column(ARRAY(db.Integer)) # [min, max]
+    numeric_range = db.Column(db.JSON(db.Integer)) # [min, max]
     fixed_base = db.Column(db.Float, default=0.0)
     selection_attrib_id = db.Column(db.Integer)
     party_targeting = db.Column(db.String(20), default=PartyTarget.ANY)
@@ -879,14 +879,14 @@ class Pile(db.Model, DictHydrator):
     * or neither; the general pile of that Item
     """
     __tablename__ = 'piles'
-    # Single Primary Key: Postgres handles autoincrement globally without drama
+    # Single Primary Key: db handles autoincrement globally without drama
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     # Still important for foreign keys
     game_token = db.Column(db.String(50), index=True, nullable=False)
     owner_id = db.Column(db.Integer, nullable=False)
     item_id = db.Column(db.Integer, nullable=False)
     # Not relevant for universal storage
-    position = db.Column(ARRAY(db.Integer), default=None)
+    position = db.Column(db.JSON(db.Integer), default=None)
     quantity = db.Column(db.Float, nullable=False, default=0.0)
     slot_id = db.Column(db.Integer)
 
@@ -975,13 +975,15 @@ class Pile(db.Model, DictHydrator):
     __table_args__ = (
         # Ensure uniqueness depending on whether position is NULL
         db.Index('idx_pile_unpositioned_unique', 
-              'game_token', 'owner_id', 'item_id',
-              unique=True,
-              postgresql_where=(db.column('position').is_(None))),
+            'game_token', 'owner_id', 'item_id',
+            unique=True,
+            sqlite_where=(db.column('position').is_(None)),
+            postgresql_where=(db.column('position').is_(None))),
         db.Index('idx_pile_positioned_unique', 
-              'game_token', 'owner_id', 'item_id', 'position',
-              unique=True,
-              postgresql_where=(db.column('position').is_not(None))),
+            'game_token', 'owner_id', 'item_id', 'position',
+            unique=True,
+            sqlite_where=(db.column('position').is_not(None)),
+            postgresql_where=(db.column('position').is_not(None))),
         # Define foreign keys in the "child" side of relationships
         db.ForeignKeyConstraint(
             ['game_token', 'owner_id'],
@@ -1148,8 +1150,8 @@ class LocDest(db.Model, DictHydrator):
     game_token = db.Column(db.String(50), index=True, nullable=False)
     loc1_id = db.Column(db.Integer, nullable=False)
     loc2_id = db.Column(db.Integer, nullable=False)
-    door1 = db.Column(ARRAY(db.Integer))
-    door2 = db.Column(ARRAY(db.Integer))
+    door1 = db.Column(db.JSON(db.Integer))
+    door2 = db.Column(db.JSON(db.Integer))
     direction = db.Column(db.String(4), default=DestExit.BOTH)
 
     def to_dict(self):
@@ -1208,7 +1210,7 @@ class LocZone(db.Model, DictHydrator):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     game_token = db.Column(db.String(50), index=True, nullable=False)
     loc_id = db.Column(db.Integer, nullable=False)
-    coords = db.Column(ARRAY(db.Integer), nullable=False) # l,t,r,b
+    coords = db.Column(db.JSON(db.Integer), nullable=False) # l,t,r,b
     
     label = db.Column(db.String(100))
     color = db.Column(db.String(20)) # e.g. "rgba(255,0,0,0.2)" or "#330000"
@@ -2021,7 +2023,7 @@ class Progress(db.Model, DictHydrator):
     host_id = db.Column(db.Integer, nullable=False)
     char_id = db.Column(db.Integer)
     loc_id = db.Column(db.Integer)
-    position = db.Column(ARRAY(db.Integer), default=None)
+    position = db.Column(db.JSON(db.Integer), default=None)
     
     # status
     start_time = db.Column(db.DateTime)
