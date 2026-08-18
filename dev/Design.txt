@@ -64,20 +64,14 @@ tethered one
 
 ---- tests ----
 
-try selenium to test client side
-
 ---- server and sharing ----
 
-hosting possibilities:
-Pythonanywhere should be able to host postgres and flask web app.
-https://www.reddit.com/r/flask/comments/12beskr/free_hosting_sites_compatible_with_flask/
-render.com is an alternative.
-
 delete data based on user_interactions timestamp
-psql -d app -c "DELETE FROM your_table WHERE created_at < NOW() - INTERVAL '4 days';"
+    psql -d app -c "DELETE FROM your_table WHERE created_at < NOW() - INTERVAL '4 days';"
+    if we can't run a cron job then maybe check on scenario load or once per session hour
 
 consider sharing community scenarios
-perhaps submit to reddit, or github via pull requests
+    perhaps submit to reddit, or github via pull requests
 ask for feedback about:
     do you appreciate the ability to change everything or would you prefer to avoid configuration pages as much as possible
     which scenarios would you like to see developed further

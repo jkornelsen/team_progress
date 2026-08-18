@@ -620,6 +620,8 @@ const recipeMetadata = {
 
 // Heartbeat tick
 
+let serverTimeOffset = 0; 
+
 async function updateStatus() {
     // 1. Build route form data
     const fd = new FormData();
@@ -644,6 +646,12 @@ async function updateStatus() {
     }
 
     const main = data.main;
+
+    if (main.server_now) {
+        const serverMillis = new Date(main.server_now).getTime();
+        const localMillis = Date.now();
+        serverTimeOffset = serverMillis - localMillis;
+    }
 
     // 4. Update Main Quantity Display
     if (main.quantity !== undefined) {
@@ -963,11 +971,12 @@ function animateProgress(recipeId, serverStart, durationSec) {
     const durationMs = durationSec * 1000;
 
     function frame() {
-        const now = Date.now();
+        const now = Date.now() + serverTimeOffset;
         const elapsedMs = now - startTimeMs;
         
         const elapsedInCurrentBatch = elapsedMs % durationMs;
-        let percent = Math.min((elapsedInCurrentBatch / durationMs) * 100, 100);
+        let percent = Math.max(0, (elapsedInCurrentBatch / durationMs) * 100);
+        percent = Math.min(percent, 100);
 
         if (percent >= 99) {
             percent = 100

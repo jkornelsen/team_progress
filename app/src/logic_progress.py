@@ -166,7 +166,7 @@ def get_elapsed_seconds(progress):
         return 0.0
     
     # Use naive datetime for comparison (consistent with DB storage)
-    now = datetime.now()
+    now = datetime.now(timezone.utc)
     start = progress.start_time
     
     # Handle both naive and timezone-aware start times by stripping timezone if present
@@ -234,7 +234,7 @@ def start_production(host_id, recipe_id, owner_id, ctx, stop_at=None):
     else:
         progress.stop_at = stop_at
 
-    progress.start_time = datetime.now()
+    progress.start_time = datetime.now(timezone.utc)
     progress.batches_processed = 0
     
     db.session.commit()

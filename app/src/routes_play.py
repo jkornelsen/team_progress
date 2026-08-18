@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 import logging
 import json
 from flask import (
@@ -268,7 +269,7 @@ def play_character(id):
     if move_party is not None:
         session['travel_with_party'] = move_party
     else:
-        move_party = session['travel_with_party']
+        move_party = session.get('travel_with_party')
     session['old_char_id'] = id
     session['grid_driver_id'] = id
     session.pop('old_loc_id', None)
@@ -672,7 +673,9 @@ def item_production_status(item_id, owner_id):
             "is_ongoing": len(all_progs) > 0,
             "active_recipe_id": active_prog.recipe_id if active_prog else None,
             "active_host_id": active_prog.host_id if active_prog else None,
-            "start_time": active_prog.start_time.isoformat() if active_prog else None,
+            "start_time": active_prog.start_time.replace(
+                tzinfo=timezone.utc).isoformat() if active_prog else None,
+            "server_now": datetime.now(timezone.utc).isoformat(),
             "rate_duration": active_prog.recipe.rate_duration if active_prog else None,
             "stop_at": active_prog.stop_at if active_prog else None
         },
