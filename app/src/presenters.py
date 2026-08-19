@@ -367,5 +367,5 @@ class ItemPlayPresenter:
                     subject_id=self.item_id).all(),
                 lambda p: p.attrib),
             "has_masked_dependents": has_masked_dependents,
-            "link_letters": LinkLetters(excluded='moedpPqrg')
+            "link_letters": LinkLetters(excluded='uoedpPqrg')
         }

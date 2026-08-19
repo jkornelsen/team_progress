@@ -36,18 +36,17 @@
    ========================================================================= #}
 
 <div>
-    <h1>Scenario Settings & Objectives</h1>
+    <h1>Configure Scenario</h1>
     
     <form method="POST">
         <!-- 1. Basic Metadata -->
         <section class="outer-border">
-            <h3>Scenario Identity</h3>
             <div class="form-group">
-                <label for="title">Scenario Title:</label>
+                <label for="title">Title:</label>
                 <input type="text" id="title" name="title" value="{{ scenario.title }}" required class="full-width themed-input">
             </div>
             <div class="form-group spacious-top">
-                <label for="description">Introductory Description:</label>
+                <label for="description">Description:</label>
                 <textarea id="description" name="description" rows="5" class="full-width themed-input">{{ scenario.description }}</textarea>
             </div>
         </section>

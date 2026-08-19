@@ -41,7 +41,7 @@
    ========================================================================= #}
 
 <div class="configure-item">
-    <h1>Item Setup</h1>
+    <h1>Configure Item</h1>
     <p class="info">
         Resources, equipment, and information such as upgrades, progress, and dialogue.
         Often produced using recipes.
@@ -65,32 +65,25 @@
 
         <!-- 2. Logic & Storage (Item Table) -->
         <section class="outer-border">
-            <p class="info">
-                <b>Carried</b> items can be picked up by characters,
-                <b>Local</b> crafting stations are immovable,
-                and <b>Universal</b> means shared globally rather than tied to a location.
-
-                To store more than one way, create an additional item
-                and convert with a recipe.
-                For example,
-                <i>funds</i> in the bank (universal) &rarr; <i>cash</i> on hand (carried).
-            </p>
             <div class="column-container">
                 <fieldset class="group-box">
                     <legend>Storage Type</legend>
-                    <label class="radio-label">
+                    <label class="radio-label"
+                            title="Shared globally rather than tied to a location">
                         <input type="radio" name="storage_type"
                             value="{{ StorageType.UNIVERSAL }}"
                             {{ 'checked' if item.storage_type == StorageType.UNIVERSAL }}> 
                         Universal &mdash; Accessible Anywhere
                     </label><br>
-                    <label class="radio-label">
+                    <label class="radio-label"
+                            title="Can be picked up by characters">
                         <input type="radio" name="storage_type"
                             value="{{ StorageType.CARRIED }}"
                             {{ 'checked' if item.storage_type == StorageType.CARRIED }}> 
                         Carried &mdash; Inventory Based
                     </label><br>
-                    <label class="radio-label">
+                    <label class="radio-label"
+                            title="Immovable, like crafting stations">
                         <input type="radio" name="storage_type"
                             value="{{ StorageType.LOCAL }}"
                             {{ 'checked' if item.storage_type == StorageType.LOCAL }}> 
@@ -188,10 +181,11 @@
 
         <!-- 4. Attributes -->
         <section class="outer-border">
-            {% if all_attribs %}
             <div class="flex-between">
                 <h3>Attributes</h3>
-                <button type="button" class="btn-sm" onclick="ConfigEditor.addRow('attrib-list', 'attrib-template')">+ Add Attribute</button>
+                {% if all_attribs %}
+                    <button type="button" class="btn-sm" onclick="ConfigEditor.addRow('attrib-list', 'attrib-template')">+ Add Attribute</button>
+                {% endif %}
             </div>
             <div id="attrib-list" class="col-list spacious-top {{ 'hidden' if not item.attrib_values }}">
                 <style>.item-attrib-row { --grid-cols: 6fr 6fr 1fr; }</style>
@@ -218,9 +212,9 @@
                     </div>
                 {% endfor %}
             </div>
-            {% else %}
-                <div style="font-style: italic">(No attributes)</div>
-            {% endif %}
+            <div id="attrib-list-empty" class="no-entities {{ 'hidden' if item.attrib_values }}">
+                (No attributes)
+            </div>
         </section>
 
         <!-- 5. Item Events -->
@@ -243,6 +237,9 @@
                         <button type="button" class="btn-sm dangerous-button" onclick="ConfigEditor.removeRow(this, 'ability-list')">×</button>
                     </div>
                 {% endfor %}
+            </div>
+            <div id="ability-list-empty" class="no-entities {{ 'hidden' if item.abilities }}">
+                (No events)
             </div>
         </section>
 

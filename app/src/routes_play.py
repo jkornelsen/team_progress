@@ -88,7 +88,7 @@ def overview():
         scenario=scenario,
         win_reqs=enriched_win_reqs,
         all_requirements_met=all_met,
-        link_letters=LinkLetters(excluded='m'),
+        link_letters=LinkLetters(excluded='u'),
         messages=messages
     )
 
@@ -255,7 +255,7 @@ def play_location(id):
         ctx_char=current_char,
         active_char_id=active_char_id,
         travel_with_party=session.get('travel_with_party', False),
-        link_letters=LinkLetters(excluded='ctmoedwu')
+        link_letters=LinkLetters(excluded='ouectdwu')
     )
 
 @play_bp.route('/play/char/<int:id>')
@@ -322,7 +322,7 @@ def play_character(id):
         party_members=party_members,
         travel_with_party=move_party,
         producing_ids=items_owned_in_production,
-        link_letters=LinkLetters(excluded='gltmoew')
+        link_letters=LinkLetters(excluded='ouegltw')
     )
 
 @play_bp.route('/char/<int:id>/drop', methods=['POST'])
@@ -845,7 +845,7 @@ def play_attrib(attrib_id, subject_id):
         attrib_value=val_record,
         items_requiring_this=items_requiring_this,
         events_using_this=events_using_this,
-        link_letters=LinkLetters(excluded='moesct'))
+        link_letters=LinkLetters(excluded='ouesct'))
 
 # ------------------------------------------------------------------------
 # Events
@@ -1115,7 +1115,7 @@ def play_event(id):
         SuccessTier=SuccessTier,
         Participant=Participant,
         Operation=Operation,
-        link_letters=LinkLetters(excluded='moeraijk')
+        link_letters=LinkLetters(excluded='oueraijk')
     )
 
 @play_bp.route('/event/preview/<int:id>', methods=['POST'])
@@ -1223,7 +1223,7 @@ def play_autobattle(loc_id):
         location=location,
         parties=parties,
         messages=get_chronicle(12),
-        link_letters=LinkLetters(excluded='srmoe'),
+        link_letters=LinkLetters(excluded='ouesr'),
         AutobattleStage=AutobattleStage
     )
 

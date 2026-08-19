@@ -87,7 +87,7 @@ def browse_scenarios():
         'session/scenarios.html', 
         scenarios=scenarios, 
         sort_by=sort_by,
-        link_letters=LinkLetters(excluded='om')
+        link_letters=LinkLetters(excluded='ou')
     )
 
 @session_bp.route('/save')

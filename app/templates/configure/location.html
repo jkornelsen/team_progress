@@ -47,7 +47,7 @@
    ========================================================================= #}
 
 <div class="configure-location">
-    <h1>Location Setup</h1>
+    <h1>Configure Location</h1>
         <p class="info">
             Area or container where items and characters can be.
             May be subdivided into a grid with position 1,1 as the upper-left corner.
@@ -193,7 +193,7 @@
                 <h3>Zones</h3>
                 <button type="button" class="btn-sm"
                     onclick="ConfigEditor.addRow('zone-list', 'zone-template',
-                    () => doZone('renumberRows'))">+ Add Zone</button>
+                    () => adjustZone('renumberRows'))">+ Add Zone</button>
             </div>
             <style>
                 .zone-row { --grid-cols: 2fr 2fr 2fr 1fr 3fr 3fr; }
@@ -245,6 +245,9 @@
                 {% for req in location.entrance_reqs %}
                     {{ req_row(loop.index0, req) }}
                 {% endfor %}
+            </div>
+            <div id="entrance-req-list-empty" class="no-entities {{ 'hidden' if location.entrance_reqs }}">
+                (No requirements)
             </div>
         </section>
 

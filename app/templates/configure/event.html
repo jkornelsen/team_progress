@@ -41,7 +41,7 @@
    ========================================================================= #}
 
 <div class="configure-event" data-lpignore="true">
-    <h1>Event Setup</h1>
+    <h1>Configure Event</h1>
     <p class="info">
         Chance or magnitude of something happening, such as
         landing a certain type of attack.
@@ -239,7 +239,7 @@
                 {% endfor %}
             </div>
             <div id="det-list-empty" class="no-entities {{ 'hidden' if event.determinants }}">
-                (No modifiers set for this event)
+                (No modifiers)
             </div>
         </section>
 
@@ -261,7 +261,7 @@
                 {% endfor %}
             </div>
             <div id="eff-list-empty" class="no-entities {{ 'hidden' if event.effects }}">
-                (No effects set for this event)
+                (No effects)
             </div>
         </section>
 
@@ -275,6 +275,9 @@
                 {% for link in event.chained %}
                     {{ chained_card(loop.index0, link) }}
                 {% endfor %}
+            </div>
+            <div id="chained-list-empty" class="no-entities {{ 'hidden' if event.chained }}">
+                (No follow-up events)
             </div>
         </section>
 

@@ -36,7 +36,7 @@
     {{ fixed_text(url_for('play.overview'), bracket('o') ~ 'verview', 'o') }}
 {%- endmacro %}
 {% macro page_main_setup() -%}
-    {{ fixed_text(url_for('configure.index'), bracket('m') ~ 'ain setup', 'm') }}
+    {{ fixed_text(url_for('configure.index'), 'set' ~ bracket('u') ~ 'p', 'u') }}
 {%- endmacro %}
 
 {% macro submit(index, link_letters, label="Submit", forced_key=None, showLetter=True) -%}

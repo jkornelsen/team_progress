@@ -232,10 +232,14 @@ class LinkLetters:
 
     Caches links to ensure the same URL gets the same hotkey on one page.
     """
-    def __init__(self, excluded='om'): # 'o' (overview) and 'm' (main setup)
+    def __init__(self, excluded='ou'): # 'o' (overview) and 'u' (setup)
         self.index = 0
-        self.alphabet = [chr(i) for i in range(ord('a'), ord('z')+1) if chr(i) not in excluded]
-        self.alphabet += [chr(i) for i in range(ord('A'), ord('Z')+1)] # Add capitals as fallback
+        self.alphabet = [
+            chr(i) for i in range(ord('a'), ord('z')+1)
+            if chr(i) not in excluded]
+        self.alphabet += [
+            chr(i) for i in range(ord('A'), ord('Z')+1)
+            if chr(i) not in excluded]
         self.links = {} # URL -> Letter cache
 
     def next(self, link=None):

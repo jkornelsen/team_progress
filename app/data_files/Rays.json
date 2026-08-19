@@ -6,7 +6,7 @@
             {"item_id": 13, "quantity": 1.0, "loc_id": 43, "attrib_value": 0.0}
         ],
         "tag_introduce_order": 20,
-        "tag_best_order": 3,
+        "tag_best_order": 5,
         "tag_progress_type": "Idle",
         "tag_complete": "10 Polished"
     },
@@ -1044,9 +1044,14 @@
                 "name": "Recipe Durations",
                 "description": "After choosing the **{lemonchiffon|BSF}**, set the **Duration Multiplier**. \r\n\r\nThen, press *Resolve* and *Apply All*.",
                 "outcome_type": "determined",
+                "determinants": [
+                    {
+                        "infield": {"attrib_id": 53}
+                    }
+                ],
                 "effects": [
                     {
-                        "infield": {"attrib_id": 53},
+                        "get_val_from": "outcome",
                         "outfield": {
                             "role": "preselected",
                             "field_mode": "rate_dur",
@@ -1058,7 +1063,7 @@
                         "val_transform": 12.0
                     },
                     {
-                        "infield": {"attrib_id": 53},
+                        "get_val_from": "outcome",
                         "outfield": {
                             "role": "preselected",
                             "field_mode": "rate_dur",
@@ -1070,7 +1075,7 @@
                         "val_transform": 12.0
                     },
                     {
-                        "infield": {"attrib_id": 53},
+                        "get_val_from": "outcome",
                         "outfield": {
                             "role": "preselected",
                             "field_mode": "rate_dur",
@@ -1082,7 +1087,7 @@
                         "val_transform": 12.0
                     },
                     {
-                        "infield": {"attrib_id": 53},
+                        "get_val_from": "outcome",
                         "outfield": {
                             "role": "preselected",
                             "field_mode": "rate_dur",
@@ -1094,7 +1099,7 @@
                         "val_transform": 12.0
                     },
                     {
-                        "infield": {"attrib_id": 53},
+                        "get_val_from": "outcome",
                         "outfield": {
                             "role": "preselected",
                             "field_mode": "rate_dur",
@@ -1106,7 +1111,7 @@
                         "val_transform": 12.0
                     },
                     {
-                        "infield": {"attrib_id": 53},
+                        "get_val_from": "outcome",
                         "outfield": {
                             "role": "preselected",
                             "field_mode": "rate_dur",
@@ -1118,7 +1123,7 @@
                         "val_transform": 12.0
                     },
                     {
-                        "infield": {"attrib_id": 53},
+                        "get_val_from": "outcome",
                         "outfield": {
                             "role": "preselected",
                             "field_mode": "rate_dur",
@@ -1130,7 +1135,7 @@
                         "val_transform": 12.0
                     },
                     {
-                        "infield": {"attrib_id": 53},
+                        "get_val_from": "outcome",
                         "outfield": {
                             "role": "preselected",
                             "field_mode": "rate_dur",
@@ -1142,7 +1147,7 @@
                         "val_transform": 14.0
                     },
                     {
-                        "infield": {"attrib_id": 53},
+                        "get_val_from": "outcome",
                         "outfield": {
                             "role": "preselected",
                             "field_mode": "rate_dur",
@@ -1154,7 +1159,7 @@
                         "val_transform": 14.0
                     },
                     {
-                        "infield": {"attrib_id": 53},
+                        "get_val_from": "outcome",
                         "outfield": {
                             "role": "preselected",
                             "field_mode": "rate_dur",
@@ -1166,7 +1171,7 @@
                         "val_transform": 14.0
                     },
                     {
-                        "infield": {"attrib_id": 53},
+                        "get_val_from": "outcome",
                         "outfield": {
                             "role": "preselected",
                             "field_mode": "rate_dur",
@@ -1178,7 +1183,7 @@
                         "val_transform": 15.0
                     },
                     {
-                        "infield": {"attrib_id": 53},
+                        "get_val_from": "outcome",
                         "outfield": {
                             "role": "preselected",
                             "field_mode": "rate_dur",
@@ -1190,7 +1195,7 @@
                         "val_transform": 15.0
                     },
                     {
-                        "infield": {"attrib_id": 53},
+                        "get_val_from": "outcome",
                         "outfield": {
                             "role": "preselected",
                             "field_mode": "rate_dur",
@@ -1202,7 +1207,7 @@
                         "val_transform": 15.0
                     },
                     {
-                        "infield": {"attrib_id": 53},
+                        "get_val_from": "outcome",
                         "outfield": {
                             "role": "preselected",
                             "field_mode": "rate_dur",
@@ -1214,7 +1219,7 @@
                         "val_transform": 15.0
                     },
                     {
-                        "infield": {"attrib_id": 53},
+                        "get_val_from": "outcome",
                         "outfield": {
                             "role": "preselected",
                             "field_mode": "rate_dur",
@@ -1226,7 +1231,7 @@
                         "val_transform": 15.0
                     },
                     {
-                        "infield": {"attrib_id": 53},
+                        "get_val_from": "outcome",
                         "outfield": {
                             "role": "preselected",
                             "field_mode": "rate_dur",
@@ -1238,7 +1243,7 @@
                         "val_transform": 10.0
                     },
                     {
-                        "infield": {"attrib_id": 53},
+                        "get_val_from": "outcome",
                         "outfield": {
                             "role": "preselected",
                             "field_mode": "rate_dur",
@@ -1250,7 +1255,7 @@
                         "val_transform": 10.0
                     },
                     {
-                        "infield": {"attrib_id": 53},
+                        "get_val_from": "outcome",
                         "outfield": {
                             "role": "preselected",
                             "field_mode": "rate_dur",
@@ -1262,7 +1267,7 @@
                         "val_transform": 15.0
                     },
                     {
-                        "infield": {"attrib_id": 53},
+                        "get_val_from": "outcome",
                         "outfield": {
                             "role": "preselected",
                             "field_mode": "rate_dur",
@@ -1274,7 +1279,7 @@
                         "val_transform": 300.0
                     },
                     {
-                        "infield": {"attrib_id": 53},
+                        "get_val_from": "outcome",
                         "outfield": {
                             "role": "preselected",
                             "field_mode": "rate_dur",
@@ -1286,7 +1291,7 @@
                         "val_transform": 180.0
                     },
                     {
-                        "infield": {"attrib_id": 53},
+                        "get_val_from": "outcome",
                         "outfield": {
                             "role": "preselected",
                             "field_mode": "rate_dur",
@@ -1298,7 +1303,7 @@
                         "val_transform": 600.0
                     },
                     {
-                        "infield": {"attrib_id": 53},
+                        "get_val_from": "outcome",
                         "outfield": {
                             "role": "preselected",
                             "field_mode": "rate_dur",
@@ -1310,7 +1315,7 @@
                         "val_transform": 120.0
                     },
                     {
-                        "infield": {"attrib_id": 53},
+                        "get_val_from": "outcome",
                         "outfield": {"field_mode": "rate_dur", "item_id": 35, "recipe_id": 94},
                         "op_application": ":=",
                         "op_transform": "*",
