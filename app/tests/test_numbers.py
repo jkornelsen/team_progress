@@ -39,8 +39,8 @@ class TestNumberUtilities(BaseTestCase):
         # Default en_US
         self.assertEqual(format_num(1234.56, "en_US"), "1,234.56")
         self.assertEqual(format_num(1000000, "en_US"), "1,000,000")
-        
-        # Note: 'de_DE' behavior depends on system locale availability, 
+
+        # Note: 'de_DE' behavior depends on system locale availability,
         # but the utility falls back to 'C' (1234.56) if missing.
 
     def test_unformatting(self):
@@ -48,11 +48,11 @@ class TestNumberUtilities(BaseTestCase):
         # Standard
         self.assertEqual(unformat_num("100"), 100.0)
         self.assertEqual(unformat_num("1,234.56"), 1234.56)
-        
+
         # Scientific
         self.assertEqual(unformat_num("1.23e6"), 1230000.0)
         self.assertEqual(unformat_num("1.23e-4"), 0.000123)
-        
+
         # Abbreviated
         self.assertEqual(unformat_num("1k"), 1000.0)
         self.assertEqual(unformat_num("1.5m"), 1500000.0)
@@ -67,12 +67,12 @@ class TestNumberUtilities(BaseTestCase):
     def test_round_trip(self):
         """Verify that formatting and then unformatting returns the same value."""
         original_val = 1500000.0
-        
+
         # Test Abbreviated round-trip
         formatted = format_num(original_val, "abbr") # "1.50m"
         result = unformat_num(formatted)
         self.assertEqual(original_val, result)
-        
+
         # Test Scientific round-trip
         formatted_sci = format_num(original_val, "sci") # "1.50e6"
         result_sci = unformat_num(formatted_sci)

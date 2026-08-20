@@ -5,8 +5,8 @@
 # Then run for example: pylint src.item
 #
 $scriptDir = Split-Path -Path $MyInvocation.MyCommand.Definition -Parent
-$appDir = Join-Path -Path $scriptDir -ChildPath ".."
-$workingDir = Join-Path -Path $appDir -ChildPath "app"
+$appDir = Join-Path -Path $scriptDir -ChildPath "../.."
+$workingDir = $appDir
 $workingDir = $workingDir.Replace(' ', '` ')
 $pylintrc = Join-Path -Path $scriptDir -ChildPath "pylintrc"
 

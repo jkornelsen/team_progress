@@ -1,16 +1,13 @@
 import math
 import logging
 from datetime import datetime, timezone
-from flask import g, session
-from sqlalchemy import text
 import zlib
+from flask import g
+from sqlalchemy import text
 from app.models import (
-    db, Entity, Item, Location, Character, Pile, Progress,
-    Recipe, RecipeSource, RecipeByproduct, AttribVal,
-    GENERAL_ID, StorageType)
+    db, Entity, Location, Character, Progress, Recipe)
 from app.utils import ContextIds
 from app.database import USE_SQLITE
-from .logic_piles import adjust_quantity
 from .logic_production import can_perform_recipe, execute_production, STALLED
 from .logic_user_interaction import add_message
 
@@ -19,8 +16,8 @@ logger = logging.getLogger(__name__)
 def tick_all_active(messages_host_id=None):
     """
     Ticks every active production record in the current game session.
-    
-    - messages_host_id: If provided, returns a list of halt 
+
+    - messages_host_id: If provided, returns a list of halt
       reasons specifically for this host.
     """
     game_token = g.game_token
@@ -34,14 +31,14 @@ def tick_all_active(messages_host_id=None):
         lock_id = zlib.adler32(game_token.encode())
         try:
             db.session.execute(
-                text("SELECT pg_advisory_xact_lock(:id)"), 
+                text("SELECT pg_advisory_xact_lock(:id)"),
                 {"id": lock_id}
             )
         except Exception as e:
             logger.exception(e)
 
     all_active_records = Progress.query.filter_by(game_token=game_token).all()
-    
+
     # --- PHASE 1: PREPARATION ---
     CHUNK_SIZE = 8
     work_items = []
@@ -50,18 +47,20 @@ def tick_all_active(messages_host_id=None):
     for p in all_active_records:
         recipe = p.recipe
         if not recipe:
-            logger.warning(f"No Recipe for Progress {p.id} found. Deleting.")
+            logger.warning(
+                "No Recipe for Progress %s found. Deleting.", p.id)
             db.session.delete(p)
             continue
         if recipe.instant:
-            logger.warning(f"Progress {p.id} points to instant recipe {recipe.id}.")
+            logger.warning(
+                "Progress %s points to instant recipe %s.", p.id, recipe.id)
             continue
 
         # Find the time debt
         elapsed = get_elapsed_seconds(p)
         total_potential = math.floor(elapsed / recipe.rate_duration)
         new_batches = total_potential - p.batches_processed
-        
+
         if new_batches > 0:
             catchup_seconds = new_batches * recipe.rate_duration
             max_catchup_time = max(max_catchup_time, catchup_seconds)
@@ -74,9 +73,9 @@ def tick_all_active(messages_host_id=None):
                 'catching_up': new_batches > 2,
                 'halt_reason': None,
                 'ctx': ContextIds(
-                    owner_id=p.owner_id, 
-                    host_id=p.host_id, 
-                    char_id=p.char_id, 
+                    owner_id=p.owner_id,
+                    host_id=p.host_id,
+                    char_id=p.char_id,
                     loc_id=p.loc_id,
                     position=p.position
                 )
@@ -84,9 +83,9 @@ def tick_all_active(messages_host_id=None):
 
     # --- PHASE 2: THE INTERLEAVED WAVES ---
     # We do an extra wave to allow dependencies to catch up
-    for wave in range(CHUNK_SIZE + 1):
+    for _wave in range(CHUNK_SIZE + 1):
         any_work_done_this_wave = False
-        
+
         for work in work_items:
             # Skip if already finished or halted
             if work['total_remaining'] <= 0 or work['halt_reason']:
@@ -94,27 +93,27 @@ def tick_all_active(messages_host_id=None):
 
             # Determine size of this chunk
             to_do = min(work['chunk_size'], work['total_remaining'])
-            
+
             # Make the change
             p = work['progress']
             actual, reason = execute_production(
-                p.host_id, 
-                work['recipe'], 
-                p.owner_id, 
-                work['ctx'], 
+                p.host_id,
+                work['recipe'],
+                p.owner_id,
+                work['ctx'],
                 batches=to_do,
                 catching_up=work['catching_up'],
                 stop_at=p.stop_at
             )
-            
+
             # Update tracking
             work['total_remaining'] -= actual
             p.batches_processed += actual
-            
+
             if actual > 0:
                 any_work_done_this_wave = True
-            elif reason == "Stalled":
-                logger.debug(f"Item {work['recipe'].product_id} waiting.")
+            elif reason == STALLED:
+                logger.debug("Item %s waiting.", work['recipe'].product_id)
             elif reason:
                 # If it halted, record why
                 work['halt_reason'] = reason
@@ -134,7 +133,7 @@ def tick_all_active(messages_host_id=None):
     for work in work_items:
         p = work['progress']
         halt_reason = work['halt_reason']
-        
+
         # Check future viability
         if not halt_reason:
             possible, reason = can_perform_recipe(
@@ -148,9 +147,9 @@ def tick_all_active(messages_host_id=None):
             # Capture needed data into local variables while p is still valid
             prod_name = p.product.name if p.product else "Unknown Item"
             p_host_id = p.host_id
-            p_id = p.id
             stop_msg = f"Production of {prod_name} halted: {halt_reason}"
-            logger.info(f"[PRODUCTION STOPPED] Host:{p_host_id} | {stop_msg}")
+            logger.info(
+                "[PRODUCTION STOPPED] Host:%s | %s", p_host_id, stop_msg)
             add_message(stop_msg)
             if p_host_id == messages_host_id:
                 halt_messages.append(halt_reason)
@@ -164,19 +163,21 @@ def get_elapsed_seconds(progress):
     """Calculates seconds since production started or last update."""
     if not progress.start_time:
         return 0.0
-    
+
     # Use naive datetime for comparison (consistent with DB storage)
     now = datetime.now(timezone.utc)
     start = progress.start_time
-    
+
     # Handle both naive and timezone-aware start times by stripping timezone if present
     if start.tzinfo is not None:
         start = start.replace(tzinfo=None)
     if now.tzinfo is not None:
         now = now.replace(tzinfo=None)
-    
+
     elapsed_seconds = (now - start).total_seconds()
-    logger.debug(f"get_elapsed_seconds: now={now}, start={start}, elapsed={elapsed_seconds}s")
+    logger.debug(
+        "get_elapsed_seconds: now=%s, start=%s, elapsed=%ss",
+        now, start, elapsed_seconds)
     return elapsed_seconds
 
 def start_production(host_id, recipe_id, owner_id, ctx, stop_at=None):
@@ -184,7 +185,7 @@ def start_production(host_id, recipe_id, owner_id, ctx, stop_at=None):
     game_token = g.game_token
     recipe = db.session.get(Recipe, (game_token, recipe_id))
     host_entity = db.session.get(Entity, (game_token, host_id))
-    
+
     # Check if we can even start the first batch
     possible, reason = can_perform_recipe(
         host_id, recipe, owner_id, ctx)
@@ -205,7 +206,7 @@ def start_production(host_id, recipe_id, owner_id, ctx, stop_at=None):
         # Concurrent: General and Location can host one job per product
         active_job = Progress.query.filter_by(
             game_token=game_token,
-            host_id=host_id, 
+            host_id=host_id,
             product_id=recipe.product_id
         ).first()
         if active_job:
@@ -236,7 +237,7 @@ def start_production(host_id, recipe_id, owner_id, ctx, stop_at=None):
 
     progress.start_time = datetime.now(timezone.utc)
     progress.batches_processed = 0
-    
+
     db.session.commit()
     return True, "Production started."
 

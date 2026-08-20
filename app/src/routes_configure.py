@@ -1,14 +1,12 @@
-from flask import (
-    Blueprint, request, session, flash, redirect, url_for, render_template,
-    g, jsonify)
 from http import HTTPStatus
-import json
 import logging
 import re
+from flask import (
+    g, Blueprint, request, flash, redirect, url_for, render_template)
 from sqlalchemy import select, delete, or_
 from app.models import (
     GENERAL_ID, EQUIPMENT_SLOTS_ID, StorageType, ENTITIES, db,
-    Entity, Item, Character, Location, Attrib, Event, 
+    Entity, Item, Character, Location, Attrib, Event,
     Pile, ItemLimit, AttribVal, EnumEntry, Operation, EntityAbility,
     Recipe, RecipeSource, RecipeByproduct, RecipeAttribReq,
     DestExit, LocDest, LocZone, EntranceReq, ItemRef,
@@ -18,7 +16,7 @@ from app.models import (
     Scenario, WinRequirement, IdSequence)
 from app.serialization import clone_entity
 from app.utils import (
-    LinkLetters, RequestHelper, parse_coords,
+    RequestHelper, parse_coords,
     capture_origin, redirect_back, name_stripped, sort_by_name_stripped)
 from .logic_discovery import run_discovery_scan
 from .logic_navigation import all_parties
@@ -40,7 +38,7 @@ def index():
         name: model.query.filter_by(game_token=g.game_token).order_by(name_stripped()).all()
         for name, model in ENTITIES.items()
     }
-    
+
     return render_template(
         'configure/index.html',
         **entities
@@ -60,14 +58,14 @@ def edit_scenario():
         req = RequestHelper('form')
         scenario.title = req.get_str('title', scenario.title)
         scenario.description = req.get_str('description')
-        
+
         use_slots = req.get_bool('use_slots')
         if use_slots:
             if not slots_attrib:
                 # Create the reserved attribute with defaults
                 slots_attrib = Attrib(
                     id=EQUIPMENT_SLOTS_ID,
-                    game_token=game_token, 
+                    game_token=game_token,
                     name="Equipment Slots",
                     description="Equipment slots for characters."
                 )
@@ -101,7 +99,7 @@ def edit_scenario():
                 game_token=game_token,
                 order_index=idx
             )
-            
+
             # Resolve target
             if target_id:
                 target = db.session.get(Entity, (game_token, target_id))
@@ -117,9 +115,9 @@ def edit_scenario():
                 if owner:
                     if owner.entity_type == Location.TYPENAME:
                         new_req.loc_id = owner_id
-                    elif owner.entity_type == Character.TYPENAME:
-                        if not new_req.char_id:
-                            new_req.char_id = owner_id
+                    elif owner.entity_type == Character.TYPENAME \
+                            and not new_req.char_id:
+                        new_req.char_id = owner_id
 
             # Resolve field
             if attrib_id:
@@ -132,7 +130,7 @@ def edit_scenario():
 
         db.session.commit()
         return redirect_back('configure.index')
-        
+
     entities = {
         name: model.query.filter_by(
             game_token=game_token).order_by(name_stripped()).all()
@@ -171,10 +169,10 @@ def edit_item(id):
         if item.id is None:
             item.id = IdSequence.generate_next_id(g.game_token)
             db.session.add(item)
-        
+
         item.name = req.get_str('name', item.name)
         item.description = req.get_str('description')
-        
+
         old_storage_type = item.storage_type
         new_storage_type = req.get_str('storage_type', StorageType.UNIVERSAL)
         if old_storage_type != new_storage_type:
@@ -217,7 +215,7 @@ def edit_item(id):
         item.toplevel = 'toplevel' in request.form
         item.loc_hosted = 'loc_hosted' in request.form
         item.masked = 'masked' in request.form
-        
+
         if item.storage_type == StorageType.UNIVERSAL:
             qty = req.get_float('quantity')
             gen_pile = Pile.query.filter_by(
@@ -226,7 +224,7 @@ def edit_item(id):
             if qty:
                 if not gen_pile:
                     gen_pile = Pile(
-                        game_token=game_token, item_id=item.id, 
+                        game_token=game_token, item_id=item.id,
                         owner_id=GENERAL_ID, position=None
                     )
                     db.session.add(gen_pile)
@@ -322,8 +320,8 @@ def edit_item(id):
 
         if 'duplicate' in request.form:
             return duplicate_entity(item.id, 'item')
-            
-        return redirect_back('configure.index') 
+
+        return redirect_back('configure.index')
 
     # GET: Prepare variables for the template
     gen_qty = 0
@@ -334,12 +332,10 @@ def edit_item(id):
         gen_qty = gen_pile.quantity if gen_pile else 0
 
     slots_attrib = db.session.get(Attrib, (game_token, EQUIPMENT_SLOTS_ID))
-    all_slots = [
-        e for e in slots_attrib.enum_entries
-        ] if slots_attrib else []
+    all_slots = list(slots_attrib.enum_entries) if slots_attrib else []
 
-    return render_template('configure/item.html', 
-        item=item, 
+    return render_template('configure/item.html',
+        item=item,
         initial_qty=gen_qty,
         all_items=Item.query.filter_by(
             game_token=game_token).order_by(name_stripped()).all(),
@@ -383,19 +379,20 @@ def edit_location(id):
         # Destinations (Exits) -- Symmetric Route Saving
         # Fetch existing routes involving this location to determine what to delete/update
         existing_routes = LocDest.query.filter(
-            (LocDest.game_token == game_token) & 
+            (LocDest.game_token == game_token) &
             ((LocDest.loc1_id == loc.id) | (LocDest.loc2_id == loc.id))
         ).all()
         existing_map = {r.id: r for r in existing_routes}
-        
+
         submitted_ids = []
         new_coords = set()
         for row in req.get_list('dests'):
             target_id = row.get_int('target_id')
-            if not target_id: continue
+            if not target_id:
+                continue
             route_id = row.get_int('id')
             direction = row.get_str('direction', 'two-way')
-            
+
             existing_route = existing_map.get(route_id)
             old_door_there = None
             if existing_route:
@@ -406,7 +403,7 @@ def edit_location(id):
                 db.session.add(route)
 
             door_here = row.get_coords('door_here')
-            here_is_loc1 = (direction != 'backward')
+            here_is_loc1 = direction != 'backward'
             route.direction = DestExit.BOTH
             if loc.id < target_id:
                 if direction == 'forward':
@@ -477,8 +474,8 @@ def edit_location(id):
         for ref_id in request.form.getlist('item_refs[]'):
             if ref_id:
                 db.session.add(ItemRef(
-                    game_token=game_token, 
-                    loc_id=loc.id, 
+                    game_token=game_token,
+                    loc_id=loc.id,
                     item_id=int(ref_id)
                 ))
 
@@ -550,16 +547,17 @@ def edit_location(id):
 
         if 'duplicate' in request.form:
             return duplicate_entity(loc.id, 'location')
-        return redirect_back('configure.index') 
+        return redirect_back('configure.index')
 
     routes = LocDest.query.filter(
-        (LocDest.game_token == game_token) & 
+        (LocDest.game_token == game_token) &
         ((LocDest.loc1_id == id) | (LocDest.loc2_id == id))
     ).all()
     normalized_dests = []
     for r in routes:
         target = r.other_loc(id)
-        if not target: continue
+        if not target:
+            continue
         if r.direction == DestExit.BOTH:
             direction = 'two-way'
         else:
@@ -574,7 +572,7 @@ def edit_location(id):
             'direction': direction
         })
 
-    return render_template('configure/location.html', 
+    return render_template('configure/location.html',
         location=loc,
         destinations=normalized_dests,
         inventory=Pile.query.filter_by(
@@ -661,15 +659,13 @@ def edit_character(id):
 
         if 'duplicate' in request.form:
             return duplicate_entity(char.id, 'character')
-        return redirect_back('configure.index') 
+        return redirect_back('configure.index')
 
     slots_attrib = db.session.get(Attrib, (game_token, EQUIPMENT_SLOTS_ID))
-    slots = [
-        e for e in slots_attrib.enum_entries
-        ] if slots_attrib else []
+    slots = list(slots_attrib.enum_entries) if slots_attrib else []
 
-    return render_template('configure/character.html', 
-        character=char, 
+    return render_template('configure/character.html',
+        character=char,
         all_locs=Location.query.filter_by(
             game_token=game_token).order_by(name_stripped()).all(),
         all_attribs=Attrib.query.filter_by(
@@ -702,9 +698,9 @@ def edit_attrib(id):
         attrib.name = req.get_str('name', attrib.name)
         attrib.description = req.get_str('description')
         attrib.ab_field = req.get_str('ab_field', AutobattleField.NONE)
-        
+
         v_type = req.get_str('value_type')
-        attrib.is_binary = (v_type == 'binary')
+        attrib.is_binary = v_type == 'binary'
 
         existing_entries = {e.id: e for e in attrib.enum_entries}
         enum_entries = []
@@ -714,7 +710,8 @@ def edit_attrib(id):
             for idx, row in enumerate(rows):
                 eid = row.get_int('id')
                 label = row.get_str('label')
-                if not label: continue
+                if not label:
+                    continue
 
                 if eid in existing_entries:
                     # Reuse so we don't break ID references
@@ -724,8 +721,8 @@ def edit_attrib(id):
                     enum_entries.append(entry)
                 else:
                     enum_entries.append(EnumEntry(
-                        game_token=game_token, 
-                        label=label, 
+                        game_token=game_token,
+                        label=label,
                         order_index=idx
                     ))
 
@@ -734,7 +731,7 @@ def edit_attrib(id):
         db.session.commit()
         if 'duplicate' in request.form:
             return duplicate_entity(attrib.id, 'attrib')
-        return redirect_back('configure.index') 
+        return redirect_back('configure.index')
 
     return render_template(
         'configure/attrib.html',
@@ -769,7 +766,7 @@ def edit_event(id):
             event.roller_type = req.get_str('roller_type')
         elif event.outcome_type in [OutcomeType.FOURWAY, OutcomeType.NUMERIC]:
             event.numeric_range = [
-                req.get_int('range_min'), 
+                req.get_int('range_min'),
                 req.get_int('range_max')
             ]
         elif event.outcome_type == OutcomeType.DETERMINED:
@@ -792,7 +789,7 @@ def edit_event(id):
         # --- SAVE DETERMINANTS & EFFECTS ---
         # 1. Clear existing factors to perform a clean sync
         # (This is simpler than matching IDs for small lists)
-        event.factors = [] 
+        event.factors = []
 
         # 2. Process Determinants and Effects
         for usage in [Participant.DET, Participant.EFF]:
@@ -829,7 +826,7 @@ def edit_event(id):
                             factor.get_val_from != Participant.INFIELD:
                         factor.infield = None
                         continue
-                    elif field_key == 'outfield' and usage == Participant.DET:
+                    if field_key == 'outfield' and usage == Participant.DET:
                         factor.outfield = None
                         continue
                     fld = row.get_map(field_key)
@@ -924,7 +921,7 @@ def edit_event(id):
         db.session.commit()
         if 'duplicate' in request.form:
             return duplicate_entity(event.id, 'event')
-        return redirect_back('configure.index') 
+        return redirect_back('configure.index')
 
     # Data for select boxes
     all_items = Item.query.filter_by(
@@ -943,7 +940,7 @@ def edit_event(id):
             for r in item.recipes
         ]
 
-    return render_template('configure/event.html', 
+    return render_template('configure/event.html',
         event=event,
         all_attribs=Attrib.query.filter_by(
             game_token=game_token).order_by(name_stripped()).all(),
@@ -973,7 +970,7 @@ def edit_event(id):
 def lookup(ent_type, id):
     game_token = g.game_token
     entity = db.get_or_404(Entity, (game_token, id))
-    
+
     type Usage = dict[str, str]
     results: dict[str, list[Usage]] = {}
 
@@ -992,7 +989,7 @@ def lookup(ent_type, id):
             results[key_name].append({
                 'label': label,
                 'name': owner.name,
-                'link': url_for(f'play.play_item', id=id, owner_id=owner.id),
+                'link': url_for('play.play_item', id=id, owner_id=owner.id),
                 'value': f'Qty: {p.quantity}'
             })
         sort_results(results[key_name])
@@ -1046,7 +1043,7 @@ def lookup(ent_type, id):
         for evt in events:
             results[key_name].append({
                 'name': evt.name,
-                'link': url_for(f'play.play_event', id=evt.id)
+                'link': url_for('play.play_event', id=evt.id)
             })
         sort_results(results[key_name])
 
@@ -1071,7 +1068,7 @@ def lookup(ent_type, id):
         # Who can trigger this
         stmt = (
             select(EntityAbility, Entity)
-            .join(Entity, (EntityAbility.entity_id == Entity.id) & 
+            .join(Entity, (EntityAbility.entity_id == Entity.id) &
                           (EntityAbility.game_token == Entity.game_token))
             .where(
                 EntityAbility.game_token == game_token,
@@ -1095,7 +1092,7 @@ def lookup(ent_type, id):
     # This handles things like [Red Bar Rate](/play/event/46)
     mention_key = 'Mentioned in Descriptions'
     pattern = f"/{ent_type}/{id}\\b|\\b{re.escape(entity.name)}\\b"
-    
+
     # Check Scenario description
     ov = db.session.get(Scenario, game_token)
     if ov.description and re.search(pattern, ov.description):
@@ -1112,7 +1109,7 @@ def lookup(ent_type, id):
             continue # Don't list self
         if ent.description and re.search(pattern, ent.description):
             if ent.entity_type == Attrib.TYPENAME:
-                link = url_for(f'configure.edit_attrib', id=ent.id)
+                link = url_for('configure.edit_attrib', id=ent.id)
             else:
                 link = url_for(f'play.play_{ent.entity_type}', id=ent.id)
             results.setdefault(mention_key, []).append({
@@ -1136,7 +1133,6 @@ def handle_deletion(entity):
     """Safely removes an entity and triggers cascade cleanup."""
     if entity:
         if entity.id == GENERAL_ID:
-            from flask import flash
             flash("Cannot delete the General Storage entity.")
             return False
         db.session.delete(entity)
@@ -1155,4 +1151,3 @@ def duplicate_entity(source_id, entity_type):
         message="Duplication Failed",
         details=f"Unable to create a copy of {entity_type} (ID: {source_id})."
     ), HTTPStatus.BAD_REQUEST
-

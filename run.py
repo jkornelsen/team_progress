@@ -1,5 +1,4 @@
 import logging
-import os
 import argparse
 from app import create_app
 from app.database import start_db
@@ -7,16 +6,16 @@ from app.database import start_db
 def main():
     parser = argparse.ArgumentParser(description="Run the Team Progress Kit server.")
     parser.add_argument(
-        '--log', 
+        '--log',
         nargs='?',
         default='WARNING',
         const='WARNING',
         help='Set the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL).'
     )
     parser.add_argument(
-        '--nodebug', 
-        action='store_false', 
-        dest='debug', 
+        '--nodebug',
+        action='store_false',
+        dest='debug',
         help='Disable Flask debug mode.'
     )
     parser.set_defaults(debug=True)
@@ -38,12 +37,14 @@ def main():
     log.setLevel(logging.ERROR)
 
     # 2. Initialize App
-    app = create_app()
+    flask_app = create_app()
 
     # 3. Start Database and App
     start_db()
-    print(f"Starting app in {'DEBUG' if args.debug else 'PRODUCTION'} mode at level {args.log.upper()}")
-    app.run(host='127.0.0.1', port=5000, debug=args.debug, use_reloader=False)
+    mode = "DEBUG" if args.debug else "PRODUCTION"
+    print(f"Starting app in {mode} mode at level {args.log.upper()}")
+    flask_app.run(
+        host='127.0.0.1', port=5000, debug=args.debug, use_reloader=False)
 
 if __name__ == "__main__":
     main()

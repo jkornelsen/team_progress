@@ -1,22 +1,21 @@
-import uuid
-import random
-import string
+from http import HTTPStatus
+import logging
 import os
 import tempfile
-import logging
+import uuid
 from datetime import datetime, timedelta
 from flask import (
     g, Blueprint, request, session, redirect, url_for, render_template, json,
     current_app, send_file)
-from http import HTTPStatus
 from sqlalchemy import func
+from sqlalchemy.sql.functions import count as sa_count
 
-from app.models import db, JsonKeys, UserInteraction, Character, Scenario
+from app.models import db, JsonKeys, UserInteraction, Scenario
 from app.serialization import (
     init_game_session, load_scenario_from_path, DEFAULT_SCENARIO_FILE,
-    import_from_dict, patch_from_dict,
-    clear_game_data, export_game_to_json, export_to_dict)
+    import_from_dict, patch_from_dict, clear_game_data, export_game_to_json)
 from app.utils import RequestHelper, LinkLetters, BaseFieldMap, redirect_back
+from .logic_user_interaction import generate_username, log_activity
 
 logger = logging.getLogger(__name__)
 session_bp = Blueprint('session', __name__)
@@ -28,7 +27,7 @@ session_bp = Blueprint('session', __name__)
 @session_bp.route('/scenarios', methods=['GET', 'POST'])
 def browse_scenarios():
     data_dir = current_app.config['DATA_DIR']
-    
+
     if request.method == 'POST':
         req = RequestHelper('form')
         filename = req.get_str('scenario_file')
@@ -82,10 +81,10 @@ def browse_scenarios():
         scenarios,
         key=lambda x: x.get(sort_by, ''),
         reverse=reverse)
-    
+
     return render_template(
-        'session/scenarios.html', 
-        scenarios=scenarios, 
+        'session/scenarios.html',
+        scenarios=scenarios,
         sort_by=sort_by,
         link_letters=LinkLetters(excluded='ou')
     )
@@ -94,7 +93,7 @@ def browse_scenarios():
 def save_to_file():
     """Exports the current game token state to a JSON file."""
     json_data = export_game_to_json()
-    
+
     scenario = db.session.get(Scenario, g.game_token)
     title = (scenario.title or '').strip() or 'scenario'
     filename = f"{title}.json"
@@ -103,7 +102,7 @@ def save_to_file():
             mode='w', delete=False, suffix='.json') as tmp:
         tmp.write(json_data)
         path = tmp.name
-        
+
     return send_file(path, as_attachment=True, download_name=filename)
 
 @session_bp.route('/upload', methods=['GET', 'POST'])
@@ -133,58 +132,15 @@ def upload():
                 ), HTTPStatus.INTERNAL_SERVER_ERROR
 
     return render_template(
-        'session/upload.html', 
+        'session/upload.html',
     )
 
 @session_bp.route('/clear-all', methods=['POST'])
 def clear_all():
     """Wipes data and re-applies the default scenario."""
     clear_game_data()
-    init_game_session() 
+    init_game_session()
     return redirect(url_for('play.overview'))
-
-# ------------------------------------------------------------------------
-# Utilities for Session Management
-# ------------------------------------------------------------------------
-
-def generate_username():
-    """Generates a random 10-letter consonant-heavy username."""
-    consonants = ''.join(c for c in string.ascii_lowercase if c not in 'aeiouyl')
-    return ''.join(random.choice(consonants) for _ in range(10))
-
-def log_user_activity(endpoint, entity_id=None):
-    """
-    Records a user's presence on a specific route.
-    Uses 'ON CONFLICT DO UPDATE' logic via SQLAlchemy.
-    """
-    if 'username' not in session or not g.game_token:
-        return
-
-    # Upsert logic for user interactions
-    interaction = UserInteraction.query.filter_by(
-        game_token=g.game_token,
-        username=session['username'],
-        route=endpoint,
-        entity_id=str(entity_id) if entity_id else ""
-    ).first()
-
-    if interaction:
-        interaction.timestamp = db.func.current_timestamp()
-    else:
-        interaction = UserInteraction(
-            game_token=g.game_token,
-            username=session['username'],
-            route=endpoint,
-            entity_id=str(entity_id) if entity_id else ""
-        )
-        db.session.add(interaction)
-    
-    try:
-        db.session.flush()
-        db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        logger.error(f"Failed to log user interaction: {e}")
 
 # ------------------------------------------------------------------------
 # Session Routes
@@ -193,21 +149,21 @@ def log_user_activity(endpoint, entity_id=None):
 @session_bp.route('/join')
 def join_game():
     """Point of entry via a shared link. Sets the session token."""
-    new_token = request.args.get('game_token')
-    if new_token:
+    token = request.args.get('game_token')
+    if token:
         current = session.get('game_token')
         alternate = session.get('alternate_token')
-        if new_token == alternate:
+        if token == alternate:
             # Swap
             session['game_token'] = alternate
             session['alternate_token'] = current
-        elif new_token != current:
+        elif token != current:
             # Replace current
-            session['game_token'] = new_token
+            session['game_token'] = token
             init_game_session()
 
         return redirect(url_for('play.overview'))
-    
+
     return "Please include a valid game token in the URL.", 400
 
 @session_bp.route('/current-tokens')
@@ -293,15 +249,15 @@ def user_settings():
         session['disable_arrow_keys'] = req.get_bool('disable_arrow_keys')
 
         return redirect_back('play.overview')
- 
+
     return render_template('session/user_settings.html')
 
 @session_bp.route('/session-users')
 def session_users():
     """Queries the UserInteraction table to show who has been active."""
-    threshold = datetime.now() - timedelta(minutes=15)
-    
-    # Create a subquery that assigns a rank to each user's interactions, 
+    threshold = datetime.now() - timedelta(minutes=60)
+
+    # Create a subquery that assigns a rank to each user's interactions,
     # ordering by most recent first
     subquery = (
         db.session.query(
@@ -313,7 +269,10 @@ def session_users():
             func.row_number().over(
                 partition_by=UserInteraction.username,
                 order_by=UserInteraction.timestamp.desc()
-            ).label('rn')
+            ).label('rn'),
+            sa_count().over(
+                partition_by=UserInteraction.username
+            ).label('total_hits')
         )
         .join(Scenario, UserInteraction.game_token == Scenario.game_token)
         .filter(UserInteraction.timestamp >= threshold)
@@ -330,12 +289,17 @@ def session_users():
             subquery.c.timestamp
         )
         .filter(subquery.c.rn == 1)
+        .filter(
+            # Exclude users who only have 1 hit AND that hit was at 'root'
+            ~((subquery.c.total_hits == 1) &
+              (subquery.c.route.in_(['root', 'main.root'])))
+        )
         .order_by(subquery.c.game_title.asc(), subquery.c.game_token.asc())
         .all()
     )
 
     return render_template(
-        'session/users.html', 
+        'session/users.html',
         interactions=recent_interactions
     )
 
@@ -360,18 +324,17 @@ def init_session_handlers(app):
         if 'game_token' not in session:
             session['game_token'] = str(uuid.uuid4())
         g.game_token = session['game_token']
-        
+
         # 2. Ensure General Storage exists for this session
-        init_game_session(g.game_token)
+        init_game_session()
 
         # 3. Ensure Username
         if 'username' not in session:
             session['username'] = generate_username()
-        
+
         # 4. Log presence (except for administrative/api routes)
         if request.endpoint and not any(
                 x in request.endpoint for x in ['static', 'log_visit']):
-            log_user_activity(
+            log_activity(
                 request.endpoint, request.view_args.get('id')
                 if request.view_args else None)
-

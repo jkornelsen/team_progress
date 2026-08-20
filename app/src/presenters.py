@@ -1,15 +1,14 @@
+import logging
 from flask import g, session
 from app.models import (
     db, GENERAL_ID, EQUIPMENT_SLOTS_ID, StorageType,
     Entity, Item, Character, Location, Attrib,
-    Pile, AttribVal, Progress, Recipe)
+    Pile, AttribVal, Progress)
 from app.utils import (
-    ContextIds, LinkLetters, capture_origin, 
-    sort_by_name_stripped, name_stripped)
+    ContextIds, LinkLetters, capture_origin, sort_by_name_stripped)
 from app.src.logic_production import (
     find_best_host, resolve_recipe_sources, can_perform_recipe)
 from app.src.logic_navigation import is_adjacent
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -19,20 +18,19 @@ class ItemPlayPresenter:
         self.game_token = g.game_token
         self.item_id = item_id
         self.item = db.get_or_404(Item, (self.game_token, item_id))
-        
+
         self.owner_id = self._resolve_owner_id(req)
         self.owner = db.session.get(Entity, (self.game_token, self.owner_id))
 
         self.ctx = self._reconcile_context(req)
-        logger.debug(f"ctx.loc_id={self.ctx.loc_id}")
+        logger.debug("ctx.loc_id=%s", self.ctx.loc_id)
         self.pile = self._get_pile()
 
         capture_origin(name=self.item.name)
-
         logger.debug(
-            f"---- play_item() ----\n"
-            f"Item:{self.item.id} | Owner:{self.owner_id}"
-            f" | Char:{self.ctx.char_id} | Loc:{self.ctx.loc_id}")
+            "---- play_item() ----\n"
+            "Item:%s | Owner:%s | Char:%s | Loc:%s",
+            self.item.id, self.owner_id, self.ctx.char_id, self.ctx.loc_id)
 
     def _resolve_owner_id(self, req):
         """
@@ -53,7 +51,7 @@ class ItemPlayPresenter:
 
         if owner_id:
             return owner_id
-            
+
         if session.get('old_char_id'):
             return session.get('old_char_id')
         return session.get('old_loc_id') or GENERAL_ID
@@ -83,7 +81,8 @@ class ItemPlayPresenter:
             self.ctx_char = char
 
         if self.owner.entity_type == Location.TYPENAME or self.ctx_char:
-            logger.debug(f"old_loc_id {session.get('old_loc_id')} -> {loc_id}")
+            logger.debug(
+                "old_loc_id %s -> %s", session.get('old_loc_id'), loc_id)
             session['old_loc_id'] = loc_id
         self.ctx_loc = db.session.get(
             Location, (self.game_token, loc_id)) if loc_id else None
@@ -102,7 +101,7 @@ class ItemPlayPresenter:
         pos = self.req.get_coords('pos')
         if pos:
             query = query.filter_by(position=list(pos))
-        
+
         pile = query.first()
         return pile or Pile(
             item_id=self.item.id,
@@ -125,7 +124,7 @@ class ItemPlayPresenter:
                     current_val = av.value
                     satisfying_entity = eid
                     break
-                
+
                 # If failing, track the most relevant fail value
                 if current_val is None:
                     current_val = av.value
@@ -137,7 +136,7 @@ class ItemPlayPresenter:
                 elif av.value > current_val:
                     current_val = av.value
                     entity_with_value = eid
-        
+
         return {
             'attrib': req.attrib,
             'display': req.display,

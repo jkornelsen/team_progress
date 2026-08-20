@@ -1,5 +1,4 @@
 import logging
-import os
 import sys
 from flask import Flask
 from sqlalchemy import text
@@ -38,6 +37,6 @@ if __name__ == "__main__":
     # This allows running 'python database_setup.py' from the terminal
     # to perform a fresh schema creation.
     reset_mode = "--wipe" in sys.argv
-    app = create_app()
+    flask_app = create_app()
     start_db()
-    setup_database(app, drop_first=reset_mode)
+    setup_database(flask_app, drop_first=reset_mode)

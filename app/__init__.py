@@ -1,5 +1,4 @@
 import os
-import logging
 import uuid
 from datetime import timedelta
 from flask import (
@@ -7,13 +6,14 @@ from flask import (
 from flask_migrate import Migrate
 from jinja2 import StrictUndefined
 
+from app.src.logic_user_interaction import generate_username, log_activity
+from app.src.routes_session import session_bp
+from app.src.routes_configure import configure_bp
+from app.src.routes_play import play_bp
 from .database import db, get_db_uri
 from .models import GENERAL_ID, EQUIPMENT_SLOTS_ID, StorageType
 from .serialization import init_game_session
 from .utils import format_num, htmlify_filter, mask_string
-from app.src.routes_session import session_bp, generate_username, log_user_activity
-from app.src.routes_configure import configure_bp
-from app.src.routes_play import play_bp
 
 def create_app():
     app = Flask(__name__)
@@ -100,7 +100,7 @@ def create_app():
         if 'game_token' not in session:
             session['game_token'] = str(uuid.uuid4())
         session.permanent = True # keep for PERMANENT_SESSION_LIFETIME
-        
+
         # Set global game token for use in SQLAlchemy queries
         g.game_token = session['game_token']
 
@@ -120,10 +120,10 @@ def create_app():
             # Avoid logging purely technical/api redirects
             if not any(x in request.endpoint for x in ['log_visit', 'status']):
                 entity_id = request.view_args.get('id') if request.view_args else None
-                log_user_activity(request.endpoint, entity_id)
+                log_activity(request.endpoint, entity_id)
 
     @app.teardown_appcontext
-    def shutdown_session(exception=None):
+    def shutdown_session(_exception=None):
         """Ensures database connections are returned to the pool."""
         db.session.remove()
 
@@ -135,7 +135,7 @@ def create_app():
         return redirect(url_for('play.overview'))
 
     @app.errorhandler(404)
-    def page_not_found(e):
+    def page_not_found(_e):
         return render_template(
             'error.html',
             message="404 Not Found",
@@ -145,5 +145,5 @@ def create_app():
     return app
 
 if __name__ == '__main__':
-    app = create_app()
-    app.run(debug=True)
+    flask_app = create_app()
+    flask_app.run(debug=True)

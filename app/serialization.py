@@ -3,18 +3,15 @@ import json
 import os
 import re
 from flask import g, current_app, session
-from sqlalchemy import func, delete, inspect as sa_inspect
+from sqlalchemy import func, delete
 from sqlalchemy.orm import identity
 from .models import (
     GENERAL_ID, HIGHEST_RESERVED_ID, ENTITIES, JsonKeys, db,
     prime_enum_cache, clear_enum_cache,
-    Entity, Item, Character, Location, Attrib, Event, 
-    Pile, Recipe, RecipeSource, RecipeByproduct, 
-    RecipeAttribReq, Progress,
-    Scenario, WinRequirement, IdSequence)
+    Entity, Attrib, Pile, Recipe, Progress, Scenario, IdSequence)
 from .src.logic_user_interaction import clear_session_logs
 from .src.logic_discovery import run_discovery_scan
-from app.utils import name_stripped
+from .utils import name_stripped
 
 logger = logging.getLogger(__name__)
 
@@ -22,17 +19,18 @@ original_init = identity.IdentityMap.__init__
 
 def patched_init(self, *args, **kwargs):
     """Catch unexpected JSON dicts in keys."""
+    # pylint: disable=protected-access
     original_init(self, *args, **kwargs)
     original_dict = self._dict
-    
+
     class TrappingDict(dict):
         def __contains__(self, key):
             try:
                 return super().__contains__(key)
             except TypeError:
-                logger.error(f"Unhashable Identity Key: {repr(key)}")
+                logger.error("Unhashable Identity Key: %r", key)
                 raise
-    
+
     trapping = TrappingDict(original_dict)
     self._dict = trapping
 
@@ -49,9 +47,9 @@ def init_game_session():
     game_token = g.game_token
     scenario = db.session.get(Scenario, game_token)
     if not scenario:
-        logger.info(f"Initializing game session")
+        logger.info("Initializing game session")
         if not load_scenario_from_path(DEFAULT_SCENARIO_FILE):
-            logger.warning(f"Falling back to class default.")
+            logger.warning("Falling back to class default.")
             scenario = Scenario(game_token=game_token)
             db.session.add(scenario)
 
@@ -75,9 +73,9 @@ def load_scenario_from_path(filename):
     """
     path = os.path.join(current_app.config['DATA_DIR'], filename)
     if not os.path.exists(path):
-        logger.warning(f"Scenario file not found: {path}")
+        logger.warning("Scenario file not found: %s", path)
         return False
-    
+
     try:
         with open(path, 'r', encoding='utf-8') as f:
             data = json.load(f)
@@ -97,7 +95,7 @@ def import_from_dict(data):
         clear_game_data()
         for key in ['old_char_id', 'old_loc_id', 'default_slot']:
             session.pop(key, None)
-        
+
         # The General Storage Entity
         db.session.add(Entity(
             id=GENERAL_ID, game_token=game_token, name="General Storage",
@@ -120,7 +118,8 @@ def import_from_dict(data):
                 prime_enum_cache(game_token)
         general_data = data.get(JsonKeys.GENERAL, {})
         for pile_data in general_data.get("piles", []):
-            db.session.add(Pile.from_dict(pile_data, game_token, GENERAL_ID))
+            db.session.add(
+                Pile.from_dict(pile_data, game_token, owner_id=GENERAL_ID))
 
         # Overall Scenario Settings
         overall_data = data.get(JsonKeys.OVERALL, {})
@@ -139,7 +138,7 @@ def import_from_dict(data):
             func.max(Recipe.id)).filter_by(game_token=game_token).scalar() or 0
         sequence.next_id = max(
             max_ent, max_rec, HIGHEST_RESERVED_ID) + 1
-        
+
         db.session.commit()
 
         # Check for unmasking dependencies
@@ -160,21 +159,20 @@ def remap_general_id(entities_data):
     # 1. Check for the specific conflict
     conflict_found = False
     max_id = GENERAL_ID
-    
+
     for category in entities_data.values():
         for entity in category:
             current_id = entity.get('id', 0)
             if current_id == GENERAL_ID:
                 conflict_found = True
-            if current_id > max_id:
-                max_id = current_id
+            max_id = max(max_id, current_id)
 
     if not conflict_found:
         return entities_data
 
     # 2. Perform the swap
     new_id = max_id + 1
-    
+
     def walk_and_remap(obj):
         if isinstance(obj, dict):
             for k, v in obj.items():
@@ -195,30 +193,30 @@ def remap_general_id(entities_data):
 def patch_from_dict(data):
     """
     Intelligently merges JSON data into the current scenario.
-    
+
     HOW IT WORKS:
     1.  ID MAPPING (Phase 1):
-        We iterate through every entity in the JSON. 
-        - If an ID exists in the DB AND the Entity Type matches (e.g., both are Items), 
+        We iterate through every entity in the JSON.
+        - If an ID exists in the DB AND the Entity Type matches (e.g., both are Items),
           we keep the ID (Update Mode).
-        - If the ID is missing OR the Type differs (e.g., JSON says ID 5 is an Item, 
+        - If the ID is missing OR the Type differs (e.g., JSON says ID 5 is an Item,
           but DB says ID 5 is a Character), we assign a NEW unique ID (Append Mode).
-          
+
     2.  LINK RESOLUTION (Phase 2):
-        Because we might have changed IDs in Phase 1, any internal references in 
-        the JSON (like a Character's 'location_id' or a Recipe's 'product_id') 
-        are now broken. We recursively walk through the JSON data and replace 
+        Because we might have changed IDs in Phase 1, any internal references in
+        the JSON (like a Character's 'location_id' or a Recipe's 'product_id')
+        are now broken. We recursively walk through the JSON data and replace
         old IDs with the newly mapped IDs from Phase 1.
-        
+
     3.  STATE MERGING (Phase 3):
         - For NEW entities: We hydrate them via .from_dict() and add to session.
-        - For EXISTING entities: We clear their current collections (piles, 
-          attrib_values, etc.) to prevent the merge from duplicating rows, 
+        - For EXISTING entities: We clear their current collections (piles,
+          attrib_values, etc.) to prevent the merge from duplicating rows,
           then use SQLAlchemy's merge() to update all fields.
     """
     game_token = g.game_token
     sequence = db.session.get(IdSequence, game_token)
-    
+
     # --- PHASE 0: DETERMINE NEXT ID ---
     # Find the absolute highest ID currently in use in the DB
     max_ent = db.session.query(
@@ -226,7 +224,7 @@ def patch_from_dict(data):
     max_rec = db.session.query(
         func.max(Recipe.id)).filter_by(game_token=game_token).scalar() or 0
     max_db = max(max_ent, max_rec)
-    
+
     # Find the highest ID mentioned in the incoming JSON
     json_ids = []
     entities_data = data.get(JsonKeys.ENTITIES, {})
@@ -240,15 +238,15 @@ def patch_from_dict(data):
                         json_ids.append(recipe['id'])
 
     max_json = max(json_ids) if json_ids else 0
-    logger.debug(f"Max DB ID: {max_db} | Max JSON ID: {max_json}")
-    
+    logger.debug("Max DB ID: %s | Max JSON ID: %s", max_db, max_json)
+
     # Force the counter to be higher than BOTH
     sequence.next_id = max(sequence.next_id, max_db, max_json) + 1
     db.session.flush()
 
     # --- PHASE 1: ID MAPPING ---
     id_map = {}
-    entities_to_process = [] 
+    entities_to_process = []
 
     for key, model_cls in ENTITIES.items():
         type_str = model_cls.__mapper_args__['polymorphic_identity']
@@ -271,17 +269,20 @@ def patch_from_dict(data):
     # --- PHASE 2: LINK RESOLUTION ---
     def resolve_links(node):
         if isinstance(node, list):
-            for item in node: resolve_links(item)
+            for item in node:
+                resolve_links(item)
         elif isinstance(node, tuple): # Add tuple support for Phase 3 list
-            for item in node: resolve_links(item)
+            for item in node:
+                resolve_links(item)
         elif isinstance(node, dict):
-            links = ['id', 'location_id', 'product_id', 'recipe_id', 'item_id', 
+            links = ['id', 'location_id', 'product_id', 'recipe_id', 'item_id',
                      'attrib_id', 'subject_id', 'loc1_id', 'loc2_id', 'target_id']
             for key in links:
                 if key in node and node[key] in id_map:
                     node[key] = id_map[node[key]]
             for val in node.values():
-                if isinstance(val, (dict, list)): resolve_links(val)
+                if isinstance(val, (dict, list)):
+                    resolve_links(val)
 
     resolve_links(entities_to_process)
 
@@ -294,8 +295,9 @@ def patch_from_dict(data):
             existing_obj = db.session.get(model_cls, (game_token, entity['id']))
             # Wipe collections to prevent data stacking
             for attr in ['piles', 'recipes', 'attrib_values', 'routes_forward', 'item_refs']:
-                if hasattr(existing_obj, attr): setattr(existing_obj, attr, [])
-            
+                if hasattr(existing_obj, attr):
+                    setattr(existing_obj, attr, [])
+
             db.session.merge(model_cls.from_dict(entity, game_token))
 
     db.session.commit()
@@ -304,8 +306,8 @@ def patch_from_dict(data):
 def clear_game_data(game_token=None):
     """Wipes all data associated with a specific token."""
     game_token = game_token or g.game_token
-    logger.info(f"Clearing all data for token: {game_token}")
-    
+    logger.info("Clearing all data for token: %s", game_token)
+
     # Due to CASCADE constraints, these lines wipe the entire relational tree
     db.session.execute(delete(Scenario).filter_by(game_token=game_token))
     db.session.execute(delete(IdSequence).filter_by(game_token=game_token))
@@ -313,7 +315,7 @@ def clear_game_data(game_token=None):
     clear_session_logs(game_token)
 
     db.session.commit()
-    logger.info(f"Token {game_token} cleared.")
+    logger.info("Token %s cleared.", game_token)
 
 # ------------------------------------------------------------------------
 # Exporting Model -> JSON
@@ -333,7 +335,7 @@ def export_to_dict():
     output = {
         JsonKeys.OVERALL: {},
         JsonKeys.ENTITIES: {
-            key: [] for key in ENTITIES.keys()
+            key: [] for key in ENTITIES
         },
         JsonKeys.GENERAL: {
             "piles": []
@@ -352,7 +354,7 @@ def export_to_dict():
         entities = model_cls.query.filter(
             model_cls.game_token == game_token
         ).order_by(name_stripped()).all()
-        
+
         output[JsonKeys.ENTITIES][key] = [ent.to_dict() for ent in entities]
 
     gen_piles = Pile.query.filter_by(
@@ -373,7 +375,7 @@ def export_to_dict():
 
 def serialize_smart(obj, indent=4, max_line_length=60, current_indent=0):
     """
-    Recursively serializes a dict/list to JSON, collapsing small 
+    Recursively serializes a dict/list to JSON, collapsing small
     entries onto a single line.
     Makes the file much easier for humans to read/edit.
     """
@@ -384,18 +386,18 @@ def serialize_smart(obj, indent=4, max_line_length=60, current_indent=0):
     if isinstance(obj, list):
         if not obj:
             return "[]"
-        
+
         # Determine if we should collapse the WHOLE list (e.g. [1, 2, 3])
         # We only collapse if it's short AND doesn't contain dictionaries/lists
         items_formatted = [
             serialize_smart(item, indent, max_line_length, 0) for item in obj]
         flat_list = "[" + ", ".join(items_formatted) + "]"
-        
+
         contains_complex = any(isinstance(item, (dict, list)) for item in obj)
-        
+
         if len(flat_list) <= max_line_length and not contains_complex:
             return flat_list
-        
+
         # Otherwise, vertical list: one item per line, with commas
         lines = []
         for i, item in enumerate(obj):
@@ -403,27 +405,27 @@ def serialize_smart(obj, indent=4, max_line_length=60, current_indent=0):
             formatted_item = serialize_smart(
                 item, indent, max_line_length, current_indent + indent)
             lines.append(f"\n{inner_padding}{formatted_item}{comma}")
-        
+
         return "[" + "".join(lines) + f"\n{padding}]"
 
     # --- HANDLE DICTIONARIES ---
     if isinstance(obj, dict):
         if not obj:
             return "{}"
-        
+
         # Try to see if this specific dictionary can be a single line
         # (e.g. {"item_id": 2, "quantity": 5.0})
         items_formatted = [
             f'"{k}": {serialize_smart(v, indent, max_line_length, 0)}'
             for k, v in obj.items()]
         flat_dict = "{" + ", ".join(items_formatted) + "}"
-        
+
         # Collapse if it's short and values aren't complex
         contains_complex_val = any(
             isinstance(v, (dict, list)) for v in obj.values())
         if len(flat_dict) <= max_line_length and not contains_complex_val:
             return flat_dict
-            
+
         # Otherwise, vertical dictionary
         lines = []
         keys = list(obj.keys())
@@ -432,7 +434,7 @@ def serialize_smart(obj, indent=4, max_line_length=60, current_indent=0):
             val_formatted = serialize_smart(
                 obj[k], indent, max_line_length, current_indent + indent)
             lines.append(f'\n{inner_padding}"{k}": {val_formatted}{comma}')
-            
+
         return "{" + "".join(lines) + f"\n{padding}}}"
 
     # --- HANDLE PRIMITIVES ---
@@ -459,7 +461,7 @@ def increment_name(name):
 def clone_entity(source_id, entity_type):
     """
     Creates a deep copy of an entity and its related records.
-    Does NOT commit the session, allowing callers to modify 
+    Does NOT commit the session, allowing callers to modify
     the object before saving.
     """
     game_token = g.game_token
@@ -467,22 +469,23 @@ def clone_entity(source_id, entity_type):
     src = db.session.get(model_class, (game_token, source_id))
     if not src:
         return None
-    
+
     data = src.to_dict()
 
     # Recursive helper to strip 'id' so new IDs are generated
     def strip_ids(obj):
         if isinstance(obj, dict):
             obj.pop('id', None)
-            for v in obj.values(): strip_ids(v)
+            for v in obj.values():
+                strip_ids(v)
         elif isinstance(obj, list):
-            for item in obj: strip_ids(item)
+            for item in obj:
+                strip_ids(item)
 
     strip_ids(data)
     data['name'] = increment_name(src.name)
-    
+
     # Re-hydrate into a new instance
     new_obj = model_class.from_dict(data, game_token)
     db.session.add(new_obj)
     return new_obj
-

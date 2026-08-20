@@ -1,10 +1,9 @@
 import math
 import logging
-from datetime import datetime, timezone
-from flask import g, session
+from flask import g
 from app.models import (
     db, Entity, Item, Location, Character, Pile, Progress,
-    Recipe, AttribVal, GENERAL_ID, StorageType)
+    AttribVal, GENERAL_ID, StorageType)
 from app.utils import maskable_name
 from .logic_piles import (
     adjust_quantity, get_accessible_quantity, get_quantity_limit)
@@ -19,19 +18,19 @@ STALLED = "Stalled"
 def find_best_host(recipe, owner_id, ctx):
     """
     Determines the host according to priority with strict channel checks.
-    Enforces Storage-Type-Specific Priority to prevent General host 
+    Enforces Storage-Type-Specific Priority to prevent General host
     from splitting wood or crafting local items.
     """
     logger.debug(
-        f"find_best_host() | Product:{recipe.product_id}"
-        f" | is_location_hosted:{recipe.is_location_hosted}"
-        f" | Char:{ctx.char_id} | Loc:{ctx.loc_id}")
+        "find_best_host() |"
+        " Product:%s | is_location_hosted:%s | Char:%s | Loc:%s",
+        recipe.product_id, recipe.is_location_hosted, ctx.char_id, ctx.loc_id)
 
     game_token = g.game_token
     product = db.session.get(Item, (game_token, recipe.product_id))
 
     # 1. The Machine Check (Highest Priority)
-    # If the recipe requires a LOCAL crafting station marked as automated, 
+    # If the recipe requires a LOCAL crafting station marked as automated,
     # the Location must be the host.
     if recipe.is_location_hosted:
         return ctx.loc_id
@@ -60,9 +59,9 @@ def find_best_host(recipe, owner_id, ctx):
 
     # 3. Physical Product Branch (Tools, Resources, Structures)
     logger.debug(
-        f"find_best_host() returning | is_location_hosted:{recipe.is_location_hosted}"
-        f" | storage_type:{product.storage_type}"
-        f" | result:{ctx.char_id}")
+        "find_best_host() returning | is_location_hosted:%s "
+        "| storage_type:%s | result:%s",
+        recipe.is_location_hosted, product.storage_type, ctx.char_id)
     return ctx.char_id
 
 def resolve_host_pos(host_id, recipe, sources=None, output_pos=None):
@@ -109,7 +108,9 @@ def get_eligible_placements(
                     placements.append((target_owner_id, None))
                 else:
                     # Character left the location
-                    logger.info(f"Target {target_ent.name} left {loc_id}. Spilling to floor.")
+                    logger.info(
+                        "Target %s left %s. Spilling to floor.",
+                        target_ent.name, loc_id)
             else:
                 # No specific location (Universal Host), allow backpack delivery
                 placements.append((target_owner_id, None))
@@ -165,8 +166,8 @@ def has_ingredients(
     a recipe.
     """
     logger.debug(
-        f"has_ingredients() Product:{recipe.product_id}"
-        f" | Char:{ctx.char_id} | Loc:{ctx.loc_id}")
+        "has_ingredients() Product:%s | Char:%s | Loc:%s",
+        recipe.product_id, ctx.char_id, ctx.loc_id)
     game_token = g.game_token
     if not host_id:
         return False, "No appropriate host."
@@ -198,7 +199,7 @@ def has_ingredients(
         if src['total_available'] < required:
             if catching_up:
                 is_being_produced = db.session.query(Progress.id).filter_by(
-                    game_token=game_token, 
+                    game_token=game_token,
                     product_id=src['item'].id
                 ).first() is not None
                 if is_being_produced:
@@ -261,7 +262,7 @@ def get_host_scope(host_id, ctx):
     # Character: Can see their own bags, the floor they stand on, and the bank.
     if host_ent and host_ent.entity_type == Character.TYPENAME:
         return ctx.unique_ids(GENERAL_ID, host_id, ctx.loc_id)
-    
+
     # Machine/Environment: Local scope
     return ctx.unique_ids(GENERAL_ID, host_id)
 
@@ -270,14 +271,13 @@ def resolve_recipe_sources(host_id, recipe, ctx):
     Determines where ingredients are pulled from based on host identity.
     """
     logger.debug(
-        f"resolve_recipe_sources() | host_id:{host_id}"
-        f" | host_id type:{type(host_id)}"
-        f" | GENERAL_ID:{GENERAL_ID}"
-        f" | host_id==GENERAL_ID:{host_id == GENERAL_ID}"
-        f" | Char:{ctx.char_id} | Loc:{ctx.loc_id}")
+        "resolve_recipe_sources() | host_id:%s | host_id type:%s "
+        "| GENERAL_ID:%s | host_id==GENERAL_ID:%s | Char:%s | Loc:%s",
+        host_id, type(host_id), GENERAL_ID, host_id == GENERAL_ID,
+        ctx.char_id, ctx.loc_id)
     game_token = g.game_token
     resolved_sources = []
-    
+
     # Determine Search Scope based on Host Identity
     host_ent = None
     host_pos = None # The physical tile where production is centered
@@ -292,11 +292,11 @@ def resolve_recipe_sources(host_id, recipe, ctx):
         else:
             # Locations (Machines) can reach the floor and global bank
             search_ids = ctx.unique_ids(GENERAL_ID, host_id)
-    logger.debug(f"Search IDs: {search_ids}")
+    logger.debug("Search IDs: %s", search_ids)
 
     for source in recipe.sources:
         item = source.ingredient
-        
+
         # Determine pile based on Storage Type
         if item.storage_type == StorageType.UNIVERSAL:
             potential_owner_ids = [GENERAL_ID]
@@ -317,8 +317,8 @@ def resolve_recipe_sources(host_id, recipe, ctx):
         potential_owner_ids = [
             eid for eid in potential_owner_ids if eid in search_ids]
         logger.debug(
-            f"Checking Item:{item.name} (Type:{item.storage_type})"
-            f" in Owners:{potential_owner_ids}")
+            "Checking Item:%s (Type:%s) in Owners:%s",
+            item.name, item.storage_type, potential_owner_ids)
 
         # Query existing piles
         all_piles = Pile.query.filter(
@@ -337,13 +337,15 @@ def resolve_recipe_sources(host_id, recipe, ctx):
                 valid_piles.append(p)
 
         total_qty = sum(p.quantity for p in valid_piles)
-        
+
         # Determine anticipated target for UI help
         best_pile = None
         if valid_piles:
             def sort_priority(p):
-                if p.owner_id == host_id: return 0
-                if p.owner_id == ctx.loc_id: return 1
+                if p.owner_id == host_id:
+                    return 0
+                if p.owner_id == ctx.loc_id:
+                    return 1
                 return 2
             sorted_piles = sorted(valid_piles, key=sort_priority)
             best_pile = sorted_piles[0]
@@ -373,14 +375,15 @@ def execute_production(
     @param target_owner_id: the initial intent
     """
     logger.debug(
-        f"execute_production() Host:{host_id} | Product:{recipe.product_id}"
-        f" | Char:{ctx.char_id} | Loc:{ctx.loc_id}")
+        "execute_production() Host:%s | Product:%s | Char:%s | Loc:%s",
+        host_id, recipe.product_id, ctx.char_id, ctx.loc_id)
 
     if batches <= 0:
         return 0, None
     game_token = g.game_token
     host_ent = db.session.get(Entity, (game_token, host_id))
-    if not host_ent: return 0, "Host not found."
+    if not host_ent:
+        return 0, "Host not found."
 
     # Validate if we can perform at least ONE
     sources = resolve_recipe_sources(host_id, recipe, ctx)
@@ -436,22 +439,18 @@ def execute_production(
                 # How many batches can this specific ingredient support?
                 limit = math.floor(
                     src['total_available'] / source_def.q_required)
-                if limit < max_possible:
-                    max_possible = limit
-        
+                max_possible = min(max_possible, limit)
+
         # Check Output Limits
         q_limit = get_quantity_limit(recipe.product_id, target_owner_id)
         for limit in (q_limit, stop_at):
             if limit and net_change:
                 remaining = limit - current_qty
                 if net_change * remaining > 0: # Same sign and neither 0
-
                     batches_limit = math.floor(remaining / net_change)
                     if remaining % net_change:
                         batches_limit += 1
-
-                    if batches_limit < max_possible:
-                        max_possible = batches_limit
+                    max_possible = min(max_possible, batches_limit)
 
         batches = max(1, max_possible)
 
@@ -468,11 +467,12 @@ def execute_production(
     for src in sources:
         if not src['source_def'].preserve:
             debt = src['source_def'].q_required * batches
-            
+
             # Drain from candidates one by one
             for p in src['all_candidate_piles']:
-                if debt <= 0: break
-                
+                if debt <= 0:
+                    break
+
                 # Try to take the debt from this specific pile
                 unpaid = adjust_quantity(
                     src['item'].id, p.owner_id, -debt, p.position)
@@ -481,7 +481,7 @@ def execute_production(
                     drained = debt - abs(unpaid)
                     net_product_delta -= drained
 
-                debt = abs(unpaid) 
+                debt = abs(unpaid)
 
     # Produce
     _, anchor_pos = resolve_host_pos(host_id, recipe, sources, ctx.position)
@@ -524,12 +524,11 @@ def get_byproduct_target(item_id, main_target_id, host_id, ctx):
     Determines where secondary items go (the owner).
     """
     game_token = g.game_token
-
-    item = db.session.get(Item, (g.game_token, item_id))
+    item = db.session.get(Item, (game_token, item_id))
     if item.storage_type == StorageType.UNIVERSAL:
         return GENERAL_ID
-    
-    host_ent = db.session.get(Entity, (g.game_token, host_id))
+
+    host_ent = db.session.get(Entity, (game_token, host_id))
     if host_ent.entity_type == Character.TYPENAME:
         return main_target_id if main_target_id != GENERAL_ID else host_id
 

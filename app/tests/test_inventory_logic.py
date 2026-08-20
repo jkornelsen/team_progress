@@ -14,7 +14,7 @@ class TestPileLogic(BaseTestCase):
     def test_adjust_quantity(self):
         # Add 50 to general storage
         adjust_quantity(10, GENERAL_ID, 50.0)
-        
+
         pile = Pile.query.filter_by(item_id=10, owner_id=GENERAL_ID).first()
         self.assertEqual(pile.quantity, 50.0)
 
@@ -25,7 +25,7 @@ class TestPileLogic(BaseTestCase):
     def test_cleanup_on_zero(self):
         adjust_quantity(10, GENERAL_ID, 10.0)
         adjust_quantity(10, GENERAL_ID, -10.0)
-        
+
         # Record should be deleted from DB entirely
         pile = Pile.query.filter_by(item_id=10, owner_id=GENERAL_ID).first()
         self.assertIsNone(pile)

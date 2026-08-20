@@ -16,9 +16,9 @@ def check_item_unmasking(game_token, item_id, was_gained=False):
     if item.masked and was_gained:
         item.masked = False
         db.session.flush()
-        logger.info(f"Item discovered via gain: {item.name}")
+        logger.info("Item discovered via gain: %s", item.name)
 
-    # 2. Update the 'Proven' flag. 
+    # 2. Update the 'Proven' flag.
     # An item is proven if it's visible AND the player has some.
     if not item.masked and not item.counted_for_unmasking:
         total_qty = db.session.query(db.func.sum(Pile.quantity))\
@@ -26,7 +26,7 @@ def check_item_unmasking(game_token, item_id, was_gained=False):
         if total_qty > 0:
             item.counted_for_unmasking = True
             db.session.flush()
-            logger.info(f"Item proven: {item.name}")
+            logger.info("Item proven: %s", item.name)
 
     # 3. Check items that REQUIRE this item.
     # We only do this if this item is now 'Proven'.
@@ -34,21 +34,22 @@ def check_item_unmasking(game_token, item_id, was_gained=False):
         # Find all recipes that use this item as an ingredient
         dependent_sources = RecipeSource.query.filter_by(
             game_token=game_token, item_id=item_id).all()
-        
+
         for ds in dependent_sources:
             recipe = db.session.get(Recipe, (game_token, ds.recipe_id))
-            if not recipe: continue
-            
+            if not recipe:
+                continue
+
             target_item = db.session.get(Item, (game_token, recipe.product_id))
 
             # If the product of that recipe is still masked, see if it can be revealed
             if target_item and target_item.masked:
                 if can_unmask_item(game_token, target_item):
-                    logger.info(f"Unmasking dependent: {target_item.name}")
+                    logger.info("Unmasking dependent: %s", target_item.name)
                     target_item.masked = False
                     # We do NOT call check_item_unmasking recursively here.
                     # This prevents the 'chain reaction' unlock.
-    
+
     # Use flush to stay safe for the tick loop
     db.session.flush()
 
@@ -58,20 +59,20 @@ def can_unmask_item(game_token, item):
         all_sources_available = True
         for source in recipe.sources:
             ingred = db.session.get(Item, (game_token, source.item_id))
-            
+
             # A source is available if it's not masked AND the player has had some.
             # We check both the flag AND the actual quantity for safety.
             if ingred.masked:
                 all_sources_available = False
                 break
-            
+
             if not ingred.counted_for_unmasking:
                 total_qty = db.session.query(db.func.sum(Pile.quantity))\
                     .filter_by(game_token=game_token, item_id=ingred.id).scalar() or 0
                 if total_qty <= 0:
                     all_sources_available = False
                     break
-            
+
         if all_sources_available:
             return True
     return False

@@ -36,9 +36,9 @@ _enum_cache: dict[tuple, dict[str, int]] = {}
 # ------------------------------------------------------------------------
 
 @sa_event.listens_for(db.Model, 'init', propagate=True)
-def auto_init_defaults(target, args, kwargs):
+def auto_init_defaults(target, _args, kwargs):
     """
-    Whenever a new Model instance is created, look for columns 
+    Whenever a new Model instance is created, look for columns
     with defaults and apply them to the Python object immediately.
     """
     for column in target.__table__.columns:
@@ -54,8 +54,8 @@ def deep_rel(attr, child_cls, fk_field):
 
 def scrub_array(data, field_name, min_length=2):
     val = data.get(field_name)
-    if (isinstance(val, (list, tuple)) and 
-        len(val) >= min_length and 
+    if (isinstance(val, (list, tuple)) and
+        len(val) >= min_length and
         any(v > 0 for v in val)):
         data[field_name] = tuple(val)
     else:
@@ -90,17 +90,17 @@ def attrib_val_to_json(game_token, attrib_id, raw_val):
     """Converts a DB float to a JSON-friendly string, bool, or float."""
     if attrib_id is None or raw_val is None:
         return raw_val
-        
+
     attrib = db.session.get(Attrib, (game_token, attrib_id))
     if not attrib:
         return raw_val
 
     if attrib.is_binary:
         return bool(raw_val)
-    
+
     if attrib.enum_entries:
         return attrib.format_value(raw_val)
-        
+
     return raw_val
 
 def attrib_val_from_json(game_token, attrib_id, json_val):
@@ -112,17 +112,18 @@ def attrib_val_from_json(game_token, attrib_id, json_val):
         # It's an enum label, resolve it to an entry ID
         val = resolve_enum_id(game_token, attrib_id, json_val)
         return float(val) if val is not None else 0.0
-    
+
     if isinstance(json_val, bool):
         return 1.0 if json_val else 0.0
-        
+
     try:
         return float(json_val)
     except (ValueError, TypeError):
         return 0.0
 
-class DictHydrator:
+class DictHydrator(db.Model):
     """Map JSON keys to DB columns."""
+    __abstract__ = True
     LEGACY_KEYS = {
         # e.g. 'old_key': 'new_key',
     }
@@ -148,8 +149,8 @@ class DictHydrator:
         for k in data:
             if k not in known_names and not isinstance(data[k], (list, dict)):
                 logger.warning(
-                    f"[{cls.__name__}.from_dict] Unrecognized field '{k}' "
-                    f"({data[k]!r})."
+                    "[%s.from_dict] Unrecognized field '%s' (%r).",
+                    cls.__name__, k, data[k]
                 )
 
         # Legacy self-healing
@@ -170,7 +171,7 @@ class DictHydrator:
                     column.type, db.JSON)
                 if not isinstance(v, (list, dict)) or is_array_col:
                     fields[k] = v
-        
+
         # Apply mandatory IDs or overrides
         fields.update(overrides)
 
@@ -214,10 +215,10 @@ def timeFromStr(date_str):
 # Entity Parent Class
 # ------------------------------------------------------------------------
 
-class Entity(db.Model, DictHydrator):
+class Entity(DictHydrator):
     """Base table for all primary game objects."""
     TYPENAME = 'entity'
-    PLURAL = f'entities'
+    PLURAL = 'entities'
     SHORT = 'ent'
     __tablename__ = PLURAL
 
@@ -234,11 +235,11 @@ class Entity(db.Model, DictHydrator):
             "name": self.name,
             "description": self.description,
             "attribs": sorted([
-                [av.attrib_id, av.serialized_value] 
+                [av.attrib_id, av.serialized_value]
                 for av in self.attrib_values
             ], key=lambda x: x[0]),
             "abilities": sorted(
-                [link.event_id for link in self._ability_links])
+                [link.event_id for link in self.ability_links])
         }
         return self.to_dict_sparse(data)
 
@@ -258,7 +259,7 @@ class Entity(db.Model, DictHydrator):
                         value=final_val
                     ))
         for event_id in data.get('abilities', []):
-            entity._ability_links.append(EntityAbility(
+            entity.ability_links.append(EntityAbility(
                 game_token=game_token,
                 event_id=event_id
             ))
@@ -274,19 +275,19 @@ class Entity(db.Model, DictHydrator):
 
     @property
     def abilities(self):
-        return [link.event for link in self._ability_links]
+        return [link.event for link in self.ability_links]
 
     piles = db.relationship(
-        'Pile', 
-        back_populates='owner', 
+        'Pile',
+        back_populates='owner',
         foreign_keys="[Pile.game_token, Pile.owner_id]",
         cascade="all, delete-orphan") # Deletes piles if Entity is deleted
     attrib_values = db.relationship(
-        'AttribVal', 
+        'AttribVal',
         back_populates='subject',
         foreign_keys="[AttribVal.game_token, AttribVal.subject_id]",
         cascade="all, delete-orphan")
-    _ability_links = db.relationship(
+    ability_links = db.relationship(
         'EntityAbility',
         back_populates='entity',
         foreign_keys="[EntityAbility.game_token, EntityAbility.entity_id]",
@@ -335,7 +336,7 @@ class Item(Entity):
         data.update({
             "storage_type": self.storage_type,
             "q_limit": self.q_limit,
-            "limits_for": sorted([l.to_dict() for l in self.limits_for], 
+            "limits_for": sorted([l.to_dict() for l in self.limits_for],
                                 key=lambda x: x['owner_id']),
             "slot": self.slot_label,
             "loc_hosted": self.loc_hosted,
@@ -349,14 +350,14 @@ class Item(Entity):
         return self.to_dict_sparse(data)
 
     @classmethod
-    def from_dict(cls, data, game_token):
+    def from_dict(cls, data, game_token, **overrides):
         updates = {
             'limits_for': [
                 ItemLimit(game_token=game_token, **l_data)
                 for l_data in data.pop('limits_for', [])
             ],
             'recipes': [
-                Recipe.from_dict(r_data, game_token, order_index)
+                Recipe.from_dict(r_data, game_token, order_index=order_index)
                 for order_index, r_data in enumerate(data.pop('recipes', []))
             ],
         }
@@ -364,6 +365,7 @@ class Item(Entity):
         if slot_label:
             updates['slot_id'] = resolve_enum_id(
                 game_token, EQUIPMENT_SLOTS_ID, slot_label)
+        updates.update(overrides)
         return super().from_dict(data, game_token, **updates)
 
     @property
@@ -388,8 +390,8 @@ class Item(Entity):
         back_populates='item',
         cascade="all, delete-orphan")
     recipes = db.relationship(
-        'Recipe', 
-        back_populates='product', 
+        'Recipe',
+        back_populates='product',
         foreign_keys="[Recipe.game_token, Recipe.product_id]",
         cascade="all, delete-orphan",
         order_by="Recipe.order_index")
@@ -416,7 +418,7 @@ class Item(Entity):
             ['slot_id'],
             ['enum_entries.id'], ondelete='SET NULL'),
         db.CheckConstraint(
-            f"storage_type IN {StorageType.ALL_CODES}", 
+            f"storage_type IN {StorageType.ALL_CODES}",
             name="check_storage_type_valid"),
     )
     __mapper_args__ = {'polymorphic_identity': TYPENAME}
@@ -447,15 +449,15 @@ class Location(Entity):
             "masked": self.masked,
             "autobattle": self.autobattle,
             "items": sorted(
-                [p.to_dict() for p in self.piles], 
+                [p.to_dict() for p in self.piles],
                 key=lambda x: (x['item_id'], x.get('position') or [])),
             "item_refs": sorted(
                 [ir.item_id for ir in self.item_refs]),
             "destinations": sorted(
-                [d.to_dict() for d in self.routes_forward], 
+                [d.to_dict() for d in self.routes_forward],
                 key=lambda x: x['loc2_id']),
             "entrance_reqs": sorted(
-                [r.to_dict() for r in self.entrance_reqs], 
+                [r.to_dict() for r in self.entrance_reqs],
                 key=lambda x: (x.get('item_id') or 0,
                             x.get('attrib_id') or 0)),
             "zones": [z.to_dict() for z in self.zones],
@@ -463,12 +465,12 @@ class Location(Entity):
         return self.to_dict_sparse(data)
 
     @classmethod
-    def from_dict(cls, data, game_token):
+    def from_dict(cls, data, game_token, **overrides):
         scrub_array(data, 'dimensions', 2)
-        loc = super().from_dict(data, game_token)
+        loc = super().from_dict(data, game_token, **overrides)
         for i in data.get('items', []):
             loc.piles.append(
-                Pile.from_dict(i, game_token, loc.id))
+                Pile.from_dict(i, game_token, owner_id=loc.id))
         for item_id in data.get('item_refs', []):
             new_ref = ItemRef(
                 game_token=game_token,
@@ -478,13 +480,13 @@ class Location(Entity):
             loc.item_refs.append(new_ref)
         for d in data.get('destinations', []):
             loc.routes_forward.append(
-                LocDest.from_dict(d, game_token, loc.id))
+                LocDest.from_dict(d, game_token, loc1_id=loc.id))
         for r in data.get('entrance_reqs', []):
             loc.entrance_reqs.append(
-                EntranceReq.from_dict(r, game_token, loc.id))
+                EntranceReq.from_dict(r, game_token, loc_id=loc.id))
         for z in data.get('zones', []):
             loc.zones.append(
-                LocZone.from_dict(z, game_token, loc.id))
+                LocZone.from_dict(z, game_token, loc_id=loc.id))
         return loc
 
     @property
@@ -566,18 +568,18 @@ class Character(Entity):
             "location_id": self.location_id,
             "position": self.position,
             "party": self.party,
-            "items": sorted([p.to_dict() for p in self.piles], 
+            "items": sorted([p.to_dict() for p in self.piles],
                            key=lambda x: x['item_id']),
         })
         return self.to_dict_sparse(data)
 
     @classmethod
-    def from_dict(cls, data, game_token):
+    def from_dict(cls, data, game_token, **overrides):
         scrub_array(data, 'position', 2)
-        char = super().from_dict(data, game_token)
+        char = super().from_dict(data, game_token, **overrides)
         for i_data in data.get('items', []):
             char.piles.append(
-                Pile.from_dict(i_data, game_token, char.id))
+                Pile.from_dict(i_data, game_token, owner_id=char.id))
         return char
 
     location = db.relationship(
@@ -623,7 +625,7 @@ class Attrib(Entity):
     def to_dict(self):
         """Exports the attribute definition (type and states)."""
         data = super().to_dict()
-        data.pop("attribs", None) 
+        data.pop("attribs", None)
         data.update({
             "is_binary": self.is_binary,
             "enum_list": [e.label for e in self.enum_entries],
@@ -632,8 +634,8 @@ class Attrib(Entity):
         return self.to_dict_sparse(data)
 
     @classmethod
-    def from_dict(cls, data, game_token):
-        attrib = super().from_dict(data, game_token)
+    def from_dict(cls, data, game_token, **overrides):
+        attrib = super().from_dict(data, game_token, **overrides)
         for idx, label in enumerate(data.get('enum_list', [])):
             attrib.enum_entries.append(EnumEntry(
                 game_token=game_token,
@@ -660,7 +662,7 @@ class Attrib(Entity):
 
     def format_value(self, val, show_rank=False):
         """
-        Converts a raw float value into a string based on this 
+        Converts a raw float value into a string based on this
         attribute's definition.
         """
         if self.is_binary:
@@ -668,7 +670,7 @@ class Attrib(Entity):
             if show_rank:
                 return f"{val:g} ({label})"
             return label
-        
+
         if self.enum_entries:
             try:
                 entry_id = int(val)
@@ -799,30 +801,30 @@ class Event(Entity):
             "ab_priority": self.ab_priority,
             "determinants": [d.to_dict() for d in self.determinants],
             "effects": [e.to_dict() for e in self.effects],
-            "chained": sorted([l.to_dict() for l in self.chained], 
+            "chained": sorted([l.to_dict() for l in self.chained],
                              key=lambda x: x['child_id'])
         })
         return self.to_dict_sparse(data)
 
     @classmethod
-    def from_dict(cls, data, game_token):
-        event = super().from_dict(data, game_token)
+    def from_dict(cls, data, game_token, **overrides):
+        event = super().from_dict(data, game_token, **overrides)
         dets = data.get('determinants', [])
         effects = data.get('effects', [])
         event.factors = [
             EventFactor.from_dict(
-                d, game_token, event.id,
-                usage_type=Participant.DET, order_index=idx) 
+                d, game_token, event_id=event.id,
+                usage_type=Participant.DET, order_index=idx)
             for idx, d in enumerate(dets)
         ] + [
             EventFactor.from_dict(
-                e, game_token, event.id,
-                usage_type=Participant.EFF, order_index=idx) 
+                e, game_token, event_id=event.id,
+                usage_type=Participant.EFF, order_index=idx)
             for idx, e in enumerate(effects)
         ]
         for child_data in data.get('chained', []):
             event.chained.append(
-                EventLink.from_dict(child_data, game_token, event.id))
+                EventLink.from_dict(child_data, game_token, event_id=event.id))
         return event
 
     @property
@@ -872,7 +874,7 @@ ENTITIES = {
 # Association Tables (Many-to-Many)
 # ------------------------------------------------------------------------
 
-class Pile(db.Model, DictHydrator):
+class Pile(DictHydrator):
     """Consolidated pile of items. The owner defines whether it is:
     * held by a Character
     * or at a Location
@@ -904,15 +906,15 @@ class Pile(db.Model, DictHydrator):
         return self.to_dict_sparse(data)
 
     @classmethod
-    def from_dict(cls, data, game_token, owner_id):
-        scrub_array(data, 'position', 2)
-        updates = {}
+    def from_dict(cls, data, game_token, **overrides):
+        updates = {'owner_id': overrides.pop('owner_id')}
+        updates.update(overrides)
         slot_label = data.pop('slot', None)
         if slot_label:
             updates['slot_id'] = resolve_enum_id(
                 game_token, EQUIPMENT_SLOTS_ID, slot_label)
-        return super().from_dict(
-            data, game_token, owner_id=owner_id, **updates)
+        scrub_array(data, 'position', 2)
+        return super().from_dict(data, game_token, **updates)
 
     @property
     def is_placed(self):
@@ -926,13 +928,13 @@ class Pile(db.Model, DictHydrator):
 
     def merge_to(self, target_position):
         """
-        Moves this pile to a new position. If a pile of the same item 
+        Moves this pile to a new position. If a pile of the same item
         already exists there, merges this one into it.
         """
         if not isinstance(target_position, (list, tuple)):
             target_position = list(target_position)
 
-        # 1. Look for an existing pile at the target
+        # Look for an existing pile at the target
         existing_pile = Pile.query.filter_by(
             game_token=self.game_token,
             owner_id=self.owner_id,
@@ -941,15 +943,15 @@ class Pile(db.Model, DictHydrator):
         ).first()
 
         if existing_pile and existing_pile.id != self.id:
-            # 2. Merge quantities
+            # Merge quantities
             existing_pile.quantity += self.quantity
-            # 3. Remove the current (source) pile from the session
+            # Remove the current (source) pile from the session
             db.session.delete(self)
             return existing_pile
-        else:
-            # 4. No collision, just move this pile
-            self.position = target_position
-            return self
+
+        # No collision, just move this pile
+        self.position = target_position
+        return self
 
     def __repr__(self):
         pos_label = f"at {self.position}" if self.is_placed else "unplaced"
@@ -974,12 +976,12 @@ class Pile(db.Model, DictHydrator):
 
     __table_args__ = (
         # Ensure uniqueness depending on whether position is NULL
-        db.Index('idx_pile_unpositioned_unique', 
+        db.Index('idx_pile_unpositioned_unique',
             'game_token', 'owner_id', 'item_id',
             unique=True,
             sqlite_where=(db.column('position').is_(None)),
             postgresql_where=(db.column('position').is_(None))),
-        db.Index('idx_pile_positioned_unique', 
+        db.Index('idx_pile_positioned_unique',
             'game_token', 'owner_id', 'item_id', 'position',
             unique=True,
             sqlite_where=(db.column('position').is_not(None)),
@@ -996,7 +998,7 @@ class Pile(db.Model, DictHydrator):
             ['enum_entries.id'], ondelete='SET NULL'),
     )
 
-class ItemLimit(db.Model, DictHydrator):
+class ItemLimit(DictHydrator):
     """Overrides the default item q_limit for a specific owner."""
     __tablename__ = 'item_limits'
     game_token = db.Column(db.String(50), primary_key=True)
@@ -1011,7 +1013,7 @@ class ItemLimit(db.Model, DictHydrator):
         }
 
     item = db.relationship(
-        'Item', 
+        'Item',
         back_populates='limits_for',
         foreign_keys=[game_token, item_id])
     owner = db.relationship(
@@ -1064,7 +1066,7 @@ class AttribVal(db.Model):
             ['entities.game_token', 'entities.id'], ondelete='CASCADE'),
     )
 
-class EnumEntry(db.Model, DictHydrator):
+class EnumEntry(DictHydrator):
     """Labels for an Attrib's enumerated states."""
     __tablename__ = 'enum_entries'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -1074,7 +1076,7 @@ class EnumEntry(db.Model, DictHydrator):
     order_index = db.Column(db.Integer, default=0)
 
     attrib = db.relationship(
-        'Attrib', 
+        'Attrib',
         back_populates='enum_entries',
         foreign_keys=[game_token, attrib_id])
 
@@ -1084,13 +1086,13 @@ class EnumEntry(db.Model, DictHydrator):
             ['attribs.game_token', 'attribs.id'], ondelete='CASCADE'),
     )
 
-class EntranceReq(db.Model, DictHydrator):
+class EntranceReq(DictHydrator):
     """Requirements that must be met for a char to arrive at this location."""
     __tablename__ = 'entrance_reqs'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     game_token = db.Column(db.String(50), index=True, nullable=False)
     loc_id = db.Column(db.Integer, nullable=False)
-    
+
     item_id = db.Column(db.Integer)
     attrib_id = db.Column(db.Integer)
     val_required = db.Column(db.Float)
@@ -1105,13 +1107,14 @@ class EntranceReq(db.Model, DictHydrator):
         return self.to_dict_sparse(data)
 
     @classmethod
-    def from_dict(cls, data, game_token, loc_id):
-        updates = {}
+    def from_dict(cls, data, game_token, **overrides):
+        updates = {'loc1_id': overrides.pop('loc1_id')}
+        updates.update(overrides)
         attrib_id = data.get('attrib_id')
         if attrib_id:
             updates['val_required'] = attrib_val_from_json(
                 game_token, attrib_id, data.pop('val_required', 0.0))
-        return super().from_dict(data, game_token, loc_id=loc_id, **updates)
+        return super().from_dict(data, game_token, **updates)
 
     location = db.relationship(
         'Location',
@@ -1144,7 +1147,7 @@ class DestExit:
 
     ALL = [BOTH, LOC1, LOC2]
 
-class LocDest(db.Model, DictHydrator):
+class LocDest(DictHydrator):
     __tablename__ = 'loc_destinations'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     game_token = db.Column(db.String(50), index=True, nullable=False)
@@ -1164,10 +1167,12 @@ class LocDest(db.Model, DictHydrator):
         return self.to_dict_sparse(data)
 
     @classmethod
-    def from_dict(cls, data, game_token, loc1_id):
+    def from_dict(cls, data, game_token, **overrides):
+        updates = {'loc1_id': overrides.pop('loc1_id')}
+        updates.update(overrides)
         scrub_array(data, 'door1', 2)
         scrub_array(data, 'door2', 2)
-        return super().from_dict(data, game_token, loc1_id=loc1_id)
+        return super().from_dict(data, game_token, **updates)
 
     def other_loc(self, loc_id):
         if self.loc1_id == loc_id:
@@ -1205,13 +1210,13 @@ class LocDest(db.Model, DictHydrator):
             direction.in_(DestExit.ALL), name='check_direction_valid'),
     )
 
-class LocZone(db.Model, DictHydrator):
+class LocZone(DictHydrator):
     __tablename__ = 'loc_zones'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     game_token = db.Column(db.String(50), index=True, nullable=False)
     loc_id = db.Column(db.Integer, nullable=False)
     coords = db.Column(db.JSON(db.Integer), nullable=False) # l,t,r,b
-    
+
     label = db.Column(db.String(100))
     color = db.Column(db.String(20)) # e.g. "rgba(255,0,0,0.2)" or "#330000"
     prevents_travel = db.Column(db.Boolean, default=True)
@@ -1227,9 +1232,11 @@ class LocZone(db.Model, DictHydrator):
         return self.to_dict_sparse(data)
 
     @classmethod
-    def from_dict(cls, data, game_token, loc_id):
+    def from_dict(cls, data, game_token, **overrides):
+        updates = {'loc_id': overrides.pop('loc_id')}
+        updates.update(overrides)
         scrub_array(data, 'coords', 4)
-        return super().from_dict(data, game_token, loc_id=loc_id)
+        return super().from_dict(data, game_token, **updates)
 
     location = db.relationship(
         'Location',
@@ -1433,14 +1440,14 @@ class Operation:
     FUNCTIONAL = [ROUND, FLOOR, CEIL, MIN, MAX, MASK, SOFTCAP]
 
 
-class EventField(db.Model, DictHydrator):
+class EventField(DictHydrator):
     """
     Access an attribute or item quantity by event role.
 
     Attribute Value Lookup:
         - Look up an AttribVal for the given attrib_id, either for an
           anchor or one of their child items.
-        - Example 1: Role SUBJECT, Mode ATTR, Attrib STR, AttribVal 3 
+        - Example 1: Role SUBJECT, Mode ATTR, Attrib STR, AttribVal 3
         - Example 2: Role SUBJECT, ChildItem True, Mode ATTR, Attrib ACCURACY,
             AttribVal 4 (a pile selected from the list of subject's inventory
             and nearby carried/local piles)
@@ -1486,7 +1493,7 @@ class EventField(db.Model, DictHydrator):
         if self.field_mode == Participant.ATTR and self.attrib_id:
             attrib = db.session.get(Attrib, (self.game_token, self.attrib_id))
             if not attrib:
-                return f"(!broken attrib!)"
+                return "(!broken attrib!)"
             if self.item_id:
                 item = db.session.get(Item, (self.game_token, self.item_id))
                 item_label = f" of {maskable_name(item)}" if item else ""
@@ -1501,7 +1508,7 @@ class EventField(db.Model, DictHydrator):
             if self.field_mode == Participant.LIMIT:
                 return f"{maskable_name(item)} Limit"
             if self.field_mode == Participant.DIST:
-               return f"Distance from Subject"
+                return "Distance from Subject"
             if self.field_mode == Participant.RATE_AMT and self.recipe_id:
                 return f"{maskable_name(item)} Yield"
             if self.field_mode == Participant.RATE_DUR and self.recipe_id:
@@ -1526,7 +1533,7 @@ class EventField(db.Model, DictHydrator):
             field_mode.in_(Participant.ALL_MODES), name='check_field_valid'),
     )
 
-class EventFactor(db.Model, DictHydrator):
+class EventFactor(DictHydrator):
     """
     Combine a retrieved value into a Determinant or Effect.
     Defines how to retrieve the value and how to apply it.
@@ -1559,7 +1566,7 @@ class EventFactor(db.Model, DictHydrator):
     #   * (1.5 ^ Qty)      -> op_app: MULT, op_trans: POW_OF_VAL, val_trans: 1.5
     #   (Str - 1) == 10    -> op_app: EQ, op_trans: SUB, val_trans: 1.0, val_req: 10
     #   + log(HP)          -> op_app: ADD, scaling: 'log'
-    #   
+    #
     op_application = db.Column(db.String(5), default=Operation.ADD) # outer op
     op_transform = db.Column(db.String(5), default=None) # inner op
     val_transform = db.Column(db.Float, default=1.0) # inner constant
@@ -1590,8 +1597,9 @@ class EventFactor(db.Model, DictHydrator):
         return self.to_dict_sparse(data)
 
     @classmethod
-    def from_dict(cls, data, game_token, event_id, **overrides):
-        updates = {}
+    def from_dict(cls, data, game_token, **overrides):
+        updates = {'event_id': overrides.pop('event_id')}
+        updates.update(overrides)
         in_data = data.get('infield', {})
         out_data = data.get('outfield', {})
         attrib_id = in_data.get('attrib_id') or out_data.get('attrib_id')
@@ -1606,10 +1614,7 @@ class EventFactor(db.Model, DictHydrator):
             updates['infield'] = EventField(game_token=game_token, **in_data)
         if out_data:
             updates['outfield'] = EventField(game_token=game_token, **out_data)
-        
-        updates.update(overrides)
-        return super().from_dict(
-            data, game_token, event_id=event_id, **updates)
+        return super().from_dict(data, game_token, **updates)
 
     @property
     def role(self):
@@ -1658,26 +1663,26 @@ class EventFactor(db.Model, DictHydrator):
             ['game_token', 'event_id'],
             ['events.game_token', 'events.id'], ondelete='CASCADE'),
         db.ForeignKeyConstraint(
-            ['infield_id'], 
+            ['infield_id'],
             ['event_fields.id'], ondelete='CASCADE'),
         db.ForeignKeyConstraint(
-            ['outfield_id'], 
+            ['outfield_id'],
             ['event_fields.id'], ondelete='CASCADE'),
         db.CheckConstraint(
             usage_type.in_(Participant.ALL_USAGE), name='check_usage_type_valid'),
     )
 
-class EventLink(db.Model, DictHydrator):
+class EventLink(DictHydrator):
     """Connections between events to create chains/sequences."""
     __tablename__ = 'event_links'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     game_token = db.Column(db.String(50), index=True, nullable=False)
-    
+
     parent_id = db.Column(db.Integer, nullable=False)
     child_id = db.Column(db.Integer, nullable=False)
 
     factor_id = db.Column(db.Integer, nullable=True)
-    
+
     def to_dict(self):
         data = {
             "child_id": self.child_id,
@@ -1686,12 +1691,14 @@ class EventLink(db.Model, DictHydrator):
         return self.to_dict_sparse(data)
 
     @classmethod
-    def from_dict(cls, data, game_token, parent_id):
-        link = super().from_dict(data, game_token, parent_id=parent_id)
+    def from_dict(cls, data, game_token, **overrides):
+        updates = {'parent_id': overrides.pop('parent_id')}
+        updates.update(overrides)
+        link = super().from_dict(data, game_token, **updates)
         req_data = data.get('req')
         if req_data:
             link.req = EventFactor.from_dict(
-                req_data, game_token, parent_id, usage_type=Participant.CHAIN)
+                req_data, game_token, usage_type=Participant.CHAIN)
         return link
 
     parent = db.relationship(
@@ -1705,7 +1712,7 @@ class EventLink(db.Model, DictHydrator):
     req = db.relationship(
         'EventFactor',
         foreign_keys=[factor_id],
-        cascade="all, delete-orphan", 
+        cascade="all, delete-orphan",
         single_parent=True)
 
     __table_args__ = (
@@ -1716,7 +1723,7 @@ class EventLink(db.Model, DictHydrator):
             ['game_token', 'child_id'],
             ['events.game_token', 'events.id'], ondelete='CASCADE'),
         db.ForeignKeyConstraint(
-            ['factor_id'], 
+            ['factor_id'],
             ['event_factors.id'], ondelete='CASCADE'),
     )
 
@@ -1732,8 +1739,8 @@ class EntityAbility(db.Model):
     entity = db.relationship(
         'Entity',
         foreign_keys=[game_token, entity_id],
-        back_populates='_ability_links',
-        overlaps="_ability_links,event")
+        back_populates='ability_links',
+        overlaps="ability_links,event")
     event = db.relationship(
         'Event',
         foreign_keys=[game_token, event_id],
@@ -1752,7 +1759,7 @@ class EntityAbility(db.Model):
 # Recipes
 # ------------------------------------------------------------------------
 
-class Recipe(db.Model, DictHydrator):
+class Recipe(DictHydrator):
     __tablename__ = 'recipes'
     game_token = db.Column(db.String(50), primary_key=True)
     id = db.Column(db.Integer, primary_key=True)
@@ -1781,9 +1788,10 @@ class Recipe(db.Model, DictHydrator):
         return self.to_dict_sparse(data)
 
     @classmethod
-    def from_dict(cls, data, game_token, order_index):
-        recipe = super().from_dict(
-            data, game_token, order_index=order_index)
+    def from_dict(cls, data, game_token, **overrides):
+        updates = {'order_index': overrides.pop('order_index')}
+        updates.update(overrides)
+        recipe = super().from_dict(data, game_token, **updates)
         recipe.sources = [
             RecipeSource(game_token=game_token, **s)
             for s in data.get('sources', [])]
@@ -1791,7 +1799,7 @@ class Recipe(db.Model, DictHydrator):
             RecipeByproduct(game_token=game_token, **b)
             for b in data.get('byproducts', [])]
         recipe.attrib_reqs = [
-            RecipeAttribReq.from_dict(ar, game_token, recipe_id=recipe.id) 
+            RecipeAttribReq.from_dict(ar, game_token, recipe_id=recipe.id)
             for ar in data.get('attrib_reqs', [])
         ]
         return recipe
@@ -1803,7 +1811,7 @@ class Recipe(db.Model, DictHydrator):
     @property
     def is_location_hosted(self):
         return any(
-            s.ingredient.storage_type == StorageType.LOCAL and 
+            s.ingredient.storage_type == StorageType.LOCAL and
             s.ingredient.loc_hosted and
             s.preserve
             for s in self.sources
@@ -1842,7 +1850,7 @@ class Recipe(db.Model, DictHydrator):
         back_populates='recipes',
         foreign_keys=[game_token, product_id])
     sources = db.relationship(
-        'RecipeSource', 
+        'RecipeSource',
         back_populates='recipe',
         foreign_keys="[RecipeSource.game_token, RecipeSource.recipe_id]",
         cascade="all, delete-orphan")
@@ -1863,7 +1871,7 @@ class Recipe(db.Model, DictHydrator):
             ['items.game_token', 'items.id'], ondelete='CASCADE'),
     )
 
-class RecipeSource(db.Model, DictHydrator):
+class RecipeSource(DictHydrator):
     __tablename__ = 'recipe_sources'
     game_token = db.Column(db.String(50), primary_key=True)
     recipe_id = db.Column(db.Integer, primary_key=True)
@@ -1880,8 +1888,10 @@ class RecipeSource(db.Model, DictHydrator):
         return self.to_dict_sparse(data)
 
     @classmethod
-    def from_dict(cls, data, game_token, recipe_id):
-        return super().from_dict(data, game_token, recipe_id=recipe_id)
+    def from_dict(cls, data, game_token, **overrides):
+        updates = {'recipe_id': overrides.pop('recipe_id')}
+        updates.update(overrides)
+        return super().from_dict(data, game_token, **updates)
 
     recipe = db.relationship(
         'Recipe',
@@ -1903,7 +1913,7 @@ class RecipeSource(db.Model, DictHydrator):
             ['items.game_token', 'items.id'], ondelete='CASCADE'),
     )
 
-class RecipeByproduct(db.Model, DictHydrator):
+class RecipeByproduct(DictHydrator):
     __tablename__ = 'recipe_byproducts'
     game_token = db.Column(db.String(50), primary_key=True)
     recipe_id = db.Column(db.Integer, primary_key=True)
@@ -1918,8 +1928,10 @@ class RecipeByproduct(db.Model, DictHydrator):
         return self.to_dict_sparse(data)
 
     @classmethod
-    def from_dict(cls, data, game_token, recipe_id):
-        return super().from_dict(data, game_token, recipe_id=recipe_id)
+    def from_dict(cls, data, game_token, **overrides):
+        updates = {'recipe_id': overrides.pop('recipe_id')}
+        updates.update(overrides)
+        return super().from_dict(data, game_token, **updates)
 
     recipe = db.relationship(
         'Recipe',
@@ -1941,7 +1953,7 @@ class RecipeByproduct(db.Model, DictHydrator):
             ['items.game_token', 'items.id'], ondelete='CASCADE'),
     )
 
-class RecipeAttribReq(db.Model, DictHydrator):
+class RecipeAttribReq(DictHydrator):
     __tablename__ = 'recipe_attrib_reqs'
     game_token = db.Column(db.String(50), primary_key=True)
     recipe_id = db.Column(db.Integer, primary_key=True)
@@ -1959,15 +1971,16 @@ class RecipeAttribReq(db.Model, DictHydrator):
         return self.to_dict_sparse(data)
 
     @classmethod
-    def from_dict(cls, data, game_token, recipe_id):
+    def from_dict(cls, data, game_token, **overrides):
         """Processes nested list data before delegating to DictHydrator."""
         attrib_id = data.get('attrib_id')
         updates = {
+            'recipe_id': overrides.pop('recipe_id'),
             'val_required': attrib_val_from_json(
                 game_token, attrib_id, data.pop('val_required', None))
         }
-        return super().from_dict(
-            data, game_token, recipe_id=recipe_id, **updates)
+        updates.update(overrides)
+        return super().from_dict(data, game_token, **updates)
 
     def is_satisfied(self, val):
         """Checks if a specific value meets this requirement."""
@@ -2005,7 +2018,7 @@ class RecipeAttribReq(db.Model, DictHydrator):
 # State and Navigation
 # ------------------------------------------------------------------------
 
-class Progress(db.Model, DictHydrator):
+class Progress(DictHydrator):
     """
     Table for all timed activities.
     Produce Items in a Pile via Recipes.
@@ -2013,7 +2026,7 @@ class Progress(db.Model, DictHydrator):
     __tablename__ = 'progress'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     game_token = db.Column(db.String(50), index=True, nullable=False)
-    
+
     # what we're making
     recipe_id = db.Column(db.Integer, nullable=False)
     product_id = db.Column(db.Integer, nullable=False) # recipe.product_id copy
@@ -2024,7 +2037,7 @@ class Progress(db.Model, DictHydrator):
     char_id = db.Column(db.Integer)
     loc_id = db.Column(db.Integer)
     position = db.Column(db.JSON(db.Integer), default=None)
-    
+
     # status
     start_time = db.Column(db.DateTime)
     batches_processed = db.Column(db.Integer, default=0)
@@ -2045,20 +2058,16 @@ class Progress(db.Model, DictHydrator):
         return self.to_dict_sparse(data)
 
     @classmethod
-    def from_dict(cls, data, game_token):
-        obj = super().from_dict(data, game_token)
-
-        from app.models import Recipe
+    def from_dict(cls, data, game_token, **overrides):
+        obj = super().from_dict(data, game_token, **overrides)
         recipe = db.session.get(Recipe, (game_token, data.get('recipe_id')))
         if recipe:
             obj.product_id = recipe.product_id
-
         obj.start_time = timeFromStr(data.get('start_time'))
-
         return obj
 
     host = db.relationship(
-        'Entity', 
+        'Entity',
         back_populates='progress_records',
         foreign_keys=[game_token, host_id],
         overlaps="recipe,progress_records")
@@ -2089,7 +2098,7 @@ class Progress(db.Model, DictHydrator):
 # Global Configuration
 # ------------------------------------------------------------------------
 
-class Scenario(db.Model, DictHydrator):
+class Scenario(DictHydrator):
     """
     Stores scenario-wide metadata and win conditions for a loaded scenario.
     The model uses a game token to identify the loaded scenario instance,
@@ -2122,11 +2131,12 @@ class Scenario(db.Model, DictHydrator):
         return data
 
     @classmethod
-    def from_dict(cls, data, game_token):
-        scenario = super().from_dict(data, game_token)
+    def from_dict(cls, data, game_token, **overrides):
+        scenario = super().from_dict(data, game_token, **overrides)
         for order_index, wr_data in enumerate(data.get('win_reqs', [])):
             scenario.win_reqs.append(
-                WinRequirement.from_dict(wr_data, game_token, order_index)
+                WinRequirement.from_dict(
+                    wr_data, game_token, order_index=order_index)
             )
         return scenario
 
@@ -2138,7 +2148,7 @@ class Scenario(db.Model, DictHydrator):
         order_by="WinRequirement.order_index",
         overlaps="scenario,item,char,loc,attrib")
 
-class WinRequirement(db.Model, DictHydrator):
+class WinRequirement(DictHydrator):
     __tablename__ = 'win_requirements'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     game_token = db.Column(db.String(50), index=True, nullable=False)
@@ -2163,15 +2173,15 @@ class WinRequirement(db.Model, DictHydrator):
         return self.to_dict_sparse(data)
 
     @classmethod
-    def from_dict(cls, data, game_token, order_index):
-        updates = {}
+    def from_dict(cls, data, game_token, **overrides):
+        updates = {'order_index': overrides.pop('order_index')}
+        updates.update(overrides)
         attrib_id = data.get('attrib_id')
         if attrib_id:
             attrib_val_raw = data.pop('attrib_value', None)
             updates['attrib_value'] = attrib_val_from_json(
                 game_token, attrib_id, attrib_val_raw)
-        return super().from_dict(
-            data, game_token, order_index=order_index, **updates)
+        return super().from_dict(data, game_token, **updates)
 
     scenario = db.relationship(
         'Scenario',
@@ -2198,23 +2208,23 @@ class WinRequirement(db.Model, DictHydrator):
     __table_args__ = (
         db.ForeignKeyConstraint(
             ['game_token'],
-            ['scenario.game_token'], 
+            ['scenario.game_token'],
             ondelete='CASCADE'),
         db.ForeignKeyConstraint(
             ['game_token', 'item_id'],
-            ['items.game_token', 'items.id'], 
+            ['items.game_token', 'items.id'],
             ondelete='CASCADE'),
         db.ForeignKeyConstraint(
             ['game_token', 'char_id'],
-            ['characters.game_token', 'characters.id'], 
+            ['characters.game_token', 'characters.id'],
             ondelete='CASCADE'),
         db.ForeignKeyConstraint(
             ['game_token', 'loc_id'],
-            ['locations.game_token', 'locations.id'], 
+            ['locations.game_token', 'locations.id'],
             ondelete='CASCADE'),
         db.ForeignKeyConstraint(
             ['game_token', 'attrib_id'],
-            ['attribs.game_token', 'attribs.id'], 
+            ['attribs.game_token', 'attribs.id'],
             ondelete='CASCADE'),
     )
 
@@ -2247,7 +2257,7 @@ class IdSequence(db.Model):
         row = db.session.execute(stmt).scalar_one_or_none()
         assigned_id = row.next_id
         row.next_id += 1
-        
+
         return assigned_id
 
 # ------------------------------------------------------------------------

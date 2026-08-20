@@ -1,13 +1,12 @@
 import random
 import math
 import logging
-from flask import g, request, session
+from flask import g, session
 from app.models import (
     db, GENERAL_ID, Entity, Item, Location, Character, Attrib, Event,
     StorageType, Operation, OutcomeType, SuccessTier, RollerType, Participant,
     AttribVal, EnumEntry, Pile, LocDest, Recipe)
 from app.utils import maskable_name
-from app.serialization import clone_entity
 from .logic_piles import (
     adjust_quantity, get_accessible_quantity, adjust_accessible_quantity)
 from .logic_user_interaction import add_message
@@ -136,20 +135,28 @@ def apply_numeric_op(current_val, mod_val, op, output_range=None):
         return sign * (1 + output_range * ratio)
 
     # Comparisons
-    if op == Operation.EQ: return current_val == mod_val
-    if op == Operation.GE: return current_val >= mod_val
-    if op == Operation.LT: return current_val < mod_val
+    if op == Operation.EQ:
+        return current_val == mod_val
+    if op == Operation.GE:
+        return current_val >= mod_val
+    if op == Operation.LT:
+        return current_val < mod_val
 
     # Arithmetic
-    if op == Operation.ADD:  return current_val + mod_val
-    if op == Operation.SUB:  return current_val - mod_val
-    if op == Operation.MULT: return current_val * mod_val
-    if op == Operation.DIV:  return current_val / mod_val \
-                                if mod_val != 0 else current_val
-    if op == Operation.MOD:  return current_val % mod_val \
-                                if mod_val != 0 else current_val
-    if op == Operation.VAL_TO_POW: return current_val ** mod_val
-    if op == Operation.POW_OF_VAL: return mod_val ** current_val
+    if op == Operation.ADD:
+        return current_val + mod_val
+    if op == Operation.SUB:
+        return current_val - mod_val
+    if op == Operation.MULT:
+        return current_val * mod_val
+    if op == Operation.DIV:
+        return current_val / mod_val if mod_val != 0 else current_val
+    if op == Operation.MOD:
+        return current_val % mod_val if mod_val != 0 else current_val
+    if op == Operation.VAL_TO_POW:
+        return current_val ** mod_val
+    if op == Operation.POW_OF_VAL:
+        return mod_val ** current_val
 
     return current_val
 
@@ -243,7 +250,7 @@ def get_entity_value(anchor_id, field_def, subject_id=None, ledger=None):
     """Handles Attr vs Qty and Base vs Child."""
     game_token=g.game_token
     target_id = anchor_id
-    
+
     # Check the virtual ledger first
     if ledger is not None:
         ledger_key = _ledger_key(anchor_id, field_def)
@@ -252,7 +259,8 @@ def get_entity_value(anchor_id, field_def, subject_id=None, ledger=None):
 
     # Distance Calculation (Read-Only)
     if field_def.field_mode == Participant.DIST:
-        if not subject_id or not anchor_id: return 0.0
+        if not subject_id or not anchor_id:
+            return 0.0
         subj = db.session.get(Entity, (game_token, subject_id))
         target = db.session.get(Entity, (game_token, anchor_id))
         if not (subj and target and subj.position and target.position):
@@ -263,9 +271,11 @@ def get_entity_value(anchor_id, field_def, subject_id=None, ledger=None):
     if field_def.field_mode in (
             Participant.RATE_AMT, Participant.RATE_DUR,
             Participant.SOURCE_QTY, Participant.BYP_QTY):
-        if not field_def.recipe_id: return 0.0
+        if not field_def.recipe_id:
+            return 0.0
         recipe = db.session.get(Recipe, (game_token, field_def.recipe_id))
-        if not recipe: return 0.0
+        if not recipe:
+            return 0.0
 
         if field_def.field_mode == Participant.RATE_AMT:
             return recipe.rate_amount
@@ -292,11 +302,11 @@ def get_entity_value(anchor_id, field_def, subject_id=None, ledger=None):
         # Find the first pile that satisfies the requirement
         if field_def.field_mode == Participant.ATTR:
             query = db.session.query(Pile).join(
-                Item, 
+                Item,
                 (Pile.item_id == Item.id) &
                 (Pile.game_token == Item.game_token)
             ).join(
-                AttribVal, 
+                AttribVal,
                 (AttribVal.subject_id == Item.id) &
                 (AttribVal.game_token == Item.game_token)
             ).filter(
@@ -307,18 +317,20 @@ def get_entity_value(anchor_id, field_def, subject_id=None, ledger=None):
             if is_character:
                 query = query.filter(Pile.slot_id.is_not(None))
             pile = query.first()
-            if not pile: return 0.0
-            target_id = pile.item_id 
+            if not pile:
+                return 0.0
+            target_id = pile.item_id
         else:
             # Quantity Mode: Target is the specific item_id requested
             if is_character:
                 # Verify the specific item is equipped
                 equipped_pile = Pile.query.filter_by(
-                    game_token=game_token, owner_id=anchor_id, 
+                    game_token=game_token, owner_id=anchor_id,
                     item_id=field_def.item_id
                 ).filter(
                     Pile.slot_id.is_not(None)).first()
-                if not equipped_pile: return 0.0
+                if not equipped_pile:
+                    return 0.0
             target_id = field_def.item_id
 
     # Fetch Attribute Value
@@ -331,7 +343,7 @@ def get_entity_value(anchor_id, field_def, subject_id=None, ledger=None):
             attrib_id=field_def.attrib_id
         ).first()
         return val_obj.value if val_obj else 0.0
-    
+
     # Fetch Default Storage Limit
     if field_def.field_mode == Participant.LIMIT and field_def.item_id:
         item = db.session.get(Item, (game_token, field_def.item_id))
@@ -349,7 +361,6 @@ def get_entity_value(anchor_id, field_def, subject_id=None, ledger=None):
             else:
                 owner_id = anchor_id
 
-        #TODO: limit by position
         pile = Pile.query.filter_by(
             game_token=game_token,
             owner_id=owner_id,
@@ -368,7 +379,7 @@ def get_entity_value(anchor_id, field_def, subject_id=None, ledger=None):
 
 def can_use_field(field, entity):
     """
-    Validation logic to see if the given entity (Char/Loc/Item) 
+    Validation logic to see if the given entity (Char/Loc/Item)
     can be accessed using the given EventField.
     """
     game_token = g.game_token
@@ -409,10 +420,6 @@ def can_use_field(field, entity):
         if not any(av.attrib_id == field.attrib_id for av in entity.attrib_values):
             return False
 
-    # TODO: check for event distance requirement e.g. 30ft (6 tiles)
-    # dist = straight_line_dist(owner.position, c.position)
-    # if dist is not None and dist > d.distance_reqired
-
     # --- 4. Standard Quantity Check (On the Anchor itself) ---
     if field.field_mode == Participant.QTY and field.item_id:
         # Check if the entity has a pile of this item
@@ -434,19 +441,23 @@ def is_factor_met(factor, entity, subject_id=None,
     """
     game_token = g.game_token
     field = factor.infield
-    
+
+    def meets(bval):
+        """If negated then the factor is met when False."""
+        return not bval if factor.negate else bval
+
     # 1. Check if the entity even has the field (The "Capability" check)
     if not field or not can_use_field(field, entity):
-        return False if not factor.negate else True
+        return meets(False)
 
     # 2. If it's a calculation then existence is enough to be met
     if not factor.is_comparison or not require_comparison:
-        return True if not factor.negate else False
+        return meets(True)
 
     # 3. If it's a comparison (==, >=, etc.), we must check the actual value
     # Fetch the value from the entity
     val = get_entity_value(entity.id, field, subject_id, ledger)
-    
+
     # Apply inner transform (e.g. Rounding or Softcap)
     if factor.op_transform and factor.op_transform != Operation.CONST:
         val = apply_operation(val, factor.val_transform, factor.op_transform)
@@ -482,7 +493,7 @@ def calculate_determinants(event, role_entities):
         field_name = infield.get_field_name() if infield else "Value"
         source_display = "Constant"
         value_display_override = None
-            
+
         attrib = None
         if infield and infield.field_mode == Participant.ATTR \
                 and infield.attrib_id:
@@ -609,7 +620,7 @@ def calculate_determinants(event, role_entities):
         if det.negate:
             is_met = not is_met
 
-        def smart_format(v):
+        def smart_format(v, attrib):
             if attrib:
                 return attrib.format_value(v, show_rank=True)
             return format_for_display(v)
@@ -626,9 +637,9 @@ def calculate_determinants(event, role_entities):
             'calc_value': calc_value,
             'value_display':
                 value_display_override if value_display_override is not None \
-                else smart_format(val),
+                else smart_format(val, attrib),
             'val_required': det.val_required,
-            'val_required_display': smart_format(det.val_required),
+            'val_required_display': smart_format(det.val_required, attrib),
             'negate': det.negate,
             'op_app': det.op_application,
             'op_app_display': det.op_app_display,
@@ -638,7 +649,7 @@ def calculate_determinants(event, role_entities):
             'op_transform': det.op_transform,
             'val_transform': det.val_transform,
         })
-        
+
     return modifiers
 
 # ------------------------------------------------------------------------
@@ -690,7 +701,8 @@ def preview_effects(event, role_entities, roll_val=None):
 
     for eff in event.effects:
         field_def = eff.outfield
-        if not field_def: continue
+        if not field_def:
+            continue
 
         # --- 1. Resolve target name & current value ---
         target_id = resolve_anchor_id(field_def.role, role_entities, field_def)
@@ -735,7 +747,7 @@ def preview_effects(event, role_entities, roll_val=None):
             impact_value = None
 
         if field_def.field_mode in Participant.REQUIRES_PRESELECTED:
-            is_resolved = True 
+            is_resolved = True
             target_name = "📦"
             current_val = get_entity_value(None, field_def, ledger)
         elif target_id is not None:
@@ -747,11 +759,11 @@ def preview_effects(event, role_entities, roll_val=None):
                     field_def.field_mode == Participant.ATTR:
                 target_ent = db.session.get(Entity, (game_token, target_id))
                 query = db.session.query(Pile).join(
-                    Item, 
+                    Item,
                     (Pile.item_id == Item.id) &
                     (Pile.game_token == Item.game_token)
                 ).join(
-                    AttribVal, 
+                    AttribVal,
                     (AttribVal.subject_id == Item.id) &
                     (AttribVal.game_token == Item.game_token)
                 ).filter(
@@ -783,7 +795,7 @@ def preview_effects(event, role_entities, roll_val=None):
         # --- 2. Resolve source data (existing logic) ---
         source_name = ""
         source_val = 0.0
-        
+
         if eff.get_val_from == Participant.OUTCOME:
             source_name = "Roll Result"
             source_val = roll_val
@@ -871,11 +883,11 @@ def resolve_effects(event, role_entities, roll_val, tier=None):
 
         if not check_outcome_success(eff.outcome_success, tier):
             continue
- 
+
         # --- 1. Fill in impact now that roll_val is known ---
         impact, _ = calculate_numeric_impact(
             eff, role_entities, roll_val, ledger)
- 
+
         # --- 2. Compute Final Value ---
         # Use the ledgered value if a prior effect already changed this field,
         # otherwise fall back to the DB-sourced value from the preview.
@@ -900,7 +912,7 @@ def resolve_effects(event, role_entities, roll_val, tier=None):
             current_val, impact, eff.op_application, attrib=attrib)
         if lkey is not None:
             ledger[lkey] = final_val
- 
+
         # --- 3. Build Display Strings ---
         # Location-setting modes: show destination name rather than a number
         if field_def.field_mode in Participant.USES_LOC:
@@ -926,7 +938,7 @@ def resolve_effects(event, role_entities, roll_val, tier=None):
             final_display = attrib.format_value(
                 final_val, show_rank=True) if attrib \
                 else format_for_display(final_val)
- 
+
         results.append({
             'effect_id': eff.id,
             'current_value': current_val,
@@ -946,7 +958,7 @@ def get_chain_results(event, role_entities, roll_val, tier, ledger=None):
     game_token = g.game_token
     subject_id = resolve_anchor_id(Participant.SUBJECT, role_entities)
     chain_results = []
-    
+
     for evt_link in event.chained:
         is_eligible = True
 
@@ -954,7 +966,7 @@ def get_chain_results(event, role_entities, roll_val, tier, ledger=None):
             # 1. Check Outcome Success Tier
             if not check_outcome_success(evt_link.req.outcome_success, tier):
                 is_eligible = False
-            
+
             # 2. Check Comparison (Using Ledger)
             factor = evt_link.req
             if is_eligible and factor.get_val_from == Participant.OUTCOME:
@@ -981,7 +993,7 @@ def get_chain_results(event, role_entities, roll_val, tier, ledger=None):
                 "child_id": evt_link.child_id,
                 "child_name": evt_link.child.name
             })
-            
+
     return chain_results
 
 def check_outcome_success(filter_val, tier):
@@ -994,14 +1006,14 @@ def check_outcome_success(filter_val, tier):
         return True
     if filter_val == SuccessTier.SUCCESS_ANY:
         return tier in [
-            SuccessTier.SUCCESS_NAT_MAX, 
-            SuccessTier.SUCCESS_MAJOR, 
+            SuccessTier.SUCCESS_NAT_MAX,
+            SuccessTier.SUCCESS_MAJOR,
             SuccessTier.SUCCESS_MINOR
         ]
     if filter_val == SuccessTier.FAILURE_ANY:
         return tier in [
-            SuccessTier.FAILURE_NAT_MIN, 
-            SuccessTier.FAILURE_MAJOR, 
+            SuccessTier.FAILURE_NAT_MIN,
+            SuccessTier.FAILURE_MAJOR,
             SuccessTier.FAILURE_MINOR
         ]
     if filter_val == SuccessTier.SUCCESS_MAJOR:
@@ -1033,7 +1045,7 @@ def do_effect_change(eff, roll_val, role_entities):
     if not field_def:
         return True, ''
 
-    # If the mode requires a specific instance (Character/Location/Pile), 
+    # If the mode requires a specific instance (Character/Location/Pile),
     # validate that the participant role is resolved.
     if field_def.field_mode not in Participant.REQUIRES_PRESELECTED:
         out_entity_id = resolve_anchor_id(
@@ -1047,11 +1059,11 @@ def do_effect_change(eff, roll_val, role_entities):
         if field_def.child_of_anchor:
             anchor = db.session.get(Entity, (game_token, out_entity_id))
             query = db.session.query(Pile).join(
-                Item, 
+                Item,
                 (Pile.item_id == Item.id) &
                 (Pile.game_token == Item.game_token)
             ).join(
-                AttribVal, 
+                AttribVal,
                 (AttribVal.subject_id == Item.id) &
                 (AttribVal.game_token == Item.game_token)
             ).filter(
@@ -1082,10 +1094,10 @@ def do_effect_change(eff, roll_val, role_entities):
         current = record.value if record else 0.0
         attrib = db.session.get(Attrib, (game_token, field_def.attrib_id))
         new_val = apply_operation(current, impact, op, attrib=attrib)
-        
+
         if not record:
             db.session.add(AttribVal(
-                game_token=game_token, subject_id=out_entity_id, 
+                game_token=game_token, subject_id=out_entity_id,
                 attrib_id=field_def.attrib_id, value=new_val))
         else:
             record.value = new_val
@@ -1138,10 +1150,10 @@ def do_effect_change(eff, roll_val, role_entities):
                     f"yield to {recipe.rate_amount:g}")
             elif field_def.field_mode == Participant.RATE_DUR:
                 current = recipe.rate_duration
-                new_dur = impact if op == Operation.ASSIGN else \
-                    apply_operation(current, impact, op)
+                new_dur = impact if op == Operation.ASSIGN \
+                    else apply_operation(current, impact, op)
                 # Truncate to integer and clamp at 1 second minimum
-                recipe.rate_duration = max(1, int(impact))
+                recipe.rate_duration = max(1, int(new_dur))
                 add_message(
                     f"Set {maskable_name(recipe.product)} "
                     f"duration to {recipe.rate_duration}s")
@@ -1173,18 +1185,19 @@ def do_effect_change(eff, roll_val, role_entities):
     elif field_def.field_mode == Participant.PLACE:
         if not field_def.loc_id:
             return False, "No location (At) for placement."
+        loc = db.session.get(Location, (game_token, field_def.loc_id))
         position = roll_val \
             if isinstance(roll_val, list) and len(roll_val) == 2 \
             else get_default_position(loc)
 
         # Create or increment the pile
         adjust_quantity(
-            field_def.item_id, 
-            field_def.loc_id, 
-            delta=1.0, 
+            field_def.item_id,
+            field_def.loc_id,
+            delta=1.0,
             position=position
         )
-        
+
         item = db.session.get(Item, (game_token, field_def.item_id))
         add_message(f"Placed {maskable_name(item)} at {roll_val}")
 
@@ -1224,7 +1237,7 @@ def roll_for_outcome(
     game_token = g.game_token
     event = db.session.get(Event, (g.game_token, event_id))
     sides, base_min, base_max = num_sides(event)
-    
+
     result_val = 0
     choice_str = ''
     attrib = None
@@ -1259,7 +1272,7 @@ def roll_for_outcome(
 
     # 2. Resolve and Apply every Determinant individually
     modifiers = calculate_determinants(event, role_entities)
-    
+
     PRECEDENCE = {
         Operation.ASSIGN:     1,
         Operation.ADD:        2,
@@ -1269,7 +1282,7 @@ def roll_for_outcome(
         Operation.MOD:        3,
     }
     breakdown_str = breakdown_parts[0] # Start with the Die Roll/Base
-    current_min_precedence = 99 
+    current_min_precedence = 99
     memory_val = 0.0
 
     for m in modifiers:
@@ -1333,7 +1346,7 @@ def roll_for_outcome(
     if event.outcome_type not in (OutcomeType.SELECT, OutcomeType.COORDS):
         breakdown_str += \
             f" = <span class='outcome-val'>{format_for_display(result_val)}</span>"
-    
+
     display_str = ""
     tier = None
     if event.outcome_type == OutcomeType.FOURWAY:
@@ -1386,7 +1399,7 @@ def roll_coordinate(loc_id):
 
     # 2. Get all valid squares (within bounds and not excluded)
     all_valid = set(get_all_valid_coords(loc))
-    
+
     # 3. Identify Occupied Squares
     occupied = set()
 
@@ -1438,10 +1451,10 @@ def roll_for_system_outcome(event_id, num_dice=1, sides=20, bonus=0):
     if event.roller_type == RollerType.DND:
         rolls = [random.randint(1, sides) for _ in range(num_dice)]
         total = sum(rolls) + bonus
-        
+
         rolls_details = " + ".join([f"d{sides}(🎲{r})" for r in rolls])
         bonus_str = f" {'+' if bonus >= 0 else '-'} {abs(bonus)}" if bonus != 0 else ""
-        
+
         display_str = f"{rolls_details}{bonus_str} = <b>{total}</b>"
         numeric_val = float(total)
         res_text = total
@@ -1450,7 +1463,7 @@ def roll_for_system_outcome(event_id, num_dice=1, sides=20, bonus=0):
         action_die = random.randint(1, 6)
         challenge_dice = [random.randint(1, 10), random.randint(1, 10)]
         total = action_die + bonus
-        
+
         hits = sum(1 for die in challenge_dice if total > die)
         with_match = challenge_dice[0] == challenge_dice[1]
         if hits == 2:
@@ -1468,7 +1481,7 @@ def roll_for_system_outcome(event_id, num_dice=1, sides=20, bonus=0):
                 tier = SuccessTier.FAILURE_NAT_MIN
         if with_match:
             res_text += " With A Match"
-        
+
         display_str = (
             f"{res_text} <br>"
             f"<small>Action: d6(🎲{action_die}) + {bonus} = {total} vs "
@@ -1478,4 +1491,3 @@ def roll_for_system_outcome(event_id, num_dice=1, sides=20, bonus=0):
 
     add_message(f"{event.name}: {res_text}")
     return numeric_val, display_str, tier
-

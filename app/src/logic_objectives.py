@@ -1,7 +1,6 @@
 from flask import g
 from sqlalchemy import select
-from app.models import (
-    db, WinRequirement, Pile, Character, Item, AttribVal, GENERAL_ID)
+from app.models import (db, Pile, AttribVal, GENERAL_ID)
 from app.utils import format_num, maskable_name
 
 def ge_positive(current, required):
@@ -77,7 +76,7 @@ def validate_requirements(scenario):
             icon = "👤" if r.char_id else ("📦" if r.item_id else "📊")
             subject_prefix = f"{icon} {subject_name}" if subject_name \
                 else f"{icon} (Any Subject)"
-            
+
             stmt = select(AttribVal).where(
                 AttribVal.game_token == game_token,
                 AttribVal.attrib_id == r.attrib_id
@@ -111,7 +110,7 @@ def validate_requirements(scenario):
 
         if not is_fulfilled:
             all_met = False
-        
+
         enriched_reqs.append({
             'description': desc,
             'fulfilled': is_fulfilled

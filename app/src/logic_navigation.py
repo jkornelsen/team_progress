@@ -1,13 +1,12 @@
-from flask import g
 import collections
 import logging
 import math
-from sqlalchemy import and_, or_
-from sqlalchemy.orm.attributes import flag_modified
+from flask import g
+from sqlalchemy import or_
 
 from app.models import (
     db, GENERAL_ID, StorageType, Character, Location, Item, Pile,
-    AttribVal, LocDest)
+    AttribVal)
 from app.utils import format_num, maskable_name, sort_by_name_stripped
 from app.src.logic_user_interaction import add_message
 
@@ -32,7 +31,7 @@ NEIGHBORHOOD = [CENTER] + OFFSETS
 
 def grid_dist(pos1, pos2):
     """
-    Grid Distance (Chebyshev). 
+    Grid Distance (Chebyshev).
     Matches tactical movement: diagonals count as 1 step.
     """
     if not pos1 or not pos2:
@@ -51,7 +50,7 @@ def is_adjacent(pos, target_pos):
 
 def straight_line_dist(pos, target_pos):
     """
-    Geometric Distance (Euclidean). 
+    Geometric Distance (Euclidean).
     Used for 'as the crow flies' calculations or range penalties.
     """
     if not pos or not target_pos:
@@ -71,19 +70,19 @@ def is_in_grid(loc, pos, check_zones=True):
     if not pos:
         return False
     x, y = pos
-    
+
     # 1. Check Outer Bounds (1-based indexing)
     if x < 1 or x > width or y < 1 or y > height:
         return False
-        
+
     # 2. Check Zone Restrictions
     if check_zones:
         for zone in loc.zones:
             if zone.prevents_travel:
                 l, t, r, b = zone.coords
                 if l <= x <= r and t <= y <= b:
-                    return False 
-            
+                    return False
+
     return True
 
 def blocked_by_local_item(loc_id, pos, allow_item_id=None):
@@ -116,11 +115,11 @@ def is_cell_blocked(loc, pos, exclude_char_id=None):
     if not pos or not is_in_grid(loc, pos, check_zones=True):
         return True
     game_token = g.game_token
-    
+
     # Check for LOCAL items (furniture/walls)
     if blocked_by_local_item(loc.id, pos):
         return True
-        
+
     # Check for other characters
     other_char = Character.query.filter(
         Character.game_token == game_token,
@@ -129,7 +128,7 @@ def is_cell_blocked(loc, pos, exclude_char_id=None):
     )
     if exclude_char_id:
         other_char = other_char.filter(Character.id != exclude_char_id)
-    
+
     return other_char.first() is not None
 
 def get_all_valid_coords(loc):
@@ -139,7 +138,7 @@ def get_all_valid_coords(loc):
 
     valid_coords = []
     width, height = loc.dimensions
-    
+
     # Iterate every square and check against exclusion logic
     for y in range(1, height + 1):
         for x in range(1, width + 1):
@@ -156,7 +155,7 @@ def find_nearest_available_pos(
     """
     if not loc.has_grid:
         return None
-        
+
     if not target_pos:
         target_pos = [1, 1]
 
@@ -167,11 +166,11 @@ def find_nearest_available_pos(
                 # We only want to check the "crust" of the current square ring
                 if abs(dx) != radius and abs(dy) != radius:
                     continue
-                
+
                 check_pos = [target_pos[0] + dx, target_pos[1] + dy]
                 if not is_cell_blocked(loc, check_pos, exclude_char_id):
                     return check_pos
-                    
+
     return None # Completely blocked area
 
 def get_default_position(loc):
@@ -192,7 +191,7 @@ def get_output_positions(loc, anchor_pos, product_item_id=None):
         if is_in_grid(loc, cand, False) and not blocked_by_local_item(
                 loc.id, cand, product_item_id):
             candidates.append(cand)
-    
+
     return candidates
 
 def find_best_output_pos(item_id, loc_id, anchor_pos):
@@ -255,7 +254,7 @@ def all_parties():
     game_token = g.game_token
     party_settings = db.session.query(Character.party).filter(
         Character.game_token == game_token,
-        Character.party != None,
+        Character.party is not None,
         Character.party != ''
     ).distinct().all()
 
@@ -272,12 +271,13 @@ def get_neighbors(pos):
     x, y = pos
     for dx in [-1, 0, 1]:
         for dy in [-1, 0, 1]:
-            if dx == 0 and dy == 0: continue
+            if dx == 0 and dy == 0:
+                continue
             yield (x + dx, y + dy)
 
 def get_cohesive_party(main_char, move_party_flag):
     """
-    Finds matching party members that are physically connected 
+    Finds matching party members that are physically connected
     to the leader (max gap of 1 empty tile between members).
     """
     if not move_party_flag:
@@ -304,7 +304,7 @@ def get_cohesive_party(main_char, move_party_flag):
     # (Distance 1 = adjacent, Distance 2 = 1 empty tile gap)
     cohesive_group = {main_char}
     queue = collections.deque([main_char])
-    
+
     while queue:
         current = queue.popleft()
         remaining_candidates = [c for c in candidates if c not in cohesive_group]
@@ -312,7 +312,7 @@ def get_cohesive_party(main_char, move_party_flag):
             if grid_dist(current.position, p.position) <= 2:
                 cohesive_group.add(p)
                 queue.append(p)
-                
+
     return list(cohesive_group)
 
 def get_reachable_map(loc, start_pos, max_steps, current_obstacles):
@@ -323,16 +323,17 @@ def get_reachable_map(loc, start_pos, max_steps, current_obstacles):
     # Start pos is always reachable in 0 steps
     reachable = {tuple(start_pos): 0}
     queue = collections.deque([tuple(start_pos)])
-    
+
     while queue:
         curr = queue.popleft()
         curr_dist = reachable[curr]
-        
+
         if curr_dist < max_steps:
             for neighbor in get_neighbors(curr):
-                if neighbor in reachable: continue
-                
-                # Pathfinding check: 
+                if neighbor in reachable:
+                    continue
+
+                # Pathfinding check:
                 # Is it in the grid? Not blocked by wall/item? Not occupied?
                 if is_in_grid(loc, neighbor) and \
                    not blocked_by_local_item(loc.id, neighbor) and \
@@ -423,7 +424,8 @@ def assign_parties_and_sort(characters):
 
         del party_to_chars[best_party]
 
-    # 3. Sort: grouped characters first (by party name), unassigned last, all secondary-sorted by name
+    # 3. Sort: grouped characters first (by party name),
+    # unassigned last, all secondary-sorted by name
     characters.sort(
         key=lambda c: (
             0 if c.assigned_party else 1,
@@ -440,7 +442,7 @@ def assign_parties_and_sort(characters):
 
 def move_group(main_char_id, dx, dy, move_party=False):
     """
-    Moves leader and party. If leader steps on a teammate, they swap 
+    Moves leader and party. If leader steps on a teammate, they swap
     positions before the teammate calculates their own movement.
     """
     game_token = g.game_token
@@ -451,7 +453,7 @@ def move_group(main_char_id, dx, dy, move_party=False):
     loc = db.session.get(Location, (game_token, main_char.location_id))
     party = get_cohesive_party(main_char, move_party)
     followers = [c for c in party if c.id != main_char.id]
-    
+
     # 1. Static obstacles: Walls and characters NOT in the moving group
     static_occupied = {
         tuple(c.position) for c in Character.query.filter(
@@ -460,13 +462,13 @@ def move_group(main_char_id, dx, dy, move_party=False):
             Character.id.notin_([c.id for c in party])
         ).all() if c.position
     }
-    
+
     results = {}
     leader_old_pos = tuple(main_char.position)
     leader_target = (leader_old_pos[0] + dx, leader_old_pos[1] + dy)
 
     # --- PHASE 1: MOVE THE LEADER & HANDLE SWAPS ---
-    
+
     if not is_in_grid(loc, leader_target) or blocked_by_local_item(
             loc.id, leader_target) or leader_target in static_occupied:
         # Leader is physically blocked by the environment or an enemy
@@ -477,7 +479,7 @@ def move_group(main_char_id, dx, dy, move_party=False):
         occupant_to_bump = next(
             (f for f in followers
             if tuple(f.position) == leader_target), None)
-        
+
         if occupant_to_bump:
             # DISPLACEMENT SWAP: Bump follower to leader's old spot
             occupant_to_bump.position = list(leader_old_pos)
@@ -485,15 +487,15 @@ def move_group(main_char_id, dx, dy, move_party=False):
         else:
             # Standard move into empty space
             main_char.position = list(leader_target)
-    
+
     results[main_char.id] = main_char.position
-    
+
     # --- PHASE 2: MOVE FOLLOWERS ---
-    
+
     # Track who has finished moving so they become obstacles for
     # the next person
     newly_settled = {tuple(main_char.position)}
-    
+
     # Sort followers by distance to leader's NEW position so
     # the "front" of the pack moves first
     followers.sort(key=lambda c: grid_dist(c.position, main_char.position))
@@ -502,13 +504,13 @@ def move_group(main_char_id, dx, dy, move_party=False):
         # Budget: 2 steps if distant (>1), else 1 step.
         dist_to_leader = grid_dist(f.position, main_char.position)
         budget = 2 if dist_to_leader > 1 else 1
-        
+
         # Obstacles = Environmental Static + teammates who already moved
         current_obstacles = static_occupied | newly_settled
-        
+
         reachable = get_reachable_map(
             loc, f.position, budget, current_obstacles)
-        
+
         if not reachable:
             # Can't move at all, stay at current (possibly bumped) position
             newly_settled.add(tuple(f.position))
@@ -518,7 +520,7 @@ def move_group(main_char_id, dx, dy, move_party=False):
         # Find reachable cell closest to leader
         best_pos = tuple(f.position)
         min_dist = grid_dist(best_pos, main_char.position)
-        
+
         for r_pos, steps in reachable.items():
             d = grid_dist(r_pos, main_char.position)
             # Criteria:
@@ -560,13 +562,13 @@ def get_available_destinations(char):
         else:
             has_nonadjacent = True
     reachable.sort(key=lambda r: r.other_loc(loc_id).name.lower())
-            
+
     return reachable, has_nonadjacent
 
 def check_location_access(party, loc):
     """Returns (True, "") or (False, "Reason") based on travel requirements."""
     game_token = g.game_token
-    
+
     for req in loc.entrance_reqs:
         # Universal Items
         if req.item_id and req.item.storage_type == StorageType.UNIVERSAL:
@@ -606,7 +608,7 @@ def check_location_access(party, loc):
                     attrib_id=req.attrib_id
                 ).first()
                 current_val = av.value if av else 0
-                
+
                 if req.attrib.is_binary or req.attrib.enum_entries:
                     if current_val == req.val_required:
                         satisfied = True
@@ -664,7 +666,7 @@ def arrive_at_destination(main_char_id, dest_loc_id, move_party=False):
         member.location_id = dest_loc_id
         member.position = new_pos
         member.dest_id = None # Clear "in-flight" destination
-    
+
     if target_loc.masked:
         target_loc.masked = False
 
@@ -672,4 +674,3 @@ def arrive_at_destination(main_char_id, dest_loc_id, move_party=False):
     party = " and party" if main_char.party and move_party else ''
     add_message(f"{main_char.name}{party} traveled to {target_loc.name}.")
     return True, "Arrived."
-

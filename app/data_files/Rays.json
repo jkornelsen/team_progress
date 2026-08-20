@@ -1365,9 +1365,14 @@
                 "name": "Solar Rates",
                 "description": "For bar recipes that draw from solar energy, along with elements.",
                 "outcome_type": "determined",
+                "determinants": [
+                    {
+                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 41}
+                    }
+                ],
                 "effects": [
                     {
-                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 41},
+                        "get_val_from": "outcome",
                         "outfield": {
                             "role": "preselected",
                             "field_mode": "rate_amt",
@@ -1379,7 +1384,7 @@
                         "val_transform": 100.0
                     },
                     {
-                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 41},
+                        "get_val_from": "outcome",
                         "outfield": {
                             "role": "preselected",
                             "field_mode": "rate_amt",
@@ -1391,7 +1396,7 @@
                         "val_transform": 100.0
                     },
                     {
-                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 41},
+                        "get_val_from": "outcome",
                         "outfield": {
                             "role": "preselected",
                             "field_mode": "rate_amt",
@@ -1403,7 +1408,7 @@
                         "val_transform": 100.0
                     },
                     {
-                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 41},
+                        "get_val_from": "outcome",
                         "outfield": {
                             "role": "preselected",
                             "field_mode": "rate_amt",
@@ -1415,7 +1420,7 @@
                         "val_transform": 4.0
                     },
                     {
-                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 41},
+                        "get_val_from": "outcome",
                         "outfield": {
                             "role": "preselected",
                             "field_mode": "rate_amt",
@@ -1426,7 +1431,7 @@
                         "op_transform": "*"
                     },
                     {
-                        "infield": {"role": "preselected", "field_mode": "qty", "item_id": 41},
+                        "get_val_from": "outcome",
                         "outfield": {
                             "role": "preselected",
                             "field_mode": "rate_amt",

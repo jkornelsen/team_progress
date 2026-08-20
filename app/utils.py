@@ -1,9 +1,9 @@
 import locale
 import logging
 import json
-from flask import g, session, request, url_for, redirect
-from sqlalchemy import func, literal_column, text
 import re
+from flask import session, request, url_for, redirect
+from sqlalchemy import func, literal_column, text as sa_text
 import markdown
 from markupsafe import Markup
 import bleach
@@ -81,7 +81,7 @@ class BaseFieldMap:
             return True
         if normalized in ('false', '0', 'f', 'n', 'no', 'off'):
             return False
-            
+
         return default
 
     def get_coords(self, key, required_len=2):
@@ -126,7 +126,7 @@ class RequestHelper(BaseFieldMap):
         if source_type not in ['form', 'args']:
             raise ValueError("Source type must be 'form' or 'args'")
         source = getattr(request, source_type)
-        data = source.to_dict() 
+        data = source.to_dict()
         super().__init__(data)
 
     def get_list(self, key_text):
@@ -146,7 +146,7 @@ class RequestHelper(BaseFieldMap):
         ]
         Keys that do not fit this structure are discarded.
 
-        If the form only sends a single value per row, then use the 
+        If the form only sends a single value per row, then use the
         standard Flask `request.form.getlist('item_refs[]')` instead.
         """
         temp_root = {}
@@ -155,7 +155,7 @@ class RequestHelper(BaseFieldMap):
             if key.startswith(f"{key_text}["):
                 # Split 'stats[0][id]' into ['stats', '0', 'id']
                 parts = re.findall(r'[^\[\]]+', key)
-                
+
                 curr = temp_root
                 for i, part in enumerate(parts):
                     if i == len(parts) - 1:
@@ -178,7 +178,7 @@ def _inflate_lists(node):
     # If it's not a dict, it's a leaf value (string)
     if not isinstance(node, dict):
         return node
-    
+
     # Process children first
     for key in node:
         node[key] = _inflate_lists(node[key])
@@ -189,7 +189,7 @@ def _inflate_lists(node):
         sorted_indices = sorted(map(int, digit_keys))
         # Build the list. If indices are 0, 2, 4, this creates a list of 3 items.
         return [node[str(i)] for i in sorted_indices]
-    
+
     return node
 
 def _wrap_request_data(node):
@@ -246,7 +246,7 @@ class LinkLetters:
         """Returns the next available letter or the cached one for this link."""
         if link and link in self.links:
             return self.links[link]
-            
+
         if self.index < len(self.alphabet):
             letter = self.alphabet[self.index]
             self.index += 1
@@ -266,7 +266,7 @@ def format_num(value, nformat='en_US'):
     """
     if value is None or value == '':
         return ''
-    
+
     try:
         value = float(value)
     except (ValueError, TypeError):
@@ -414,7 +414,7 @@ class ContextIds:
           is hosted by a Location
         """
         new_owner = self.owner_id
-        
+
         if target_item.storage_type == StorageType.UNIVERSAL:
             new_owner = GENERAL_ID
         elif target_item.storage_type == StorageType.LOCAL:
@@ -429,7 +429,7 @@ class ContextIds:
             if not location_hosted and self.owner_id == self.loc_id \
                     and self.char_id:
                 new_owner = self.char_id
-        
+
         return self.clone(owner_id=new_owner)
 
     def get_params(self):
@@ -471,7 +471,7 @@ def name_stripped(col=None):
                 joining tables or using aliases
     """
     if col is None:
-        col = text('name')
+        col = sa_text('name')
 
     expr = func.lower(func.regexp_replace(col, r'^\W+', '', 'g'))
     if USE_SQLITE:
@@ -488,7 +488,7 @@ def sort_by_name_stripped(items, named=lambda x: x):
             name_str = obj.get('name') if isinstance(
                 obj, dict) else getattr(obj, 'name', '')
         return re.sub(r'^\W+', '', name_str).lower()
-        
+
     return sorted(items, key=get_sort_key)
 
 # ------------------------------------------------------------------------
@@ -502,7 +502,8 @@ def htmlify_filter(text, allow_links=True):
     Converts newline to <br> and handles custom <c=color> tags safely.
     Uses Bleach for security.
     """
-    if not text: return ""
+    if not text:
+        return ""
 
     # 1. Variable Substitution: ${subject_id} -> value from current URL
     def sub_vars(match):
@@ -520,8 +521,8 @@ def htmlify_filter(text, allow_links=True):
     if not allow_links:
         # Replace <a> tags with colored <span> tags instead of links
         html = re.sub(
-            r'<a\s+href="[^"]+">([^<]+)</a>', 
-            r'<span style="color:#88dddd; font-weight:bold;">\1</span>', 
+            r'<a\s+href="[^"]+">([^<]+)</a>',
+            r'<span style="color:#88dddd; font-weight:bold;">\1</span>',
             html
         )
 
@@ -550,7 +551,7 @@ def htmlify_filter(text, allow_links=True):
         if not href.startswith('/'):
             href = '/' + href
         if not re.match(r'^/[a-zA-Z0-9/=?&_.\-#]*$', href):
-            logger.warning(f"Preventing link to '{href}'")
+            logger.warning("Preventing link to '%s'", href)
             return 'href="#"'
         return match.group(0)
 
@@ -567,13 +568,13 @@ def htmlify_filter(text, allow_links=True):
         'u', 'p', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'sup', 'sub'}
     allowed_attrs = {
         'a': ['href', 'title'],
-        'span': ['style', 'class'], 
-        'div': ['style'], 
+        'span': ['style', 'class'],
+        'div': ['style'],
         'code': ['class']
     }
     clean_html = bleach.clean(
-        html, 
-        tags=allowed_tags, 
+        html,
+        tags=allowed_tags,
         attributes=allowed_attrs,
         css_sanitizer=css_sanitizer
     )

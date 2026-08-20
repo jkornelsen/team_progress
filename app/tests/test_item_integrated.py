@@ -10,9 +10,9 @@ class TestItemIntegrated(BaseTestCase):
     def test_jti_inheritance(self):
         """Verify that creating an Item creates the underlying Entity registry row."""
         new_item = Item(
-            id=100, 
-            game_token=self.game_token, 
-            name="Steel Ingot", 
+            id=100,
+            game_token=self.game_token,
+            name="Steel Ingot",
             entity_type="item",
             storage_type=StorageType.UNIVERSAL
         )
@@ -35,7 +35,7 @@ class TestItemIntegrated(BaseTestCase):
         resource = Item(id=11, game_token=self.game_token, name="Wood", storage_type=StorageType.UNIVERSAL)
         product = Item(id=12, game_token=self.game_token, name="Plank", storage_type=StorageType.UNIVERSAL)
         db.session.add_all([tool, resource, product])
-        
+
         # 2. Setup: Create a Recipe for Plank
         # Needs 1 Hammer (preserved) and 2 Wood (consumed)
         recipe = Recipe(id=1, game_token=self.game_token, item_id=12, rate_amount=1)
@@ -70,7 +70,7 @@ class TestItemIntegrated(BaseTestCase):
         item = Item(id=50, game_token=self.game_token, name="DeleteMe", storage_type=StorageType.UNIVERSAL)
         db.session.add(item)
         db.session.flush()
-        
+
         # Add a pile and a recipe
         db.session.add(Pile(game_token=self.game_token, item_id=50, owner_id=GENERAL_ID, quantity=10))
         db.session.add(Recipe(id=50, game_token=self.game_token, item_id=50))

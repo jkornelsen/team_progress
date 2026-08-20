@@ -1,20 +1,61 @@
-import logging
-from flask import g
 from datetime import datetime, timedelta, timezone
+import logging
+import random
+import string
+from flask import g, session
 from sqlalchemy import desc
-from app.models import db, GameMessage, UserInteraction, Entity
-from app.utils import maskable_name
+from app.models import db, GameMessage, UserInteraction
 
 logger = logging.getLogger(__name__)
 
 # ------------------------------------------------------------------------
-# 1. Chronicle (Game Message Log)
+# User Tracking
+# ------------------------------------------------------------------------
+
+def generate_username():
+    """Generates a random 10-letter consonant-heavy username."""
+    consonants = ''.join(c for c in string.ascii_lowercase if c not in 'aeiouyl')
+    return ''.join(random.choice(consonants) for _ in range(10))
+
+def log_activity(endpoint, entity_id=None):
+    """Records a user's presence on a specific route."""
+    if 'username' not in session or not g.game_token:
+        return
+
+    # Upsert logic for user interactions
+    interaction = UserInteraction.query.filter_by(
+        game_token=g.game_token,
+        username=session['username'],
+        route=endpoint,
+        entity_id=str(entity_id) if entity_id else ""
+    ).first()
+
+    if interaction:
+        interaction.timestamp = db.func.current_timestamp()
+    else:
+        interaction = UserInteraction(
+            game_token=g.game_token,
+            username=session['username'],
+            route=endpoint,
+            entity_id=str(entity_id) if entity_id else ""
+        )
+        db.session.add(interaction)
+
+    try:
+        db.session.flush()
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        logger.error("Failed to log user interaction: %s", e)
+
+# ------------------------------------------------------------------------
+# Game Log
 # ------------------------------------------------------------------------
 
 def add_message(text, group_duplicates=True, commit=False):
     """
-    Adds a message to the game log. 
-    If the exact same message was sent recently, increments the count 
+    Adds a message to the game log.
+    If the exact same message was sent recently, increments the count
     instead of spamming the list.
     """
     game_token = g.game_token
@@ -25,7 +66,7 @@ def add_message(text, group_duplicates=True, commit=False):
     if group_duplicates:
         # 1. Check for a very recent duplicate (within the last 2 minutes)
         recent_threshold = datetime.now(timezone.utc) - timedelta(minutes=2)
-        
+
         duplicate = GameMessage.query.filter(
             GameMessage.game_token == game_token,
             GameMessage.message == text,
@@ -43,7 +84,7 @@ def add_message(text, group_duplicates=True, commit=False):
             count=1
         )
         db.session.add(msg)
-    
+
     db.session.flush()
     if commit:
         db.session.commit()
@@ -64,86 +105,8 @@ def get_chronicle(limit=50):
     return messages
 
 # ------------------------------------------------------------------------
-# 2. Presence Tracking
+# Helpers
 # ------------------------------------------------------------------------
-
-def log_activity(game_token, username, route, entity_id=None):
-    """
-    Records which page a user is viewing. 
-    Uses an UPSERT-style pattern to keep one record per user per unique view.
-    """
-    # Normalize entity_id to string as stored in DB
-    eid_str = str(entity_id) if entity_id else ""
-    
-    interaction = UserInteraction.query.filter_by(
-        game_token=game_token,
-        username=username,
-        route=route,
-        entity_id=eid_str
-    ).first()
-
-    if interaction:
-        interaction.timestamp = datetime.now(timezone.utc)
-    else:
-        interaction = UserInteraction(
-            game_token=game_token,
-            username=username,
-            route=route,
-            entity_id=eid_str
-        )
-        db.session.add(interaction)
-    
-    db.session.flush()
-
-def get_active_sessions(game_token, minutes=5):
-    """
-    Returns a list of unique users active within the threshold,
-    along with a human-readable description of what they are doing.
-    """
-    threshold = datetime.now(timezone.utc) - timedelta(minutes=minutes)
-    
-    # Get all recent interactions
-    recent = UserInteraction.query.filter(
-        UserInteraction.game_token == game_token,
-        UserInteraction.timestamp >= threshold
-    ).order_by(desc(UserInteraction.timestamp)).all()
-
-    # De-duplicate by username in Python (keep the latest interaction)
-    results = []
-    seen_users = set()
-    
-    for inter in recent:
-        if inter.username not in seen_users:
-            # Add a dynamic 'action_display' for the UI
-            inter.display_action = format_action_string(game_token, inter)
-            results.append(inter)
-            seen_users.add(inter.username)
-            
-    return results
-
-# ------------------------------------------------------------------------
-# 3. Helpers
-# ------------------------------------------------------------------------
-
-def format_action_string(game_token, interaction):
-    """
-    Converts a route and entity ID into a friendly string.
-    Example: 'play.play_character' + '5' -> 'Viewing Character: Valerius'
-    """
-    endpoint = interaction.route
-    eid = interaction.entity_id
-    
-    if 'overview' in endpoint: return "Viewing Overview"
-    if 'configure' in endpoint: return "In Main Setup"
-    
-    # If we have an entity ID, try to get its name from our registry
-    if eid and eid.isdigit():
-        entity = db.session.get(Entity, (int(eid), game_token))
-        if entity:
-            type_label = entity.entity_type.capitalize()
-            return f"Viewing {type_label}: {maskable_name(entity)}"
-            
-    return "Exploring"
 
 def clear_session_logs(game_token):
     """
@@ -153,7 +116,7 @@ def clear_session_logs(game_token):
     GameMessage.query.filter_by(game_token=game_token).delete()
     UserInteraction.query.filter_by(game_token=game_token).delete()
     db.session.flush()
-    logger.info(f"Logs cleared for token: {game_token}")
+    logger.info("Logs cleared for token: %s", game_token)
 
 def clear_old_data(days=1):
     """Maintenance function to delete old messages and user logs."""
