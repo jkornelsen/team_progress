@@ -351,21 +351,22 @@ class Item(Entity):
 
     @classmethod
     def from_dict(cls, data, game_token, **overrides):
+        item_id = data.get('id')
         updates = {
             'limits_for': [
-                ItemLimit(game_token=game_token, **l_data)
+                ItemLimit.from_dict(l_data, game_token, item_id=item_id)
                 for l_data in data.pop('limits_for', [])
             ],
             'recipes': [
                 Recipe.from_dict(r_data, game_token, order_index=order_index)
                 for order_index, r_data in enumerate(data.pop('recipes', []))
             ],
+            **overrides
         }
         slot_label = data.pop('slot', None)
         if slot_label:
             updates['slot_id'] = resolve_enum_id(
                 game_token, EQUIPMENT_SLOTS_ID, slot_label)
-        updates.update(overrides)
         return super().from_dict(data, game_token, **updates)
 
     @property
@@ -824,7 +825,7 @@ class Event(Entity):
         ]
         for child_data in data.get('chained', []):
             event.chained.append(
-                EventLink.from_dict(child_data, game_token, event_id=event.id))
+                EventLink.from_dict(child_data, game_token, parent_id=event.id))
         return event
 
     @property
@@ -907,8 +908,10 @@ class Pile(DictHydrator):
 
     @classmethod
     def from_dict(cls, data, game_token, **overrides):
-        updates = {'owner_id': overrides.pop('owner_id')}
-        updates.update(overrides)
+        updates = {
+            'owner_id': overrides.pop('owner_id'),
+            **overrides
+        }
         slot_label = data.pop('slot', None)
         if slot_label:
             updates['slot_id'] = resolve_enum_id(
@@ -1108,8 +1111,10 @@ class EntranceReq(DictHydrator):
 
     @classmethod
     def from_dict(cls, data, game_token, **overrides):
-        updates = {'loc1_id': overrides.pop('loc1_id')}
-        updates.update(overrides)
+        updates = {
+            'loc_id': overrides.pop('loc_id'),
+            **overrides
+        }
         attrib_id = data.get('attrib_id')
         if attrib_id:
             updates['val_required'] = attrib_val_from_json(
@@ -1168,8 +1173,10 @@ class LocDest(DictHydrator):
 
     @classmethod
     def from_dict(cls, data, game_token, **overrides):
-        updates = {'loc1_id': overrides.pop('loc1_id')}
-        updates.update(overrides)
+        updates = {
+            'loc1_id': overrides.pop('loc1_id'),
+            **overrides
+        }
         scrub_array(data, 'door1', 2)
         scrub_array(data, 'door2', 2)
         return super().from_dict(data, game_token, **updates)
@@ -1233,8 +1240,10 @@ class LocZone(DictHydrator):
 
     @classmethod
     def from_dict(cls, data, game_token, **overrides):
-        updates = {'loc_id': overrides.pop('loc_id')}
-        updates.update(overrides)
+        updates = {
+            'loc_id': overrides.pop('loc_id'),
+            **overrides
+        }
         scrub_array(data, 'coords', 4)
         return super().from_dict(data, game_token, **updates)
 
@@ -1598,8 +1607,10 @@ class EventFactor(DictHydrator):
 
     @classmethod
     def from_dict(cls, data, game_token, **overrides):
-        updates = {'event_id': overrides.pop('event_id')}
-        updates.update(overrides)
+        updates = {
+            'event_id': overrides.pop('event_id'),
+            **overrides
+        }
         in_data = data.get('infield', {})
         out_data = data.get('outfield', {})
         attrib_id = in_data.get('attrib_id') or out_data.get('attrib_id')
@@ -1692,13 +1703,20 @@ class EventLink(DictHydrator):
 
     @classmethod
     def from_dict(cls, data, game_token, **overrides):
-        updates = {'parent_id': overrides.pop('parent_id')}
-        updates.update(overrides)
+        updates = {
+            'parent_id': overrides.pop('parent_id'),
+            **overrides
+        }
         link = super().from_dict(data, game_token, **updates)
         req_data = data.get('req')
         if req_data:
+            factor_updates = {
+                'event_id': updates.pop('parent_id'), # Rename key
+                'usage_type': Participant.CHAIN,
+                **updates
+            }
             link.req = EventFactor.from_dict(
-                req_data, game_token, usage_type=Participant.CHAIN)
+                req_data, game_token, **factor_updates)
         return link
 
     parent = db.relationship(
@@ -1789,14 +1807,16 @@ class Recipe(DictHydrator):
 
     @classmethod
     def from_dict(cls, data, game_token, **overrides):
-        updates = {'order_index': overrides.pop('order_index')}
-        updates.update(overrides)
+        updates = {
+            'order_index': overrides.pop('order_index'),
+            **overrides
+        }
         recipe = super().from_dict(data, game_token, **updates)
         recipe.sources = [
-            RecipeSource(game_token=game_token, **s)
+            RecipeSource.from_dict(s, game_token, recipe_id=recipe.id)
             for s in data.get('sources', [])]
         recipe.byproducts = [
-            RecipeByproduct(game_token=game_token, **b)
+            RecipeByproduct.from_dict(b, game_token, recipe_id=recipe.id)
             for b in data.get('byproducts', [])]
         recipe.attrib_reqs = [
             RecipeAttribReq.from_dict(ar, game_token, recipe_id=recipe.id)
@@ -1889,8 +1909,10 @@ class RecipeSource(DictHydrator):
 
     @classmethod
     def from_dict(cls, data, game_token, **overrides):
-        updates = {'recipe_id': overrides.pop('recipe_id')}
-        updates.update(overrides)
+        updates = {
+            'recipe_id': overrides.pop('recipe_id'),
+            **overrides
+        }
         return super().from_dict(data, game_token, **updates)
 
     recipe = db.relationship(
@@ -1929,8 +1951,10 @@ class RecipeByproduct(DictHydrator):
 
     @classmethod
     def from_dict(cls, data, game_token, **overrides):
-        updates = {'recipe_id': overrides.pop('recipe_id')}
-        updates.update(overrides)
+        updates = {
+            'recipe_id': overrides.pop('recipe_id'),
+            **overrides
+        }
         return super().from_dict(data, game_token, **updates)
 
     recipe = db.relationship(
@@ -1972,14 +1996,13 @@ class RecipeAttribReq(DictHydrator):
 
     @classmethod
     def from_dict(cls, data, game_token, **overrides):
-        """Processes nested list data before delegating to DictHydrator."""
-        attrib_id = data.get('attrib_id')
         updates = {
             'recipe_id': overrides.pop('recipe_id'),
-            'val_required': attrib_val_from_json(
-                game_token, attrib_id, data.pop('val_required', None))
+            **overrides
         }
-        updates.update(overrides)
+        attrib_id = data.get('attrib_id')
+        updates['val_required'] = attrib_val_from_json(
+            game_token, attrib_id, data.pop('val_required', None))
         return super().from_dict(data, game_token, **updates)
 
     def is_satisfied(self, val):
@@ -2059,11 +2082,13 @@ class Progress(DictHydrator):
 
     @classmethod
     def from_dict(cls, data, game_token, **overrides):
+        start_time = timeFromStr(data.pop('start_time', 0))
+        recipe_id = data.get('recipe_id')
         obj = super().from_dict(data, game_token, **overrides)
-        recipe = db.session.get(Recipe, (game_token, data.get('recipe_id')))
+        recipe = db.session.get(Recipe, (game_token, recipe_id))
         if recipe:
             obj.product_id = recipe.product_id
-        obj.start_time = timeFromStr(data.get('start_time'))
+        obj.start_time = start_time
         return obj
 
     host = db.relationship(
@@ -2174,8 +2199,10 @@ class WinRequirement(DictHydrator):
 
     @classmethod
     def from_dict(cls, data, game_token, **overrides):
-        updates = {'order_index': overrides.pop('order_index')}
-        updates.update(overrides)
+        updates = {
+            'order_index': overrides.pop('order_index'),
+            **overrides
+        }
         attrib_id = data.get('attrib_id')
         if attrib_id:
             attrib_val_raw = data.pop('attrib_value', None)
