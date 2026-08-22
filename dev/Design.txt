@@ -73,10 +73,6 @@ tethered one
 
 ---- server and sharing ----
 
-delete data based on user_interactions timestamp
-    psql -d app -c "DELETE FROM your_table WHERE created_at < NOW() - INTERVAL '4 days';"
-    if we can't run a cron job then maybe check on scenario load or once per session hour
-
 consider sharing community scenarios
     perhaps submit to reddit, or github via pull requests
 ask for feedback about:

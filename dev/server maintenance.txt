@@ -1,0 +1,65 @@
+-------------------------------------------------------------------------------
+- Server Maintenance
+-------------------------------------------------------------------------------
+
+Generate an auth token:
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+
+Store in pythonanywhere in the projroot/.env file.
+Then paste this into GitHub Actions secrets so they match.
+This allows GitHub to periodically ping /session/purge.
+
+The queries below are for purging manually instead.
+
+-------------------------------------------------------------------------------
+- Token Status
+-------------------------------------------------------------------------------
+
+SELECT
+    s.game_token,
+    s.title,
+    MAX(ui.timestamp) AS last_interaction,
+    CASE
+        WHEN MAX(ui.timestamp) IS NULL THEN 'inactive'  -- never had an interaction
+        WHEN MAX(ui.timestamp) < datetime('now', '-4 days') THEN 'inactive'
+        ELSE 'active'
+    END AS status,
+    ui.route
+FROM scenario s
+LEFT JOIN user_interactions ui ON ui.game_token = s.game_token
+GROUP BY s.game_token, s.title
+ORDER BY status, last_interaction;
+
+-------------------------------------------------------------------------------
+- Purge Outdated Token Data
+-------------------------------------------------------------------------------
+
+-- First clean up single hit activity such as from bots
+DELETE FROM user_interactions
+WHERE route IN ('root', 'main.root')
+  AND timestamp < datetime('now', '-1 hours')
+  AND username IN (
+      SELECT username
+      FROM user_interactions
+      GROUP BY username
+      HAVING COUNT(*) = 1
+  );
+
+DROP TABLE IF EXISTS tokens_to_purge;
+
+CREATE TEMP TABLE tokens_to_purge AS
+SELECT s.game_token
+FROM scenario s
+LEFT JOIN (
+    SELECT game_token, MAX(timestamp) AS last_ts
+    FROM user_interactions
+    GROUP BY game_token
+) ls ON ls.game_token = s.game_token
+WHERE ls.last_ts IS NULL OR ls.last_ts < datetime('now', '-4 days');
+
+SELECT * FROM tokens_to_purge;
+
+DELETE FROM scenario    WHERE game_token IN (SELECT game_token FROM tokens_to_purge);
+DELETE FROM id_sequence WHERE game_token IN (SELECT game_token FROM tokens_to_purge);
+DELETE FROM entities    WHERE game_token IN (SELECT game_token FROM tokens_to_purge);
+DELETE FROM user_interactions WHERE game_token IN (SELECT game_token FROM tokens_to_purge);

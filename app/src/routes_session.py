@@ -6,19 +6,53 @@ import uuid
 from datetime import datetime, timedelta
 from flask import (
     g, Blueprint, request, session, redirect, url_for, render_template, json,
-    current_app, send_file)
+    current_app, send_file, abort)
 from sqlalchemy import func
 from sqlalchemy.sql.functions import count as sa_count
 
-from app.models import db, JsonKeys, UserInteraction, Scenario
+from app.models import (
+    db, JsonKeys, UserInteraction, Scenario, MaintenanceLog)
 from app.serialization import (
     init_game_session, load_scenario_from_path, DEFAULT_SCENARIO_FILE,
     import_from_dict, patch_from_dict, clear_game_data, export_game_to_json)
 from app.utils import RequestHelper, LinkLetters, BaseFieldMap, redirect_back
-from .logic_user_interaction import generate_username, log_activity
+from .logic_user_interaction import (
+    generate_username, log_activity, run_purge, get_token_statuses)
 
 logger = logging.getLogger(__name__)
 session_bp = Blueprint('session', __name__)
+
+# ------------------------------------------------------------------------
+# Global App Integration Helper
+# ------------------------------------------------------------------------
+
+def init_session_handlers(app):
+    """
+    Should be called in app.py to register before_request logic.
+    """
+    @app.before_request
+    def ensure_session_data():
+        if request.endpoint and request.endpoint.startswith('static'):
+            return
+
+        # 1. Ensure Game Token
+        if 'game_token' not in session:
+            session['game_token'] = str(uuid.uuid4())
+        g.game_token = session['game_token']
+
+        # 2. Ensure General Storage exists for this session
+        init_game_session()
+
+        # 3. Ensure Username
+        if 'username' not in session:
+            session['username'] = generate_username()
+
+        # 4. Log presence (except for administrative/api routes)
+        if request.endpoint and not any(
+                x in request.endpoint for x in ['static', 'log_visit']):
+            log_activity(
+                request.endpoint, request.view_args.get('id')
+                if request.view_args else None)
 
 # ------------------------------------------------------------------------
 # File Handling
@@ -308,33 +342,55 @@ def about():
     return render_template('session/about.html')
 
 # ------------------------------------------------------------------------
-# Global App Integration Helper
+# Maintenance
 # ------------------------------------------------------------------------
 
-def init_session_handlers(app):
-    """
-    Should be called in app.py to register before_request logic.
-    """
-    @app.before_request
-    def ensure_session_data():
-        if request.endpoint and request.endpoint.startswith('static'):
-            return
+@session_bp.route('/session/purge', methods=['GET', 'POST'])
+def maintenance_purge():
+    expected = os.environ.get('PURGE_AUTH_TOKEN')
+    auth = request.headers.get('Authorization', '')
+    if request.method != 'POST' or not expected \
+            or auth != f'Bearer {expected}':
+        abort(HTTPStatus.NOT_FOUND)
 
-        # 1. Ensure Game Token
-        if 'game_token' not in session:
-            session['game_token'] = str(uuid.uuid4())
-        g.game_token = session['game_token']
+    latest = (
+        db.session.query(MaintenanceLog)
+        .filter_by(job_name='purge')
+        .order_by(MaintenanceLog.last_run.desc())
+        .first()
+    )
+    if latest and latest.last_run > datetime.now() - timedelta(hours=1):
+        return jsonify(
+            status='skipped',
+            last_run=latest.last_run.isoformat(),
+            tokens_purged=latest.tokens_purged,
+        ), 200
 
-        # 2. Ensure General Storage exists for this session
-        init_game_session()
+    try:
+        tokens_purged = run_purge()
+    except Exception:
+        db.session.rollback()
+        raise
 
-        # 3. Ensure Username
-        if 'username' not in session:
-            session['username'] = generate_username()
+    db.session.add(MaintenanceLog(
+        job_name='purge',
+        last_run=datetime.now(),
+        tokens_purged=tokens_purged,
+    ))
+    db.session.commit()
+    return jsonify(status='purged', tokens_purged=tokens_purged), 200
 
-        # 4. Log presence (except for administrative/api routes)
-        if request.endpoint and not any(
-                x in request.endpoint for x in ['static', 'log_visit']):
-            log_activity(
-                request.endpoint, request.view_args.get('id')
-                if request.view_args else None)
+@session_bp.route('/session/maintenance_log')
+def maintenance_log_page():
+    token_statuses = get_token_statuses()
+    recent_logs = (
+        db.session.query(MaintenanceLog)
+        .order_by(MaintenanceLog.last_run.desc())
+        .limit(20)
+        .all()
+    )
+    return render_template(
+        'session/maintenance_log.html',
+        token_statuses=token_statuses,
+        recent_logs=recent_logs,
+    )

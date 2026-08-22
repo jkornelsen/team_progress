@@ -1,0 +1,44 @@
+{% extends "layout/base.html" %}
+{% block content %}
+<h2>Token Status</h2>
+<table border="1" cellpadding="4" cellspacing="0">
+  <thead>
+    <tr>
+      <th>Game Token</th>
+      <th>Title</th>
+      <th>Last Interaction</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in token_statuses %}
+    <tr>
+      <td>{{ row.game_token }}</td>
+      <td>{{ row.title }}</td>
+      <td>{{ row.last_interaction.strftime('%Y-%m-%d %H:%M') if row.last_interaction else 'never' }}</td>
+      <td>{{ row.status }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h2>Recent Maintenance Runs</h2>
+<table border="1" cellpadding="4" cellspacing="0">
+  <thead>
+    <tr>
+      <th>Job</th>
+      <th>Last Run</th>
+      <th>Tokens Purged</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for log in recent_logs %}
+    <tr>
+      <td>{{ log.job_name }}</td>
+      <td>{{ log.last_run.strftime('%Y-%m-%d %H:%M') }}</td>
+      <td>{{ log.tokens_purged if log.tokens_purged is not none else '—' }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

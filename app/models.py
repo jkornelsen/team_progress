@@ -2299,6 +2299,13 @@ class UserInteraction(db.Model):
     entity_id = db.Column(db.String(20), primary_key=True)
     timestamp = db.Column(db.DateTime, default=db.func.current_timestamp())
 
+class MaintenanceLog(db.Model):
+    __tablename__ = 'maintenance_log'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    job_name = db.Column(db.String(50), nullable=False, index=True)
+    last_run = db.Column(db.DateTime, nullable=False)
+    tokens_purged = db.Column(db.Integer)
+
 class GameMessage(db.Model):
     __tablename__ = 'game_messages'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
