@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime, timedelta
 from flask import (
     g, Blueprint, request, session, redirect, url_for, render_template, json,
-    current_app, send_file, abort)
+    jsonify, current_app, send_file, abort)
 from sqlalchemy import func
 from sqlalchemy.sql.functions import count as sa_count
 
@@ -17,42 +17,30 @@ from app.serialization import (
     import_from_dict, patch_from_dict, clear_game_data, export_game_to_json)
 from app.utils import RequestHelper, LinkLetters, BaseFieldMap, redirect_back
 from .logic_user_interaction import (
-    generate_username, log_activity, run_purge, get_token_statuses)
+    generate_username, log_activity, run_purge, get_token_statuses,
+    new_game_token)
 
 logger = logging.getLogger(__name__)
 session_bp = Blueprint('session', __name__)
 
 # ------------------------------------------------------------------------
-# Global App Integration Helper
+# Token Lifecycle
 # ------------------------------------------------------------------------
 
-def init_session_handlers(app):
+def ensure_game_token():
     """
-    Should be called in app.py to register before_request logic.
+    Ensures a game_token exists in the session, creating one if needed,
+    and that its backing Scenario record exists in the DB.
+    Call this before any route that reads or writes persistent
+    scenario data - e.g. when the user starts editing configuration or
+    loads a scenario. Idempotent: a no-op if a token is already active.
     """
-    @app.before_request
-    def ensure_session_data():
-        if request.endpoint and request.endpoint.startswith('static'):
-            return
-
-        # 1. Ensure Game Token
-        if 'game_token' not in session:
-            session['game_token'] = str(uuid.uuid4())
-        g.game_token = session['game_token']
-
-        # 2. Ensure General Storage exists for this session
-        init_game_session()
-
-        # 3. Ensure Username
-        if 'username' not in session:
-            session['username'] = generate_username()
-
-        # 4. Log presence (except for administrative/api routes)
-        if request.endpoint and not any(
-                x in request.endpoint for x in ['static', 'log_visit']):
-            log_activity(
-                request.endpoint, request.view_args.get('id')
-                if request.view_args else None)
+    if 'game_token' not in session:
+        session['game_token'] = new_game_token()
+    session.permanent = True
+    g.game_token = session['game_token']
+    init_game_session()
+    return g.game_token
 
 # ------------------------------------------------------------------------
 # File Handling
@@ -65,6 +53,7 @@ def browse_scenarios():
     if request.method == 'POST':
         req = RequestHelper('form')
         filename = req.get_str('scenario_file')
+        ensure_game_token()
         if load_scenario_from_path(filename):
             return redirect(url_for('play.overview'))
         return render_template(
@@ -147,6 +136,7 @@ def upload():
             return "No file uploaded", 400
         file = request.files['file']
         json_data = json.load(file)
+        ensure_game_token()
         try:
             mode = request.form.get('active_mode')
             if mode == 'patch':
@@ -172,6 +162,7 @@ def upload():
 @session_bp.route('/clear-all', methods=['POST'])
 def clear_all():
     """Wipes data and re-applies the default scenario."""
+    ensure_game_token()
     clear_game_data()
     init_game_session()
     return redirect(url_for('play.overview'))
@@ -193,6 +184,7 @@ def join_game():
             session['alternate_token'] = current
         elif token != current:
             # Replace current
+            ensure_game_token()
             session['game_token'] = token
             init_game_session()
 

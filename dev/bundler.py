@@ -133,15 +133,15 @@ def write_file_block(f_out, file_path, display_path):
 if __name__ == "__main__":
     print("What would you like to bundle?")
     print("  a) Code files (.py, .html, .js, .css)")
-    print("  b) JSON files (.json)")
-    print("  c) Specific file list")
+    print("  b) Specific file list")
+    print("  c) JSON files (.json)")
     choice = input("\nChoice (a/b/c): ").strip().lower()
 
     if choice == 'a':
         bundle_files()
     elif choice == 'b':
-        bundle_json()
-    elif choice == 'c':
         bundle_file_list()
+    elif choice == 'c':
+        bundle_json()
     else:
         print("Invalid choice.")

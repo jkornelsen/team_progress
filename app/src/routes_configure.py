@@ -21,9 +21,19 @@ from app.utils import (
 from .logic_discovery import run_discovery_scan
 from .logic_navigation import all_parties
 from .logic_autobattle import is_autobattle_enabled
+from .routes_session import ensure_game_token
 
 logger = logging.getLogger(__name__)
 configure_bp = Blueprint('configure', __name__, url_prefix='/configure')
+
+@configure_bp.before_request
+def ensure_configure_token():
+    """
+    Visiting configuration implies the user is about to create or edit
+    a scenario, so make sure a game_token and Scenario record
+    exist before any configure route runs.
+    """
+    ensure_game_token()
 
 # ------------------------------------------------------------------------
 # Main Index

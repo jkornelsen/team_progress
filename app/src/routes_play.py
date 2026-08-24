@@ -16,6 +16,7 @@ from app.utils import (
     RequestHelper, ContextIds, format_num, parse_coords, LinkLetters,
     capture_origin, name_stripped, sort_by_name_stripped,
     maskable_name)
+from app.serialization import get_default_scenario_preview
 from .logic_piles import transfer_item
 from .logic_event import (
     roll_for_outcome, roll_for_system_outcome,
@@ -49,6 +50,24 @@ play_bp = Blueprint('play', __name__)
 @play_bp.route('/overview')
 def overview():
     game_token = g.game_token
+
+    if not game_token:
+        # No active game session yet (e.g. a fresh visitor, or a bot
+        # hitting '/'). Render the default scenario's title/description
+        # without creating a game_token or any DB records.
+        return render_template(
+            'play/overview.html',
+            characters=[],
+            locations=[],
+            items=[],
+            items_in_production={},
+            events=[],
+            scenario=get_default_scenario_preview(),
+            win_reqs=[],
+            all_requirements_met=False,
+            link_letters=LinkLetters(excluded='u'),
+            messages=[]
+        )
 
     # Fetch Top-Level Entities
     chars = Character.query.filter_by(

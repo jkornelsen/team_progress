@@ -63,3 +63,18 @@ DELETE FROM scenario    WHERE game_token IN (SELECT game_token FROM tokens_to_pu
 DELETE FROM id_sequence WHERE game_token IN (SELECT game_token FROM tokens_to_purge);
 DELETE FROM entities    WHERE game_token IN (SELECT game_token FROM tokens_to_purge);
 DELETE FROM user_interactions WHERE game_token IN (SELECT game_token FROM tokens_to_purge);
+
+-------------------------------------------------------------------------------
+- Repair malformed sqlite db file
+-------------------------------------------------------------------------------
+
+cp app.db app.db.bak
+sqlite3 app.db ".recover" | sqlite3 repaired.db
+mv repaired.db app.db
+
+sqlite3 app.db ".dump" > dump.sql
+vi dump.sql
+sqlite3 fixed_database.db < dump.sql
+sqlite3 fixed_database.db "PRAGMA quick_check;"
+rm app.db-wal app.db-shm
+

@@ -11,7 +11,7 @@ from .models import (
     Entity, Attrib, Pile, Recipe, Progress, Scenario, IdSequence)
 from .src.logic_user_interaction import clear_session_logs
 from .src.logic_discovery import run_discovery_scan
-from .utils import name_stripped
+from .utils import name_stripped, BaseFieldMap
 
 logger = logging.getLogger(__name__)
 
@@ -83,6 +83,35 @@ def load_scenario_from_path(filename):
     except Exception as e:
         logger.exception(e)
         return False
+
+class ScenarioPreview:
+    """
+    Lightweight stand-in for a Scenario row, used to render the default
+    scenario's title/description before any game_token or DB record
+    exists (e.g. a first-time visitor's '/overview' hit).
+    """
+    def __init__(self, title="", description=""):
+        self.title = title
+        self.description = description
+
+def get_default_scenario_preview():
+    """
+    Reads the default scenario file's overall settings directly from
+    disk, without touching the database or creating a game_token.
+    """
+    path = os.path.join(current_app.config['DATA_DIR'], DEFAULT_SCENARIO_FILE)
+    if not os.path.exists(path):
+        return ScenarioPreview()
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        overall_map = BaseFieldMap(data.get(JsonKeys.OVERALL, {}))
+        return ScenarioPreview(
+            title=overall_map.get_str('title', ''),
+            description=overall_map.get_str('description', ''))
+    except Exception as e:
+        logger.exception(e)
+        return ScenarioPreview()
 
 def import_from_dict(data):
     """

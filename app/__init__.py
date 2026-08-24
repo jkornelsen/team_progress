@@ -1,5 +1,4 @@
 import os
-import uuid
 from datetime import timedelta
 from flask import (
     Flask, g, session, request, redirect, render_template, url_for)
@@ -12,7 +11,6 @@ from app.src.routes_configure import configure_bp
 from app.src.routes_play import play_bp
 from .database import db, get_db_uri
 from .models import GENERAL_ID, EQUIPMENT_SLOTS_ID, StorageType
-from .serialization import init_game_session
 from .utils import format_num, htmlify_filter, mask_string
 
 def create_app():
@@ -88,34 +86,30 @@ def create_app():
     @app.before_request
     def initialize_session():
         """
-        The core multi-tenant logic. 
-        Ensures every request has a game_token and an initialized System ID 1.
+        Lightweight per-request setup.
+
+        Deliberately does not create a game_token or a Scenario db record.
+        That only happens when a route opts in via ensure_game_token(),
+        typically when the user starts editing a scenario or loads one.
         """
         if request.endpoint and (
                 request.endpoint.startswith('static')
                 or 'favicon' in request.endpoint):
             return
 
-        # 1. Ensure Game Token exists in session
-        if 'game_token' not in session:
-            session['game_token'] = str(uuid.uuid4())
-        session.permanent = True # keep for PERMANENT_SESSION_LIFETIME
+        # Attach any existing game token to this request, if present
+        g.game_token = session.get('game_token')
+        if g.game_token:
+            session.permanent = True # keep for PERMANENT_SESSION_LIFETIME
 
-        # Set global game token for use in SQLAlchemy queries
-        g.game_token = session['game_token']
-
-        # 2. Bootstrap the game session (Ensure ID 1 exists)
-        # This is a lightweight check performed via database_setup.py
-        init_game_session()
-
-        # 3. User Settings
+        # User Settings
         if 'username' not in session:
             session['username'] = generate_username()
         if 'number_format' not in session:
             session['number_format'] = 'en_US'
         g.number_format = session['number_format']
 
-        # 4. Log the user's presence for 'Session Users' view
+        # Log the user's presence for 'Session Users' view
         if request.endpoint:
             # Avoid logging purely technical/api redirects
             if not any(x in request.endpoint for x in ['log_visit', 'status']):

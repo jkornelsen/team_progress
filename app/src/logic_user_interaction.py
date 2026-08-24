@@ -2,11 +2,11 @@ from datetime import datetime, timedelta, timezone
 import logging
 import random
 import string
+import uuid
 from flask import g, session
 from sqlalchemy import desc, delete, select, func
 from app.models import (
-    db, GameMessage, UserInteraction,
-    Scenario, IdSequence, Entity, UserInteraction)
+    db, GameMessage, UserInteraction, Scenario, IdSequence, Entity)
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +18,10 @@ def generate_username():
     """Generates a random 10-letter consonant-heavy username."""
     consonants = ''.join(c for c in string.ascii_lowercase if c not in 'aeiouyl')
     return ''.join(random.choice(consonants) for _ in range(10))
+
+def new_game_token():
+    """Generates a fresh, unique game token string."""
+    return str(uuid.uuid4())
 
 def log_activity(endpoint, entity_id=None):
     """Records a user's presence on a specific route."""
