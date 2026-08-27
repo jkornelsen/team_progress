@@ -4,7 +4,9 @@ Produce, interact, and explore, driven by storytelling and chance. Model ideas u
 
 **🎲[Play Online](https://teamprogress.pythonanywhere.com/)**
 
-> No login needed. Hosted on free tier, so it may be slower for multiple simultaneous players.
+> No login needed. Hosted on free tier, often slow to respond.
+
+To play without delays, [Install](Installation.md) on desktop instead.
 
 ## Overview
 
@@ -31,8 +33,4 @@ You'll probably “get” this game if you have done any of these:
 
 - Anytime the story calls for a value that isn't handled automatically, go ahead and make the change in settings—don't worry that you might be bypassing the “official” game.
 - For the **Dating** scenario, track the narrative in a separate markdown document, optionally enhanced by AI.
-- The **Dungeon Crawl** scenario can support multiple players, where the Gamemaster controls the configuration. Use Discord to communicate.
-
-## Server
-
-See [Installing](Installation.md) to run from your desktop.
+- The **Dungeon Crawl** scenario can potentially support multiple players, where the Gamemaster controls the configuration. Use Discord to communicate.

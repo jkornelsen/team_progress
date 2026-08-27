@@ -68,13 +68,22 @@ DELETE FROM user_interactions WHERE game_token IN (SELECT game_token FROM tokens
 - Repair malformed sqlite db file
 -------------------------------------------------------------------------------
 
+# Before running these commands, restart the server to break any lingering connections.
+sqlite3 app.db "PRAGMA integrity_check;"
+
+# Merge all unwritten WAL transactions directly into app.db and reset the WAL file.
+sqlite3 app.db "PRAGMA wal_checkpoint(TRUNCATE);"
+
+# Remove auxiliary WAL and shared memory files to clear stale locks.
+rm app.db-wal app.db-shm
+
+# Recovery tool
 cp app.db app.db.bak
 sqlite3 app.db ".recover" | sqlite3 repaired.db
 mv repaired.db app.db
 
+# Dump tool
 sqlite3 app.db ".dump" > dump.sql
 vi dump.sql
 sqlite3 fixed_database.db < dump.sql
 sqlite3 fixed_database.db "PRAGMA quick_check;"
-rm app.db-wal app.db-shm
-

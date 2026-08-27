@@ -65,7 +65,7 @@
             {
                 "id": 9,
                 "name": "Energy",
-                "description": "Stored in a high-capacity battery. Measured in kilowatt-hours (kWh).\r\n\r\nA fully charged battery is enough to provide backup power for a city while the main supply is repaired. *IRL Note: Present-day batteries cannot hold such large amounts.*",
+                "description": "Stored in a high-capacity battery. Measured in kilowatt-hours (kWh).\r\n\r\nA fully charged battery is enough to provide backup power for a city while the main supply is repaired. *IRL Present-day batteries cannot hold such large amounts.*",
                 "abilities": [18, 33],
                 "storage_type": "u",
                 "q_limit": 10000000.0,
@@ -90,7 +90,7 @@
             {
                 "id": 11,
                 "name": "Funds",
-                "description": "Money is required for research &amp; development, repairs, and hiring workers.\r\n\r\n**Easy Mode:** Set *Gain per Batch* to 20 instead of the normal 5.",
+                "description": "Money is required for research &amp; development, repairs, and hiring workers.\r\n\r\nTo play **Easy Mode,** set *Gain per Batch* to 20 instead of the normal 5.",
                 "storage_type": "u",
                 "toplevel": true,
                 "recipes": [
@@ -201,7 +201,7 @@
             {
                 "id": 3,
                 "name": "Production Rate I",
-                "description": "+1 each to energy production rate. This does not improve efficiency.\r\n\r\nTo implement, go to **Production Rate** (event).",
+                "description": "+1 each to energy production rate. This does not improve efficiency.\r\n\r\nTo implement, go to **Production Rates** (event).",
                 "abilities": [17],
                 "storage_type": "u",
                 "q_limit": 20.0,
@@ -452,7 +452,8 @@
                         "op_application": "*",
                         "op_transform": "^x",
                         "val_transform": 1.8
-                    }
+                    },
+                    {"op_application": ":=", "op_transform": "floor"}
                 ],
                 "effects": [
                     {
@@ -521,7 +522,8 @@
                         "op_application": "*",
                         "op_transform": "^x",
                         "val_transform": 1.5
-                    }
+                    },
+                    {"op_application": ":=", "op_transform": "floor"}
                 ],
                 "effects": [
                     {
@@ -589,14 +591,15 @@
             {
                 "id": 51,
                 "name": "Radioactive Waste Leak",
-                "description": "10% increase in barrels of radioactive waste — cleanup becomes a bigger job.",
+                "description": "20% increase in barrels of radioactive waste — cleanup becomes a bigger job.",
                 "outcome_type": "determined",
-                "fixed_base": 1.1,
+                "fixed_base": 1.2,
                 "determinants": [
                     {
                         "infield": {"role": "preselected", "field_mode": "qty", "item_id": 7},
                         "op_application": "*"
-                    }
+                    },
+                    {"op_application": ":=", "op_transform": "floor"}
                 ],
                 "effects": [
                     {
@@ -637,7 +640,8 @@
                         "label": "Base Threshold",
                         "op_transform": "c",
                         "val_transform": 12.0
-                    }
+                    },
+                    {"op_application": ":=", "op_transform": "floor"}
                 ],
                 "effects": [
                     {
@@ -652,6 +656,12 @@
                         "op_transform": "*",
                         "val_transform": 0.4,
                         "outcome_success": "success_major"
+                    },
+                    {
+                        "get_val_from": "outfield",
+                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 4},
+                        "op_application": ":=",
+                        "op_transform": "floor"
                     },
                     {
                         "get_val_from": "outcome",
@@ -685,7 +695,8 @@
                         "op_application": "*",
                         "op_transform": "x^",
                         "val_transform": -0.5
-                    }
+                    },
+                    {"op_application": ":=", "op_transform": "floor"}
                 ],
                 "effects": [
                     {
@@ -911,7 +922,8 @@
                     {
                         "infield": {"role": "preselected", "field_mode": "limit", "item_id": 5},
                         "op_application": "-"
-                    }
+                    },
+                    {"op_application": ":=", "op_transform": "floor"}
                 ],
                 "effects": [
                     {
@@ -973,7 +985,7 @@
             {
                 "id": 21,
                 "name": "Workers: Hire",
-                "description": "On major success, higher 2 workers instead of 1, while on major failure, hire no workers. The cost is the same regardless.\r\n\r\nOn minor failure, nothing happens—roll again.",
+                "description": "On major success, higher 2 workers instead of 1, while on failure, hire no workers. The cost is the same regardless.",
                 "numeric_range": [1, 20],
                 "determinants": [
                     {
@@ -1004,15 +1016,7 @@
                         "get_val_from": "outcome",
                         "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 50},
                         "op_application": "-",
-                        "op_transform": "c",
-                        "outcome_success": "success_any"
-                    },
-                    {
-                        "get_val_from": "outcome",
-                        "outfield": {"role": "preselected", "field_mode": "qty", "item_id": 50},
-                        "op_application": "-",
-                        "op_transform": "c",
-                        "outcome_success": "failure_major"
+                        "op_transform": "c"
                     },
                     {
                         "get_val_from": "outcome",
@@ -1047,7 +1051,8 @@
                         "op_application": "*",
                         "op_transform": "x^",
                         "val_transform": 2.0
-                    }
+                    },
+                    {"op_application": ":=", "op_transform": "floor"}
                 ],
                 "effects": [
                     {
