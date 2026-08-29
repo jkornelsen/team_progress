@@ -4,11 +4,14 @@ import random
 import string
 import uuid
 from flask import g, session
-from sqlalchemy import desc, delete, select, func
+from sqlalchemy import desc, delete, select, func, and_
 from app.models import (
     db, GameMessage, UserInteraction, Scenario, IdSequence, Entity)
 
 logger = logging.getLogger(__name__)
+
+STALE_TOKEN_AGE = timedelta(days=4)
+ENABLE_LOG_PRUNING = False
 
 # ------------------------------------------------------------------------
 # User Tracking
@@ -28,6 +31,8 @@ def log_activity(endpoint, entity_id=None):
     if 'username' not in session or not g.game_token:
         return
 
+    scenario = db.session.get(Scenario, g.game_token)
+
     # Upsert logic for user interactions
     interaction = UserInteraction.query.filter_by(
         game_token=g.game_token,
@@ -38,10 +43,12 @@ def log_activity(endpoint, entity_id=None):
 
     if interaction:
         interaction.timestamp = db.func.current_timestamp()
+        interaction.title = scenario.title
     else:
         interaction = UserInteraction(
             game_token=g.game_token,
             username=session['username'],
+            title=scenario.title,
             route=endpoint,
             entity_id=str(entity_id) if entity_id else ""
         )
@@ -124,7 +131,7 @@ def clear_session_logs(game_token):
     db.session.flush()
     logger.info("Logs cleared for token: %s", game_token)
 
-def clear_old_data(days=1):
+def clear_old_data(days=7):
     """Maintenance function to delete old messages and user logs."""
     cutoff = datetime.now(timezone.utc) - timedelta(days=days)
     GameMessage.query.filter(GameMessage.timestamp < cutoff).delete()
@@ -137,7 +144,6 @@ def clear_old_data(days=1):
 
 BOT_ROUTES = ('root', 'main.root')
 BOT_HIT_MIN_AGE = timedelta(hours=1)
-STALE_TOKEN_AGE = timedelta(days=4)
 
 def purge_bot_hits(now=None):
     """Remove single-hit rows (e.g. from bots) older than an hour."""
@@ -193,6 +199,8 @@ def run_purge(now=None):
     """
     now = now or datetime.now()
     purge_bot_hits(now=now)
+    if ENABLE_LOG_PRUNING:
+        clear_old_data()
     tokens = find_stale_tokens(now=now)
     purge_tokens(tokens)
     return len(tokens)
@@ -200,23 +208,41 @@ def run_purge(now=None):
 def get_token_statuses(now=None):
     """Return per-token status rows: game_token, title, last_interaction, status."""
     now = now or datetime.now()
-    last_seen = (
+
+    # Subquery: Get the latest interaction for every token.
+    # Use ROW_NUMBER() to ensure we get the specific title 
+    # associated with the most recent timestamp.
+    latest_hit_subq = (
         select(
             UserInteraction.game_token,
-            func.max(UserInteraction.timestamp).label('last_ts'),
+            UserInteraction.title,
+            UserInteraction.timestamp,
+            func.row_number().over(
+                partition_by=UserInteraction.game_token,
+                order_by=UserInteraction.timestamp.desc()
+            ).label('rn')
         )
-        .group_by(UserInteraction.game_token)
         .subquery()
     )
-    rows = db.session.execute(
+
+    # Main Query: Start with Scenario to ensure we see every token.
+    # Join to the subquery to find the "Top 1" interaction.
+    stmt = (
         select(
             Scenario.game_token,
-            Scenario.title,
-            last_seen.c.last_ts,
+            # Captured title is preferred; Scenario title is the fallback
+            func.coalesce(
+                latest_hit_subq.c.title, Scenario.title).label('final_title'),
+            latest_hit_subq.c.timestamp
         )
-        .outerjoin(last_seen, last_seen.c.game_token == Scenario.game_token)
-        .order_by(last_seen.c.last_ts.asc().nulls_first())
-    ).all()
+        .outerjoin(latest_hit_subq, and_(
+            Scenario.game_token == latest_hit_subq.c.game_token,
+            latest_hit_subq.c.rn == 1  # Only pick the latest interaction row
+        ))
+        .order_by(latest_hit_subq.c.timestamp.asc().nulls_first())
+    )
+
+    rows = db.session.execute(stmt).all()
 
     result = []
     for game_token, title, last_ts in rows:

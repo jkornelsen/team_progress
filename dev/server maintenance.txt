@@ -87,3 +87,27 @@ sqlite3 app.db ".dump" > dump.sql
 vi dump.sql
 sqlite3 fixed_database.db < dump.sql
 sqlite3 fixed_database.db "PRAGMA quick_check;"
+
+-------------------------------------------------------------------------------
+- Track activity
+-------------------------------------------------------------------------------
+
+sqlite3 --readonly app.db
+
+SELECT 
+    ui.game_token,
+    ui.username,
+    ui.title,
+    ui.route,
+    COALESCE(e.name, ui.entity_id) AS entity_name,
+    ui.timestamp
+FROM user_interactions ui
+LEFT JOIN entities e 
+    ON ui.entity_id = e.id
+    AND ui.game_token = e.game_token
+ORDER BY ui.timestamp DESC
+LIMIT 200;
+
+The retrieved entity name won't be the right one if they switch to a
+different scenario that uses the same entity id.
+The title is still reliable, so you could find the id in the json file.

@@ -2295,6 +2295,7 @@ class UserInteraction(db.Model):
     __tablename__ = 'user_interactions'
     game_token = db.Column(db.String(50), primary_key=True)
     username = db.Column(db.String(50), primary_key=True)
+    title = db.Column(db.String(255))
     route = db.Column(db.String(50), primary_key=True)
     entity_id = db.Column(db.String(20), primary_key=True)
     timestamp = db.Column(db.DateTime, default=db.func.current_timestamp())
