@@ -10,7 +10,7 @@ from app.models import (
 
 logger = logging.getLogger(__name__)
 
-STALE_TOKEN_AGE = timedelta(days=4)
+STALE_TOKEN_AGE = timedelta(days=8)
 ENABLE_LOG_PRUNING = False
 
 # ------------------------------------------------------------------------
