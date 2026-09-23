@@ -1,5 +1,10 @@
 #-------------------------------------------------------------------------------
+#
 # Show all sequenced IDs in a JSON file. 
+#
+# To deduplicate old json file IDs,
+# prepend a different digit for each entity type.
+# 
 #-------------------------------------------------------------------------------
 import json
 import sys

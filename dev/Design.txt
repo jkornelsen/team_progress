@@ -2,9 +2,9 @@
 - issues and proposed changes
 -------------------------------------------------------------------------------
 
-log shows times in utc instead of local
+producing u1b scales relocated the pile to the character's position
 
-comma-separated party names didn't work for traveling together
+log shows times in utc instead of local
 
 one or more followers with their leader should be shown as a group at location
 
@@ -43,6 +43,12 @@ CONTEXT:  while updating tuple (0,46) in relation "characters"
 [parameters: {'position': [9, 4], 'characters_game_token': '128a971e-9667-4496-9d0d-8ce491b31780', 'characters_id': 8}]
 
 ---- scenario ----
+
+dungeon crawl
+    note on u1c that if a party member dies here it's not the end of the world
+        see the <<restart in entry cavern>> ability that all of your party members should have
+    restart should restore hp to full
+    add items such as iron armor to the main scenario after this playthrough
 
 lumber
     idle a certain number of batches that require fuel

@@ -1,6 +1,7 @@
 import collections
 import logging
 import math
+import re
 from flask import g
 from sqlalchemy import or_
 
@@ -235,20 +236,32 @@ def find_best_output_pos(item_id, loc_id, anchor_pos):
 # Party
 # ------------------------------------------------------------------------
 
+def clean_party_identifier(s):
+    if not s:
+        return ''
+    # Strip leading non-alphanumeric characters (including emojis and symbols)
+    cleaned = re.sub(r'^[^\w]+', '', s.strip(), flags=re.UNICODE)
+    return cleaned.strip().lower()
+
 def get_party_set(character):
     if not character or not character.party:
         return set()
-    return {p.strip().lower() for p in character.party.split(',') if p.strip()}
+    return {clean_party_identifier(p) for p in character.party.split(',') if clean_party_identifier(p)}
 
 def is_in_same_party(char_a, char_b):
     set_a = get_party_set(char_a)
     set_b = get_party_set(char_b)
-    # Also check if one's name is the other's party
-    name_a = char_a.name.lower()
-    name_b = char_b.name.lower()
+    name_a = clean_party_identifier(char_a.name)
+    name_b = clean_party_identifier(char_b.name)
+
+    # Shared party tags
+    if not set_a.isdisjoint(set_b):
+        return True
+
+    # Leader / follower relationship
     if name_a in set_b or name_b in set_a:
         return True
-    return not set_a.isdisjoint(set_b)
+    return False
 
 def all_parties():
     game_token = g.game_token
@@ -282,23 +295,15 @@ def get_cohesive_party(main_char, move_party_flag):
     """
     if not move_party_flag:
         return [main_char]
-
     game_token = g.game_token
-    # 1. Get all potential candidates based on party settings
-    party_name = main_char.party
-    my_name = main_char.name
-    filters = []
-    if party_name:
-        filters.append(Character.party == party_name)
-        filters.append(Character.name == party_name)
-    filters.append(Character.party == my_name)
 
-    candidates = Character.query.filter(
+    # 1. Get all potential candidates based on party settings
+    other_chars = Character.query.filter(
         Character.game_token == game_token,
         Character.location_id == main_char.location_id,
-        Character.id != main_char.id,
-        or_(*filters)
+        Character.id != main_char.id
     ).all()
+    candidates = [c for c in other_chars if is_in_same_party(main_char, c)]
 
     # 2. Flood-fill to find connected components within distance 2
     # (Distance 1 = adjacent, Distance 2 = 1 empty tile gap)
@@ -353,25 +358,16 @@ def get_moving_party(main_char, move_party=False):
     """
     if not move_party:
         return [main_char]
-
     if main_char.location and main_char.location.has_grid:
         return get_cohesive_party(main_char, move_party)
 
     game_token = g.game_token
-    party_name = main_char.party
-    my_name = main_char.name
-
-    filters = []
-    if party_name:
-        filters.append(Character.party == party_name) # Shared group name
-        filters.append(Character.name == party_name)  # I am following them
-    filters.append(Character.party == my_name)        # They are following me
-
-    group_members = Character.query.filter(
+    other_chars = Character.query.filter(
         Character.game_token == game_token,
         Character.location_id == main_char.location_id,
-        or_(*filters)
+        Character.id != main_char.id
     ).all()
+    group_members = [c for c in other_chars if is_in_same_party(main_char, c)]
 
     party = {main_char}
     party.update(group_members)

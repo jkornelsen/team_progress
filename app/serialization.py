@@ -93,6 +93,7 @@ class ScenarioPreview:
     def __init__(self, title="", description=""):
         self.title = title
         self.description = description
+        self.win_reqs = []
 
 def get_default_scenario_preview():
     """

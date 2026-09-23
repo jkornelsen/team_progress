@@ -262,7 +262,7 @@
                             <div id="party-move-container" style="display: none; margin-top: 10px;">
                                 <label class="checkbox-label">
                                     <input type="checkbox" id="move-with-party-chk" 
-                                        onchange="syncPartySession(this.checked); this.blur();
+                                        onchange="syncPartySession(this.checked); this.blur();"
                                         {{ 'checked' if travel_with_party }}>
                                     Move {{ hk.bracket('w') }}ith Party
                                 </label>
@@ -549,25 +549,61 @@ async function syncDriverSession(id) {
     syncPartyState(); 
 }
 
+function cleanPartyIdentifier(str) {
+    if (!str) return '';
+    // Strip leading emojis, symbols, punctuation, or spaces
+    // e.g. "😈 Suhkh" -> "suhkh", "@Player" -> "player"
+    return str
+        .replace(/^[^\p{L}\p{N}]+/u, '') // remove leading non-letters/non-digits
+        .trim()
+        .toLowerCase();
+}
+
+function getPartySet(partyStr) {
+    if (!partyStr) return new Set();
+    return new Set(
+        partyStr
+            .split(',')
+            .map(cleanPartyIdentifier)
+            .filter(Boolean)
+    );
+}
+
+function isInSameParty(charA, charB) {
+    const setA = getPartySet(charA.party);
+    const setB = getPartySet(charB.party);
+    const nameA = cleanPartyIdentifier(charA.name);
+    const nameB = cleanPartyIdentifier(charB.name);
+
+    // Check shared party tags
+    for (const tag of setA) {
+        if (setB.has(tag)) return true;
+    }
+
+    // Check leader/follower references
+    if (setB.has(nameA) || setA.has(nameB)) return true;
+    return false;
+}
+
 function syncPartyState() {
     const container = document.getElementById('party-move-container');
-    const chk = document.getElementById('move-with-party-chk');
-    if (!container) return;
+    if (!container) {
+        return;
+    }
     
     const active = getActiveChar();
-    const myName = active.char.name.toLowerCase();
-    const myParty = (active.char.party || "").toLowerCase();
+    if (!active) {
+        container.style.display = 'none';
+        return;
+    }
 
-    // Check if there are any other members in the same party here
-    const candidates = Object.keys(chars).filter(id => {
-        if (id == active.char_id) return false;
-        const c = chars[id];
-        return (myParty !== "" && c.party?.toLowerCase() === myParty) ||
-               (myParty !== "" && c.name?.toLowerCase() === myParty) ||
-               (c.party?.toLowerCase() === myName);
-    }).map(id => chars[id]);
+    // Find characters at this location who share a party or follow active leader
+    const candidateIds = Object.keys(chars).filter(id => id != active.char_id);
+    const candidates = candidateIds
+        .filter(id => isInSameParty(active.char, chars[id]))
+        .map(id => chars[id]);
 
-    // Filter by Proximity -- Flood fill to match cohesive party logic
+    // Filter by proximity on grid (flood-fill distance <= 2)
     let nearbyMembers = [];
     if ({{ location.has_grid | tojson }}) {
         let cohesive = new Set([active.char]);
@@ -576,7 +612,9 @@ function syncPartyState() {
             let curr = queue.shift();
             candidates.forEach(cand => {
                 if (!cohesive.has(cand)) {
-                    const d = Math.max(Math.abs(curr.x - cand.x), Math.abs(curr.y - cand.y));
+                    const dx = Math.abs(curr.x - cand.x);
+                    const dy = Math.abs(curr.y - cand.y);
+                    const d = Math.max(dx, dy);
                     if (d <= 2) {
                         cohesive.add(cand);
                         queue.push(cand);
@@ -591,9 +629,10 @@ function syncPartyState() {
 
     if (nearbyMembers.length > 0) {
         container.style.display = 'block';
-        const displayName = active.char.party || "Followers";
+        const displayName = active.char.party ? active.char.party.split(',')[0].trim() : "Followers";
         const label = container.querySelector('.checkbox-label');
-        const isChecked = document.getElementById('move-with-party-chk')?.checked;
+        const chk = document.getElementById('move-with-party-chk');
+        const isChecked = chk ? chk.checked : false;
         label.innerHTML = `
             <input type="checkbox" id="move-with-party-chk" 
                 onchange="syncPartySession(this.checked); this.blur();" 
@@ -603,7 +642,7 @@ function syncPartyState() {
     } else {
         container.style.display = 'none';
     }
-    syncTravelPromptState(); // Refresh the door prompts too
+    syncTravelPromptState();
 }
 
 function getActiveExit() {

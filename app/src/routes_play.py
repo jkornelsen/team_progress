@@ -16,7 +16,7 @@ from app.utils import (
     RequestHelper, ContextIds, format_num, parse_coords, LinkLetters,
     capture_origin, name_stripped, sort_by_name_stripped,
     maskable_name)
-from app.serialization import get_default_scenario_preview
+from app.serialization import get_default_scenario_preview, ScenarioPreview
 from .logic_piles import transfer_item
 from .logic_event import (
     roll_for_outcome, roll_for_system_outcome,
@@ -88,7 +88,7 @@ def overview():
     }
 
     # Check Win Requirements
-    scenario = db.session.get(Scenario, game_token)
+    scenario = db.session.get(Scenario, game_token) or ScenarioPreview()
     enriched_win_reqs, all_met = validate_requirements(scenario)
 
     # Recent Messages
@@ -291,26 +291,21 @@ def play_character(id):
     session.pop('old_loc_id', None)
 
     # Identify other party members at this location
-    party_members = []
-    party_criteria = []
-    if character.party:
-        party_criteria.append(Character.party == character.party)
-        party_criteria.append(Character.name == character.party)
-    party_criteria.append(Character.party == character.name)
+    all_candidates = Character.query.filter(
+        Character.game_token == game_token,
+        Character.location_id == character.location_id,
+        Character.id != character.id
+    ).all()
+    party_candidates = [
+        c for c in all_candidates if is_in_same_party(character, c)]
 
-    if party_criteria:
-        all_candidates = Character.query.filter(
-            Character.game_token == game_token,
-            Character.location_id == character.location_id,
-            or_(*party_criteria),
-            Character.id != character.id
-        ).all()
-        if character.location and character.location.has_grid:
-            party_members = [
-                c for c in get_cohesive_party(character, True)
-                if c.id != character.id]
-        else:
-            party_members = all_candidates
+    if character.location and character.location.has_grid:
+        party_members = [
+            c for c in get_cohesive_party(character, True)
+            if c.id != character.id
+        ]
+    else:
+        party_members = party_candidates
 
     # Fetch Navigation (Nearby Destinations)
     destinations, has_nonadjacent = get_available_destinations(character)

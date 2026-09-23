@@ -31,7 +31,8 @@ def log_activity(endpoint, entity_id=None):
     if 'username' not in session or not g.game_token:
         return
 
-    scenario = db.session.get(Scenario, g.game_token)
+    from app.serialization import ScenarioPreview
+    scenario = db.session.get(Scenario, g.game_token) or ScenarioPreview()
 
     # Upsert logic for user interactions
     interaction = UserInteraction.query.filter_by(
