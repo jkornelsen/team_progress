@@ -11,6 +11,7 @@ from sqlalchemy.engine import Engine
 db = SQLAlchemy()
 
 USE_SQLITE = True
+ALLOW_LOCAL = False  # safe to set to True when running on local machine
 
 def get_db_uri():
     """Centralized logic for building the connection string."""

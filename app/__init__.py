@@ -1,5 +1,6 @@
 import os
 from datetime import timedelta
+from urllib.parse import quote
 from flask import (
     Flask, g, session, request, redirect, render_template, url_for)
 from flask_migrate import Migrate
@@ -64,6 +65,19 @@ def create_app():
     @app.template_filter('mask_string')
     def filter_mask_string(s):
         return mask_string(s)
+
+    @app.template_filter('image_src')
+    def filter_image_src(image_val):
+        if not image_val:
+            return ''
+        image_val = image_val.strip()
+
+        # External web URL: use directly
+        if image_val.startswith(('http://', 'https://')):
+            return image_val
+
+        # Local file path: route through local-media endpoint
+        return url_for('play.serve_local_media', path=image_val)
 
     @app.context_processor
     def inject_user_vars():

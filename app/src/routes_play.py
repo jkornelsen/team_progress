@@ -1,10 +1,14 @@
 from datetime import datetime, timezone
 from http import HTTPStatus
 import logging
+import os
+import mimetypes
 from flask import (
-    Blueprint, render_template, request, redirect, jsonify, g, session)
+    Blueprint, render_template, request, redirect, jsonify, g, session,
+    send_file, abort, current_app)
 from sqlalchemy import select, or_, and_
 from sqlalchemy.orm import joinedload
+from app.database import ALLOW_LOCAL
 from app.models import (
     db, Entity, Item, Character, Location, Attrib, Event,
     Pile, AttribVal, Recipe, RecipeAttribReq,
@@ -109,7 +113,7 @@ def overview():
     )
 
 # ------------------------------------------------------------------------
-# Location & Character Routes
+# Location & Character
 # ------------------------------------------------------------------------
 
 @play_bp.route('/play/location/<int:id>')
@@ -563,7 +567,7 @@ def sync_session():
     return '', 204
 
 # ------------------------------------------------------------------------
-# Item Route
+# Item & Production
 # ------------------------------------------------------------------------
 
 @play_bp.route('/play/item/<int:id>')
@@ -572,10 +576,6 @@ def play_item(id):
     return render_template(
         'play/item.html',
         **presenter.get_template_context())
-
-# ------------------------------------------------------------------------
-# Production Routes
-# ------------------------------------------------------------------------
 
 @play_bp.route(
     '/production/status/item/<int:item_id>/owner/<int:owner_id>',
@@ -1304,3 +1304,33 @@ def autobattle_reset(loc_id):
         "log": [{"time": m.timestamp.strftime('%H:%M'), "text": m.message, "count": m.count}
                 for m in get_chronicle(12)]
     })
+
+# ------------------------------------------------------------------------
+# Media
+# ------------------------------------------------------------------------
+
+@play_bp.route('/local-media')
+def serve_local_media():
+    """Serves a local image from the host filesystem."""
+    # Safeguard: Do not allow arbitrary local file reads in web production
+    if not (ALLOW_LOCAL or current_app.debug):
+        abort(403)
+
+    raw_path = request.args.get('path', '').strip()
+    if not raw_path:
+        abort(404)
+
+    # Normalize path (handles both forward and backward slashes)
+    file_path = os.path.abspath(os.path.expanduser(raw_path))
+
+    # Basic security checks:
+    # 1. File must exist
+    # 2. Must be a recognized image extension
+    # 3. Don't allow reading sensitive files (.py, .db, .env, etc.)
+    valid_exts = {'.png', '.jpg', '.jpeg', '.webp', '.gif', '.bmp', '.svg'}
+    _, ext = os.path.splitext(file_path)
+    if ext.lower() not in valid_exts or not os.path.isfile(file_path):
+        abort(404)
+
+    mime_type, _ = mimetypes.guess_type(file_path)
+    return send_file(file_path, mimetype=mime_type or 'image/png')

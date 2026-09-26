@@ -182,6 +182,7 @@ def edit_item(id):
 
         item.name = req.get_str('name', item.name)
         item.description = req.get_str('description')
+        item.image = req.get_str('image', None)
 
         old_storage_type = item.storage_type
         new_storage_type = req.get_str('storage_type', StorageType.UNIVERSAL)
@@ -616,6 +617,7 @@ def edit_character(id):
 
         char.name = req.get_str('name', char.name)
         char.description = req.get_str('description')
+        char.image = req.get_str('image', None)
         char.location_id = req.get_int('location_id', None)
         char.position = parse_coords(req.get_str('pos_str'))
         char.party = req.get_str('party')
@@ -707,6 +709,7 @@ def edit_attrib(id):
 
         attrib.name = req.get_str('name', attrib.name)
         attrib.description = req.get_str('description')
+        attrib.image = req.get_str('image', None)
         attrib.ab_field = req.get_str('ab_field', AutobattleField.NONE)
 
         v_type = req.get_str('value_type')
@@ -768,6 +771,7 @@ def edit_event(id):
 
         event.name = req.get_str('name', event.name)
         event.description = req.get_str('description')
+        event.image = req.get_str('image', None)
         event.toplevel = req.get_bool('toplevel')
         event.auto_apply = req.get_bool('auto_apply')
         event.outcome_type = req.get_str('outcome_type')

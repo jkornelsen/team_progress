@@ -44,9 +44,16 @@
         </span>
 
         <h1>{{ location.name }}</h1>
-        {% if location.description %}
-            <div class="description-box">{{ location.description | htmlify }}</div>
-        {% endif %}
+        <div class="entity-header-layout">
+            <div class="entity-header-content">
+                {% if location.description %}
+                    <div class="description-box">{{ location.description | htmlify }}</div>
+                {% endif %}
+            </div>
+            {% if not location.masked %}
+                {{ render.entity_portrait(location) }}
+            {% endif %}
+        </div>
     </header>
 
     <div class="column-container">

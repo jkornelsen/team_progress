@@ -60,6 +60,11 @@
                     Description:
                     <textarea id="description" name="description" rows="6" class="full-width themed-input">{{ item.description or '' }}</textarea>
                 </label>
+                <label for="image">Image:</label>
+                <input type="text" id="image" name="image" 
+                       value="{{ item.image or '' }}" 
+                       class="full-width themed-input"
+                       placeholder="https://example.com/art.png or C:\games\assets\portrait.png">
             </div>
         </section>
 

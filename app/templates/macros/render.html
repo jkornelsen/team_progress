@@ -30,3 +30,14 @@
     {% endif %}
 {% endmacro %}
 
+{% macro entity_portrait(entity, max_size=140) %}
+    {% if entity.image %}
+        <div class="entity-portrait-container" style="max-width: {{ max_size }}px; max-height: {{ max_size }}px;">
+            <img src="{{ entity.image | image_src }}" 
+                 alt="{{ entity.name }}" 
+                 class="entity-portrait"
+                 loading="lazy"
+                 onerror="this.parentElement.style.display='none';">
+        </div>
+    {% endif %}
+{% endmacro %}

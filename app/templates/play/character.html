@@ -4,6 +4,7 @@
 
 {% extends 'layout/base.html' %}
 {% import 'macros/hotkeys.html' as hk %}
+{% import 'macros/render.html' as render %}
 {% import 'macros/config_forms.html' as forms %}
 
 {% block upper_left %}
@@ -37,9 +38,14 @@
 <div class="play-container">
     <header class="entity-header">
         <h1>{{ character.name }}</h1>
-        {% if character.description %}
-            <div class="description-box">{{ character.description | htmlify }}</div>
-        {% endif %}
+        <div class="entity-header-layout">
+            <div class="entity-header-content">
+                {% if character.description %}
+                    <div class="description-box">{{ character.description | htmlify }}</div>
+                {% endif %}
+            </div>
+            {{ render.entity_portrait(character) }}
+        </div>
     </header>
 
     <main>

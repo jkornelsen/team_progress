@@ -65,6 +65,11 @@
             <div class="spacious-top">
                 <label for="description">Description:</label>
                 <textarea id="description" name="description" rows="5" class="full-width themed-input">{{ event.description or '' }}</textarea>
+                <label for="image">Image:</label>
+                <input type="text" id="image" name="image" 
+                       value="{{ event.image or '' }}" 
+                       class="full-width themed-input"
+                       placeholder="https://example.com/art.png or C:\games\assets\portrait.png">
             </div>
         </section>
 

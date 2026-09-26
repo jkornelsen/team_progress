@@ -41,9 +41,14 @@
             <div class="spacious-top">
                 <label for="description">Description:</label>
                 <textarea id="description" name="description" rows="3" class="full-width themed-input">{{ attrib.description or '' }}</textarea>
+                <label for="image">Image:</label>
+                <input type="text" id="image" name="image" 
+                       value="{{ attrib.image or '' }}" 
+                       class="full-width themed-input"
+                       placeholder="https://example.com/art.png or C:\games\assets\portrait.png">
             </div>
 
-            <div class="type-selection" class="spacious-top">
+            <div class="type-selection" class="spacious-top" style="margin-top: 15px;">
                 <label>Value Type:</label>
 
                 {% set is_slots = (attrib.id == EQUIPMENT_SLOTS_ID) %}

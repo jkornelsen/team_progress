@@ -250,6 +250,61 @@ select {
   -moz-appearance: textfield;
 }
 
+/* Container for portrait + header info */
+.entity-header-layout {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 15px;
+}
+
+.entity-portrait-container {
+    flex-shrink: 0;
+    width: 120px;
+    height: 120px;
+    border: 1px solid var(--border);
+    background: #000;
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.entity-portrait {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.entity-header-content {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Tighten spacing between h1 and the description/portrait row */
+.entity-header h1 {
+    margin-bottom: 14px;
+}
+.entity-header-layout .description-box {
+    margin-top: 0;
+    margin-left: 0;
+}
+.entity-header-layout .description-box > p:first-child {
+    margin-top: 0;
+}
+
+/* Mobile: stack vertically */
+@media (max-width: 600px) {
+    .entity-header-layout {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+}
+
 /* ==========================================================================
    5. WIDGETS (Tables, Progress, Logs)
    ========================================================================== */

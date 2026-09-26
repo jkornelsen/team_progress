@@ -114,6 +114,14 @@ different scenario that uses the same entity id.
 The title is still reliable, so you could find the id in the json file.
 
 -------------------------------------------------------------------------------
+- Modify a table
+-------------------------------------------------------------------------------
+
+sqlite3 --readonly app.db
+ALTER TABLE entities ADD COLUMN image VARCHAR(500);
+pragma table_info(entities);
+
+-------------------------------------------------------------------------------
 - Latest Source Code
 -------------------------------------------------------------------------------
 

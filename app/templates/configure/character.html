@@ -57,6 +57,11 @@
             <div class="form-group spacious-top">
                 <label for="description">Biography / Description:</label>
                 <textarea id="description" name="description" rows="4" class="full-width themed-input">{{ character.description or '' }}</textarea>
+                <label for="image">Image:</label>
+                <input type="text" id="image" name="image" 
+                       value="{{ character.image or '' }}" 
+                       class="full-width themed-input"
+                       placeholder="https://example.com/art.png or C:\games\assets\portrait.png">
             </div>
         </section>
 

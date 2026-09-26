@@ -227,6 +227,7 @@ class Entity(DictHydrator):
     entity_type = db.Column(db.String(20), nullable=False)
     name = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text)
+    image = db.Column(db.String(500), nullable=True)
 
     def to_dict(self):
         """Base export for shared entity fields."""
@@ -234,6 +235,7 @@ class Entity(DictHydrator):
             "id": self.id,
             "name": self.name,
             "description": self.description,
+            "image": self.image,
             "attribs": sorted([
                 [av.attrib_id, av.serialized_value]
                 for av in self.attrib_values

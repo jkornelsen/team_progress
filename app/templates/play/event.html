@@ -82,10 +82,16 @@
                 </select>
             </span>
         </span>
+
         <h1>⚡ {{ event.name }}</h1>
-        {% if event.description %}
-            <div class="description-box">{{ event.description | htmlify }}</div>
-        {% endif %}
+        <div class="entity-header-layout">
+            <div class="entity-header-content">
+                {% if event.description %}
+                    <div class="description-box">{{ event.description | htmlify }}</div>
+                {% endif %}
+            </div>
+            {{ render.entity_portrait(event) }}
+        </div>
     </header>
 
     <div class="column-container">

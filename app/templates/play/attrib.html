@@ -47,9 +47,14 @@
             {% endif %}
         </h1>
 
-        {% if attribute.description %}
-            <div class="description-box">{{ attribute.description | htmlify }}</div>
-        {% endif %}
+        <div class="entity-header-layout">
+            <div class="entity-header-content">
+                {% if attribute.description %}
+                    <div class="description-box">{{ attribute.description | htmlify }}</div>
+                {% endif %}
+            </div>
+            {{ render.entity_portrait(attribute) }}
+        </div>
     </header>
 
     <div class="column-container">

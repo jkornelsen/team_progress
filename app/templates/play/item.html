@@ -94,13 +94,20 @@
                 <small class="label-like">/ {{ item.limit_for(owner.id) | formatNum }}</small>
             {% endif %}
         </h1>
-        {% if item.masked %}
-            <div class="description-box">
-                <i class="text-dim">This item is currently masked. To reveal, you must obtain at least one of each source material.</i>
+        <div class="entity-header-layout">
+            <div class="entity-header-content">
+                {% if item.masked %}
+                    <div class="description-box">
+                        <i class="text-dim">This item is currently masked. To reveal, you must obtain at least one of each source material.</i>
+                    </div>
+                {% elif item.description %}
+                    <div class="description-box">{{ item.description | htmlify }}</div>
+                {% endif %}
             </div>
-        {% elif item.description %}
-            <div class="description-box">{{ item.description | htmlify }}</div>
-        {% endif %}
+            {% if not item.masked %}
+                {{ render.entity_portrait(item) }}
+            {% endif %}
+        </div>
         
         {% if manualtick %}
         <button id="debug-tick-btn" 
