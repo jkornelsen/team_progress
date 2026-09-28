@@ -49,6 +49,14 @@
                 <label for="description">Description:</label>
                 <textarea id="description" name="description" rows="5" class="full-width themed-input">{{ scenario.description }}</textarea>
             </div>
+            <div class="form-group spacious-top">
+                <label for="base_image_path">Base Image Path / URL:</label>
+                <input type="text" id="base_image_path" name="base_image_path" 
+                       value="{{ scenario.base_image_path or '' }}" 
+                       class="full-width themed-input"
+                       placeholder="e.g. C:\games\assets or https://example.com/assets/">
+                <small class="label-like">Optional folder or URL prefix. Entities can then specify just a filename (<code>hero.png</code>) or relative path (<code>../shared/sword.png</code>).</small>
+            </div>
         </section>
 
         <!-- 2. Application Logic -->

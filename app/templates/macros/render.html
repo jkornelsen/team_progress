@@ -32,12 +32,19 @@
 
 {% macro entity_portrait(entity, max_size=140) %}
     {% if entity.image %}
+        {% set src = entity.image | image_src %}
         <div class="entity-portrait-container" style="max-width: {{ max_size }}px; max-height: {{ max_size }}px;">
-            <img src="{{ entity.image | image_src }}" 
-                 alt="{{ entity.name }}" 
-                 class="entity-portrait"
-                 loading="lazy"
-                 onerror="this.parentElement.style.display='none';">
+            <a href="{{ src }}" 
+               target="_blank" 
+               rel="noopener noreferrer" 
+               class="entity-portrait-link" 
+               title="Open full image in new tab">
+                <img src="{{ src }}" 
+                     alt="{{ entity.name }}" 
+                     class="entity-portrait"
+                     loading="lazy"
+                     onerror="this.closest('.entity-portrait-container').style.display='none';">
+            </a>
         </div>
     {% endif %}
 {% endmacro %}

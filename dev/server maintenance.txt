@@ -117,7 +117,7 @@ The title is still reliable, so you could find the id in the json file.
 - Modify a table
 -------------------------------------------------------------------------------
 
-sqlite3 --readonly app.db
+sqlite3 app.db
 ALTER TABLE entities ADD COLUMN image VARCHAR(500);
 pragma table_info(entities);
 

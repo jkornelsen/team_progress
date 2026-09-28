@@ -45,7 +45,10 @@ class BaseFieldMap:
         """Retrieve a string from the request.
         No special checks are needed -- just a thin wrapper method.
         """
-        return (self._get_raw(key) or default).strip()
+        val = self._get_raw(key) or default
+        if val:
+            val = val.strip()
+        return val
 
     def get_int(self, key, default=0):
         val_raw = self._get_raw(key)

@@ -68,6 +68,7 @@ def edit_scenario():
         req = RequestHelper('form')
         scenario.title = req.get_str('title', scenario.title)
         scenario.description = req.get_str('description')
+        scenario.base_image_path = req.get_str('base_image_path') or None
 
         use_slots = req.get_bool('use_slots')
         if use_slots:

@@ -1,6 +1,7 @@
 import os
+import re
 from datetime import timedelta
-from urllib.parse import quote
+from urllib.parse import quote, urljoin
 from flask import (
     Flask, g, session, request, redirect, render_template, url_for)
 from flask_migrate import Migrate
@@ -11,7 +12,7 @@ from app.src.routes_session import session_bp
 from app.src.routes_configure import configure_bp
 from app.src.routes_play import play_bp
 from .database import db, get_db_uri
-from .models import GENERAL_ID, EQUIPMENT_SLOTS_ID, StorageType
+from .models import GENERAL_ID, EQUIPMENT_SLOTS_ID, StorageType, Scenario
 from .utils import format_num, htmlify_filter, mask_string
 
 def create_app():
@@ -72,9 +73,30 @@ def create_app():
             return ''
         image_val = image_val.strip()
 
-        # External web URL: use directly
+        # If the individual image is already an absolute web URL, use directly
         if image_val.startswith(('http://', 'https://')):
             return image_val
+
+        # Check if the individual image is already an absolute filesystem path
+        # (covers both POSIX leading '/' and Windows drive letters like 'C:\')
+        is_abs = os.path.isabs(image_val) or bool(re.match(r'^[a-zA-Z]:[/\\]', image_val))
+
+        # Retrieve the scenario's base path if available
+        base_path = None
+        if hasattr(g, 'game_token') and g.game_token:
+            scenario = db.session.get(Scenario, g.game_token)
+            if scenario and scenario.base_image_path:
+                base_path = scenario.base_image_path.strip()
+
+        if not is_abs and base_path:
+            # Case 1: Base is a web URL
+            if base_path.startswith(('http://', 'https://')):
+                if not base_path.endswith('/'):
+                    base_path += '/'
+                return urljoin(base_path, image_val)
+
+            # Case 2: Base is a filesystem path (os.path.join handles '../img.jpeg')
+            image_val = os.path.normpath(os.path.join(base_path, image_val))
 
         # Local file path: route through local-media endpoint
         return url_for('play.serve_local_media', path=image_val)

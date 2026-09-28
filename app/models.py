@@ -2135,6 +2135,7 @@ class Scenario(DictHydrator):
     game_token = db.Column(db.String(50), primary_key=True)
     title = db.Column(db.String(255), nullable=False, default='New Scenario')
     description = db.Column(db.Text)
+    base_image_path = db.Column(db.String(500))
 
     # Metadata tags for scenario browsing
     tag_introduce_order = db.Column(db.Integer, default=50)
@@ -2146,6 +2147,7 @@ class Scenario(DictHydrator):
         data = {
             "title": self.title,
             "description": self.description,
+            "base_image_path": self.base_image_path,
             "win_reqs": [
                 wr.to_dict() for wr in
                 sorted(self.win_reqs, key=lambda x: x.order_index)
